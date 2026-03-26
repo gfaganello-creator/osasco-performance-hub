@@ -293,6 +293,32 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
 .cv-urgent{color:#ff6b35;font-size:11px;font-weight:700}
 .cv-expired{color:var(--re);font-size:11px;font-weight:700}
 
+
+.el-ficha-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center;padding:20px}
+.el-ficha-bg.open{display:flex}
+.el-ficha{background:rgba(8,16,26,.98);border:1px solid rgba(70,162,247,.2);border-radius:10px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto}
+.el-ficha-top{background:linear-gradient(135deg,rgba(70,162,247,.12) 0%,rgba(7,14,22,.8) 100%);padding:28px 32px;border-bottom:1px solid rgba(70,162,247,.1);display:flex;align-items:center;gap:20px}
+.el-ficha-avatar{width:72px;height:72px;border-radius:50%;background:rgba(70,162,247,.15);border:2px solid rgba(70,162,247,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--az)}
+.el-ficha-info{flex:1}
+.el-ficha-name{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--ww);letter-spacing:1px;line-height:1}
+.el-ficha-pos{font-size:12px;color:var(--ts);margin-top:4px;letter-spacing:1px}
+.el-ficha-camisa{font-family:'Bebas Neue',sans-serif;font-size:48px;color:rgba(70,162,247,.15);letter-spacing:-2px;line-height:1}
+.el-ficha-body{padding:24px 32px}
+.el-ficha-section{margin-bottom:24px}
+.el-ficha-section-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid rgba(70,162,247,.08)}
+.el-ficha-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.el-ficha-field{display:flex;flex-direction:column;gap:3px}
+.el-ficha-field-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts)}
+.el-ficha-field-val{font-size:13px;color:var(--wh);font-weight:500}
+.el-ficha-close{background:none;border:none;color:var(--ts);cursor:pointer;font-size:20px;padding:4px;line-height:1;transition:.2s}
+.el-ficha-close:hover{color:var(--wh)}
+.el-ficha-contrato{display:flex;align-items:center;gap:8px;background:rgba(70,162,247,.05);border:1px solid rgba(70,162,247,.1);border-radius:6px;padding:14px 16px;margin-top:8px}
+.el-ficha-contrato-info{flex:1}
+.el-ficha-contrato-tipo{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--az)}
+.el-ficha-contrato-datas{font-size:12px;color:var(--ts);margin-top:2px}
+.el-ficha-dias{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;text-align:right}
+.el-ficha-dias-label{font-size:9px;color:var(--ts);text-align:right;letter-spacing:1px}
+
 </style>
 </head>
 <body>
@@ -856,6 +882,47 @@ function elTab(filtro, el) {
   el.classList.add('active');
   elMostrar();
 }
+
+function abrirFicha(idx) {
+  var r = elDados2[idx];
+  if(!r) return;
+  var ini = (r['Nome Completo']||'?').charAt(0).toUpperCase();
+  document.getElementById('ef-avatar').textContent = ini;
+  document.getElementById('ef-nome').textContent = r['Apelido']||r['Nome Completo']||'—';
+  document.getElementById('ef-pos').textContent = (r['Posicao']||r['Posição']||'—') + ' · ID ' + (r['ID']||'—');
+  document.getElementById('ef-nomec').textContent = r['Nome Completo']||'—';
+  document.getElementById('ef-apelido').textContent = r['Apelido']||'—';
+  document.getElementById('ef-nasc').textContent = r['Data Nasc.']||'—';
+  document.getElementById('ef-natural').textContent = r['Naturalidade']||'—';
+  document.getElementById('ef-camisa').textContent = '#'+(r['Nº Camisa']||r['N Camisa']||'—');
+  document.getElementById('ef-tipo').textContent = r['Tipo Contrato']||'—';
+  document.getElementById('ef-datas').textContent = 'Contratado em ' + (r['Data Contratação']||r['Data Contratacao']||'—') + ' · Válido até ' + (r['Validade Contrato']||'—');
+  document.getElementById('ef-resp').textContent = r['Registrado por']||'—';
+  document.getElementById('ef-status').textContent = r['Status Contrato']||'—';
+  document.getElementById('ef-obs').textContent = r['Observações']||r['Observacoes']||'Sem observações';
+  // Badge status
+  var s = r['Status Contrato']||'';
+  var cls = s==='Ativo'?'ativo':s==='Rescindido'?'rescindido':'emprestimo';
+  document.getElementById('ef-badge').innerHTML = '<span class="el-badge '+cls+'">'+s+'</span>';
+  // Dias restantes
+  var valStr = r['Validade Contrato']||'';
+  var diasEl = document.getElementById('ef-dias');
+  if(valStr) {
+    var parts = valStr.split('/');
+    var valDate = parts.length===3 ? new Date(parts[2],parts[1]-1,parts[0]) : new Date(valStr);
+    var hoje = new Date(); hoje.setHours(0,0,0,0);
+    var diff = Math.ceil((valDate-hoje)/(1000*60*60*24));
+    diasEl.textContent = diff < 0 ? 'VENCIDO' : diff;
+    diasEl.style.color = diff < 0 ? 'var(--re)' : diff <= 30 ? '#ff6b35' : diff <= 60 ? 'var(--ye)' : 'var(--gr)';
+  } else {
+    diasEl.textContent = '—';
+  }
+  document.getElementById('el-ficha-bg').classList.add('open');
+}
+function fecharFicha() {
+  document.getElementById('el-ficha-bg').classList.remove('open');
+}
+
 function elFiltrar() { elMostrar(); }
 async function elCarregar() {
   try {
@@ -942,7 +1009,9 @@ function elMostrar() {
   var html=dados.map(function(r,i) {
     var s=r['Status Contrato']||'';
     var cls=s==='Ativo'?'ativo':s==='Rescindido'?'rescindido':'emprestimo';
-    return '<tr><td style="color:var(--ts)">'+(r['ID']||i+1)+'</td><td style="font-weight:600">'+(r['Nome Completo']||'-')+'</td><td style="color:var(--ts)">'+(r['Apelido']||'-')+'</td><td>'+(r['Posicao']||r['Posição']||'-')+'</td><td style="text-align:center">'+(r['N Camisa']||r['Nº Camisa']||'-')+'</td><td style="color:var(--ts)">'+(r['Tipo Contrato']||'-')+'</td><td style="color:var(--ts);font-size:11px">'+(r['Validade Contrato']||'-')+'</td><td><span class="el-badge '+cls+'">'+s+'</span></td></tr>';
+    // find original index in elDados2
+    var origIdx = elDados2.indexOf(r);
+    return '<tr><td style="color:var(--ts)">'+(r['ID']||i+1)+'</td><td style="font-weight:600;cursor:pointer;color:var(--az)" onclick="abrirFicha('+origIdx+')">'+(r['Nome Completo']||'-')+'</td><td style="color:var(--ts)">'+(r['Apelido']||'-')+'</td><td>'+(r['Posicao']||r['Posição']||'-')+'</td><td style="text-align:center">'+(r['N Camisa']||r['Nº Camisa']||'-')+'</td><td style="color:var(--ts)">'+(r['Tipo Contrato']||'-')+'</td><td style="color:var(--ts);font-size:11px">'+(r['Validade Contrato']||'-')+'</td><td><span class="el-badge '+cls+'">'+s+'</span></td></tr>';
   }).join('');
   document.getElementById('el-tbody').innerHTML=html;
 }
@@ -965,6 +1034,56 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+
+
+<div class="el-ficha-bg" id="el-ficha-bg" onclick="if(event.target===this)fecharFicha()">
+  <div class="el-ficha">
+    <div class="el-ficha-top">
+      <div class="el-ficha-avatar" id="ef-avatar">?</div>
+      <div class="el-ficha-info">
+        <div class="el-ficha-name" id="ef-nome">—</div>
+        <div class="el-ficha-pos" id="ef-pos">—</div>
+        <div style="margin-top:8px" id="ef-badge"></div>
+      </div>
+      <div>
+        <div class="el-ficha-camisa" id="ef-camisa">#</div>
+      </div>
+      <button class="el-ficha-close" onclick="fecharFicha()">&#10005;</button>
+    </div>
+    <div class="el-ficha-body">
+      <div class="el-ficha-section">
+        <div class="el-ficha-section-title">Dados Pessoais</div>
+        <div class="el-ficha-grid">
+          <div class="el-ficha-field"><div class="el-ficha-field-label">Nome Completo</div><div class="el-ficha-field-val" id="ef-nomec">—</div></div>
+          <div class="el-ficha-field"><div class="el-ficha-field-label">Apelido</div><div class="el-ficha-field-val" id="ef-apelido">—</div></div>
+          <div class="el-ficha-field"><div class="el-ficha-field-label">Data de Nascimento</div><div class="el-ficha-field-val" id="ef-nasc">—</div></div>
+          <div class="el-ficha-field"><div class="el-ficha-field-label">Naturalidade</div><div class="el-ficha-field-val" id="ef-natural">—</div></div>
+        </div>
+      </div>
+      <div class="el-ficha-section">
+        <div class="el-ficha-section-title">Contrato</div>
+        <div class="el-ficha-contrato">
+          <div class="el-ficha-contrato-info">
+            <div class="el-ficha-contrato-tipo" id="ef-tipo">—</div>
+            <div class="el-ficha-contrato-datas" id="ef-datas">—</div>
+          </div>
+          <div>
+            <div class="el-ficha-dias" id="ef-dias">—</div>
+            <div class="el-ficha-dias-label">dias restantes</div>
+          </div>
+        </div>
+      </div>
+      <div class="el-ficha-section">
+        <div class="el-ficha-section-title">Informacoes Adicionais</div>
+        <div class="el-ficha-grid">
+          <div class="el-ficha-field"><div class="el-ficha-field-label">Registrado por</div><div class="el-ficha-field-val" id="ef-resp">—</div></div>
+          <div class="el-ficha-field"><div class="el-ficha-field-label">Status</div><div class="el-ficha-field-val" id="ef-status">—</div></div>
+          <div class="el-ficha-field" style="grid-column:1/-1"><div class="el-ficha-field-label">Observacoes</div><div class="el-ficha-field-val" id="ef-obs" style="color:var(--ts)">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
