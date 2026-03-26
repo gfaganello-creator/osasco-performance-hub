@@ -149,7 +149,7 @@ section{padding:96px 80px}
 .cd2{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:300;color:var(--ts);border-radius:3px;position:relative;transition:.15s;cursor:default}
 .cd2.gm{background:rgba(70,162,247,.15);color:var(--az);font-weight:700;cursor:pointer}
 .cd2.gm:hover{background:rgba(70,162,247,.25)}
-.cd2.td{background:var(--az);color:var(--bk);font-weight:700}
+.cd2.td{background:var(--az);color:var(--bk);font-weight:700}.cd2.selected{background:rgba(206,170,120,.15);border:1px solid rgba(206,170,120,.5) !important;color:var(--go)}
 .cd2 .dot{position:absolute;bottom:2px;width:4px;height:4px;background:var(--az);border-radius:50%}
 .pts{display:flex;flex-direction:column;gap:10px}
 .pt{background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:4px;padding:16px 20px;display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;transition:.2s}
@@ -2591,6 +2591,16 @@ function voltarProgForm() {
 function mostrarDiaProg(y, m, d) {
   var panel = document.getElementById('cal-day-content');
   if(!panel) return;
+  // Remove destaque anterior
+  document.querySelectorAll('.cd2.selected').forEach(function(el){ el.classList.remove('selected'); });
+  // Destaca o dia clicado
+  var allDays = document.querySelectorAll('.cd2');
+  allDays.forEach(function(el) {
+    var span = el.querySelector('span');
+    if(span && parseInt(span.textContent) === d) {
+      el.classList.add('selected');
+    }
+  });
   var dd = String(d).padStart(2,'0');
   var mm = String(m+1).padStart(2,'0');
   var dataStr = dd+'/'+mm+'/'+y;
