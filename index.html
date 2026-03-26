@@ -414,6 +414,26 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
 .ppf-lesao-nome{font-size:12px;font-weight:600;color:var(--wh)}
 .ppf-lesao-det{font-size:11px;color:var(--ts);margin-top:2px}
 
+
+.prog-card{background:rgba(15,25,35,.7);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:16px 20px;margin-bottom:10px;cursor:pointer;transition:.2s}
+.prog-card:hover{border-color:rgba(70,162,247,.35);background:rgba(15,25,35,.95)}
+.prog-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10001;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.prog-modal-bg.open{display:flex}
+.prog-modal{background:rgba(8,16,26,.98);border:1px solid rgba(70,162,247,.2);border-radius:10px;width:100%;max-width:800px}
+.prog-modal-head{padding:24px 28px;border-bottom:1px solid rgba(70,162,247,.1);display:flex;align-items:center;justify-content:space-between}
+.prog-modal-title{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--ww);letter-spacing:2px}
+.prog-modal-body{padding:24px 28px}
+.prog-dias-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.prog-dia-card{background:rgba(15,25,35,.6);border:1px solid rgba(70,162,247,.08);border-radius:6px;padding:12px}
+.prog-dia-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--az);margin-bottom:8px}
+.prog-dia-data{font-size:10px;color:var(--ts);margin-bottom:8px}
+.prog-turno-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ts);margin-bottom:3px}
+.prog-select{background:rgba(8,16,26,.8);border:1px solid rgba(70,162,247,.2);border-radius:3px;color:var(--wh);font-size:11px;padding:4px 6px;width:100%;margin-bottom:6px}
+.prog-select:focus{outline:none;border-color:rgba(70,162,247,.5)}
+.prog-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.prog-new-btn{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:7px 16px;border-radius:3px;cursor:pointer;background:rgba(70,162,247,.15);color:var(--az);border:1px solid rgba(70,162,247,.3);transition:.2s}
+.prog-new-btn:hover{background:rgba(70,162,247,.3)}
+
 </style>
 </head>
 <body>
@@ -596,6 +616,17 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
         <div class="pt" style="opacity:.65"><div class="pd"><div class="pdi">22</div><div class="pm">Mar</div></div><div><div class="pc">Paulista A2 · Semifinal</div><div class="ptm">Osasco Sporting <span class="pvs">vs</span> Adversário</div><div class="ploc">📍 Fora de casa</div></div><div class="ppd"><div class="ppct md">83%</div><div class="pdlbl">Disponível</div></div></div>
         <div class="pt" style="opacity:.4"><div class="pd"><div class="pdi">15</div><div class="pm">Mar</div></div><div><div class="pc">Paulista A2 · Quartas</div><div class="ptm">Osasco Sporting <span class="pvs">vs</span> Adversário</div><div class="ploc">📍 Arena Osasco</div></div><div class="ppd"><div class="ppct hi">87%</div><div class="pdlbl">Disponível</div></div></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Programacao Semanal -->
+  <div style="margin-top:40px">
+    <div class="prog-section-header">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Programacoes Semanais</div>
+      <button class="prog-new-btn" onclick="abrirNovaProgamacao()">+ Nova Programacao</button>
+    </div>
+    <div id="prog-lista">
+      <div style="color:var(--ts);font-size:13px;padding:20px 0">Carregando programacoes...</div>
     </div>
   </div>
 </section>
@@ -1091,7 +1122,9 @@ document.querySelectorAll('.rv').forEach(el=>{
 
 // SMOOTH SCROLL
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
-  a.addEventListener('click',e=>{e.preventDefault();document.querySelector(a.getAttribute('href'))?.scrollIntoView({behavior:'smooth',block:'start'});});
+  a.addEventListener('click',e=>{e.preventDefault();document.querySelector(a.getAttribute('href'))?.scrollIntoView({behavior:'smooth',block:'start'});
+    if(link.getAttribute('href')==='#calendario') setTimeout(carregarProgramacoes,300);
+  });
 });
 
 </script>
@@ -2220,6 +2253,423 @@ function salvarFisica(){
   setTimeout(function(){ppCarregar();},1500);
   alert("Dados fisicos salvos!");
 }
+
+</script>
+
+<!-- Modal Nova Programacao -->
+<div class="prog-modal-bg" id="prog-modal-bg" onclick="if(event.target===this)fecharProgModal()">
+  <div class="prog-modal">
+    <div class="prog-modal-head">
+      <div class="prog-modal-title" id="prog-modal-title">NOVA PROGRAMACAO SEMANAL</div>
+      <button class="ppf-close" onclick="fecharProgModal()">&#10005;</button>
+    </div>
+    <div class="prog-modal-body">
+      <!-- Info geral -->
+      <div class="el-form-grid" style="margin-bottom:20px">
+        <div class="el-form-group">
+          <label class="el-label">Semana (data da segunda-feira)</label>
+          <input class="el-input" id="prog-semana-inicio" type="date">
+        </div>
+        <div class="el-form-group">
+          <label class="el-label">Local</label>
+          <input class="el-input" id="prog-local" value="Jose Liberatti">
+        </div>
+        <div class="el-form-group">
+          <label class="el-label">Horario Manha</label>
+          <input class="el-input" id="prog-horario-manha" type="time" value="08:00">
+        </div>
+        <div class="el-form-group">
+          <label class="el-label">Horario Tarde</label>
+          <input class="el-input" id="prog-horario-tarde" type="time" value="13:30">
+        </div>
+      </div>
+      <!-- Dias -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:12px">Programacao por dia</div>
+      <div class="prog-dias-grid">
+        <!-- Segunda -->
+        <div class="prog-dia-card">
+          <div class="prog-dia-label">Segunda</div>
+          <div class="prog-turno-label">Manha</div>
+          <select class="prog-select" id="prog-manha-Segunda">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+          <div class="prog-turno-label">Tarde</div>
+          <select class="prog-select" id="prog-tarde-Segunda">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+        </div>
+        <!-- Terca -->
+        <div class="prog-dia-card">
+          <div class="prog-dia-label">Terca</div>
+          <div class="prog-turno-label">Manha</div>
+          <select class="prog-select" id="prog-manha-Terca">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+          <div class="prog-turno-label">Tarde</div>
+          <select class="prog-select" id="prog-tarde-Terca">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+        </div>
+        <!-- Quarta -->
+        <div class="prog-dia-card">
+          <div class="prog-dia-label">Quarta</div>
+          <div class="prog-turno-label">Manha</div>
+          <select class="prog-select" id="prog-manha-Quarta">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+          <div class="prog-turno-label">Tarde</div>
+          <select class="prog-select" id="prog-tarde-Quarta">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+        </div>
+        <!-- Quinta -->
+        <div class="prog-dia-card">
+          <div class="prog-dia-label">Quinta</div>
+          <div class="prog-turno-label">Manha</div>
+          <select class="prog-select" id="prog-manha-Quinta">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+          <div class="prog-turno-label">Tarde</div>
+          <select class="prog-select" id="prog-tarde-Quinta">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+        </div>
+        <!-- Sexta -->
+        <div class="prog-dia-card">
+          <div class="prog-dia-label">Sexta</div>
+          <div class="prog-turno-label">Manha</div>
+          <select class="prog-select" id="prog-manha-Sexta">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+          <div class="prog-turno-label">Tarde</div>
+          <select class="prog-select" id="prog-tarde-Sexta">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+        </div>
+        <!-- Sabado -->
+        <div class="prog-dia-card">
+          <div class="prog-dia-label">Sabado</div>
+          <div class="prog-turno-label">Manha</div>
+          <select class="prog-select" id="prog-manha-Sabado">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+          <div class="prog-turno-label">Tarde</div>
+          <select class="prog-select" id="prog-tarde-Sabado">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+        </div>
+        <!-- Domingo -->
+        <div class="prog-dia-card">
+          <div class="prog-dia-label">Domingo</div>
+          <div class="prog-turno-label">Manha</div>
+          <select class="prog-select" id="prog-manha-Domingo">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+          <div class="prog-turno-label">Tarde</div>
+          <select class="prog-select" id="prog-tarde-Domingo">
+            <option>Treino</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
+          </select>
+        </div>
+      </div>
+      <!-- Obs -->
+      <div class="el-form-group full" style="margin-top:8px">
+        <label class="el-label">Observacoes</label>
+        <input class="el-input" id="prog-obs" value="Programacao sujeita a alteracao.">
+      </div>
+      <!-- Footer -->
+      <div class="el-modal-footer" style="margin-top:20px">
+        <button class="el-btn el-btn-secondary" onclick="fecharProgModal()">Cancelar</button>
+        <button class="el-btn el-btn-primary" onclick="previewProg()">Revisar Programacao</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Preview -->
+<div class="prog-modal-bg" id="prog-preview-bg" onclick="if(event.target===this)fecharProgModal()">
+  <div class="prog-modal" style="max-width:600px">
+    <div class="prog-modal-head">
+      <div class="prog-modal-title">REVISAR PROGRAMACAO</div>
+      <button class="ppf-close" onclick="fecharProgModal()">&#10005;</button>
+    </div>
+    <div class="prog-modal-body">
+      <div id="prog-preview-content"></div>
+      <div style="background:rgba(70,162,247,.06);border:1px solid rgba(70,162,247,.15);border-radius:6px;padding:14px;margin-top:16px">
+        <div style="font-size:11px;font-weight:700;color:var(--az);margin-bottom:6px">Email sera enviado para:</div>
+        <div style="font-size:12px;color:var(--ts)" id="prog-email-lista">gfaganello@osascosporting.com.br</div>
+      </div>
+      <div class="el-modal-footer" style="margin-top:20px">
+        <button class="el-btn el-btn-secondary" onclick="voltarProgForm()">Voltar e Editar</button>
+        <button class="el-btn el-btn-primary" id="prog-confirm-btn" onclick="confirmarProg()">Confirmar e Enviar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// PROGRAMAÇÃO SEMANAL
+// ══════════════════════════════════════
+var progAtual = null; // programação sendo editada
+var progModo = 'nova'; // 'nova' ou 'editar'
+
+var DIAS_SEMANA = ['Segunda','Terca','Quarta','Quinta','Sexta','Sabado','Domingo'];
+var OPCOES = ['Treino','Descanso Programado','Folga','Jogo','Viagem'];
+
+function abrirNovaProgamacao() {
+  progModo = 'nova';
+  progAtual = null;
+  document.getElementById('prog-modal-title').textContent = 'NOVA PROGRAMACAO SEMANAL';
+  document.getElementById('prog-semana-inicio').value = '';
+  document.getElementById('prog-local').value = 'Jose Liberatti';
+  document.getElementById('prog-horario-manha').value = '08:00';
+  document.getElementById('prog-horario-tarde').value = '13:30';
+  document.getElementById('prog-obs').value = 'Programacao sujeita a alteracao.';
+  DIAS_SEMANA.forEach(function(d) {
+    var m = document.getElementById('prog-manha-'+d);
+    var t = document.getElementById('prog-tarde-'+d);
+    if(m) m.value = 'Treino';
+    if(t) t.value = 'Descanso Programado';
+  });
+  // Segunda descanso manha por padrao
+  var seg = document.getElementById('prog-manha-Segunda');
+  if(seg) seg.value = 'Descanso Programado';
+  var segT = document.getElementById('prog-tarde-Segunda');
+  if(segT) segT.value = 'Treino';
+  // Domingo folga por padrao
+  ['prog-manha-Domingo','prog-tarde-Domingo'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='Folga';
+  });
+  document.getElementById('prog-modal-bg').classList.add('open');
+}
+
+function fecharProgModal() {
+  document.getElementById('prog-modal-bg').classList.remove('open');
+  document.getElementById('prog-preview-bg').classList.remove('open');
+}
+
+function getProgData() {
+  var inicio = document.getElementById('prog-semana-inicio').value;
+  if(!inicio) { alert('Informe a data de inicio da semana.'); return null; }
+  var local = document.getElementById('prog-local').value.trim()||'Jose Liberatti';
+  var horManha = document.getElementById('prog-horario-manha').value||'08:00';
+  var horTarde = document.getElementById('prog-horario-tarde').value||'13:30';
+  var obs = document.getElementById('prog-obs').value.trim();
+  var dias = {};
+  DIAS_SEMANA.forEach(function(d,i) {
+    var date = new Date(inicio);
+    // inicio must be monday; adjust
+    var dayOfWeek = date.getDay(); // 0=Sun
+    var mondayOffset = dayOfWeek===0?-6:1-dayOfWeek;
+    date.setDate(date.getDate() + mondayOffset + i);
+    var dd = String(date.getDate()).padStart(2,'0');
+    var mm = String(date.getMonth()+1).padStart(2,'0');
+    var yyyy = date.getFullYear();
+    var m = document.getElementById('prog-manha-'+d);
+    var t = document.getElementById('prog-tarde-'+d);
+    dias[d] = {
+      data: dd+'/'+mm+'/'+yyyy,
+      manha: m?m.value:'Treino',
+      tarde: t?t.value:'Descanso Programado'
+    };
+  });
+  return {local:local, horManha:horManha, horTarde:horTarde, obs:obs, dias:dias, inicio:inicio};
+}
+
+function previewProg() {
+  var data = getProgData();
+  if(!data) return;
+  var html = '<div style="font-family:monospace;font-size:12px">';
+  html += '<div style="font-size:14px;font-weight:700;color:var(--az);margin-bottom:12px">PROGRAMACAO SEMANAL</div>';
+  html += '<div style="margin-bottom:8px;color:var(--ts)">Local: '+data.local+' | Manha: '+data.horManha+' | Tarde: '+data.horTarde+'</div>';
+  html += '<table style="width:100%;border-collapse:collapse">';
+  html += '<tr><th style="text-align:left;padding:6px;border-bottom:1px solid rgba(70,162,247,.2);color:var(--ts);font-size:10px">DIA</th>';
+  html += '<th style="padding:6px;border-bottom:1px solid rgba(70,162,247,.2);color:var(--ts);font-size:10px">DATA</th>';
+  html += '<th style="padding:6px;border-bottom:1px solid rgba(70,162,247,.2);color:var(--ts);font-size:10px">MANHA</th>';
+  html += '<th style="padding:6px;border-bottom:1px solid rgba(70,162,247,.2);color:var(--ts);font-size:10px">TARDE</th></tr>';
+  DIAS_SEMANA.forEach(function(d) {
+    var dia = data.dias[d];
+    function cor(v) { return v==='Treino'?'var(--gr)':v==='Folga'?'var(--re)':v==='Jogo'?'var(--az)':'var(--ts)'; }
+    html += '<tr>';
+    html += '<td style="padding:6px;font-weight:600;color:var(--wh)">'+d+'</td>';
+    html += '<td style="padding:6px;color:var(--ts);font-size:11px">'+dia.data+'</td>';
+    html += '<td style="padding:6px;color:'+cor(dia.manha)+'">'+dia.manha+'</td>';
+    html += '<td style="padding:6px;color:'+cor(dia.tarde)+'">'+dia.tarde+'</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  if(data.obs) html += '<div style="margin-top:12px;color:var(--ts);font-size:11px;font-style:italic">Obs.: '+data.obs+'</div>';
+  html += '</div>';
+  document.getElementById('prog-preview-content').innerHTML = html;
+  document.getElementById('prog-modal-bg').classList.remove('open');
+  document.getElementById('prog-preview-bg').classList.add('open');
+}
+
+function voltarProgForm() {
+  document.getElementById('prog-preview-bg').classList.remove('open');
+  document.getElementById('prog-modal-bg').classList.add('open');
+}
+
+function confirmarProg() {
+  var data = getProgData();
+  if(!data) return;
+  var isEdit = progModo==='editar';
+  var payload = {
+    action: 'saveProgamacao',
+    modo: progModo,
+    progId: progAtual ? progAtual.id : '',
+    local: data.local,
+    horManha: data.horManha,
+    horTarde: data.horTarde,
+    obs: data.obs,
+    semanaInicio: data.inicio,
+    dias: JSON.stringify(data.dias),
+    email: 'gfaganello@osascosporting.com.br',
+    isEdit: isEdit
+  };
+  fetch(SCRIPT_URL2, {
+    method:'POST', mode:'no-cors',
+    body: JSON.stringify(payload)
+  }).catch(function(){});
+  fecharProgModal();
+  alert(isEdit ?
+    'Alteracao salva! Email de aviso sera enviado em instantes.' :
+    'Programacao criada! Email sera enviado para os destinatarios em instantes.'
+  );
+  setTimeout(function(){ carregarProgramacoes(); }, 2000);
+}
+
+function carregarProgramacoes() {
+  var SID = '1Fj8RhuKjicvVyF06CPJqF7kiKpEsquCKFSHX3qf3Pus';
+  var BASE = 'https://docs.google.com/spreadsheets/d/'+SID+'/gviz/tq?tqx=out:csv&sheet=';
+  fetch(BASE + encodeURIComponent('Programacao'))
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      if(!txt||txt.length<10) return;
+      function pcsv(line){var r=[],c='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(c.trim());c='';}else{c+=ch;}}r.push(c.trim());return r;}
+      var lines=txt.split('\n');
+      var hdrs=pcsv(lines[0]).map(function(h){return h.replace(/^"|"$/g,'').trim();});
+      var rows=lines.slice(1).filter(function(l){return l.trim();}).map(function(l){
+        var vs=pcsv(l);var o={};hdrs.forEach(function(h,i){o[h]=(vs[i]||'').replace(/^"|"$/g,'').trim();});return o;
+      });
+      renderizarProgramacoes(rows);
+    }).catch(function(){});
+}
+
+function renderizarProgramacoes(rows) {
+  var container = document.getElementById('prog-lista');
+  if(!container) return;
+  if(!rows.length) {
+    container.innerHTML = '<div style="color:var(--ts);font-size:13px;padding:20px 0">Nenhuma programacao cadastrada ainda.</div>';
+    return;
+  }
+  container.innerHTML = rows.map(function(r,i) {
+    var dias = {};
+    try { dias = JSON.parse(r['Dias']||'{}'); } catch(e){}
+    var treinos = Object.values(dias).filter(function(d){return d.manha==='Treino'||d.tarde==='Treino';}).length;
+    return '<div class="prog-card" onclick="verProg('+i+')" data-idx="'+i+'" data-raw=\''+JSON.stringify(r).replace(/'/g,"&#39;")+'\'>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between">' +
+        '<div>' +
+          '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:16px;color:var(--ww);letter-spacing:1px">Semana de '+(r['Semana Inicio']||'-')+'</div>' +
+          '<div style="font-size:11px;color:var(--ts);margin-top:2px">'+(r['Local']||'-')+' &middot; '+treinos+' treinos na semana</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<button class="ppf-edit-btn" onclick="event.stopPropagation();editarProg('+i+',\''+JSON.stringify(r).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\')" style="font-size:9px;padding:4px 10px">Editar</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function verProg(idx) {
+  // expand/collapse
+}
+
+function editarProg(idx, rawStr) {
+  try {
+    var r = JSON.parse(rawStr.replace(/&quot;/g,'"'));
+    progModo = 'editar';
+    progAtual = r;
+    document.getElementById('prog-modal-title').textContent = 'EDITAR PROGRAMACAO';
+    document.getElementById('prog-semana-inicio').value = r['Semana Inicio Raw']||'';
+    document.getElementById('prog-local').value = r['Local']||'Jose Liberatti';
+    document.getElementById('prog-horario-manha').value = r['Horario Manha']||'08:00';
+    document.getElementById('prog-horario-tarde').value = r['Horario Tarde']||'13:30';
+    document.getElementById('prog-obs').value = r['Obs']||'';
+    var dias = {};
+    try { dias = JSON.parse(r['Dias']||'{}'); } catch(e) {}
+    DIAS_SEMANA.forEach(function(d) {
+      var m = document.getElementById('prog-manha-'+d);
+      var t = document.getElementById('prog-tarde-'+d);
+      if(dias[d]) {
+        if(m) m.value = dias[d].manha||'Treino';
+        if(t) t.value = dias[d].tarde||'Descanso Programado';
+      }
+    });
+    document.getElementById('prog-modal-bg').classList.add('open');
+  } catch(e) { alert('Erro ao carregar programacao.'); }
+}
+
+</script>
+<script>
+
+function mostrarSucesso(isEdit, pdfLink, data) {
+  var hubUrl = 'https://gfaganello-criador.github.io/ozhub/';
+  var semana = data ? (Object.values(data.dias)[0].data + ' a ' + Object.values(data.dias)[6].data) : '';
+  var waMsg = (isEdit ? 'ALTERACAO - ' : '') + 'Programacao Semanal Osasco Sporting FC\n'
+    + 'Semana: ' + semana + '\n'
+    + 'Local: ' + (data ? data.local : '') + '\n'
+    + (pdfLink ? 'PDF: ' + pdfLink + '\n' : '')
+    + 'Ver no Hub: ' + hubUrl;
+  var waUrl = 'https://wa.me/?text=' + encodeURIComponent(waMsg);
+  var pdfBtn = pdfLink ? '<a href="' + pdfLink + '" target="_blank" class="el-btn el-btn-secondary" style="text-decoration:none;font-size:11px;display:inline-block">PDF Download</a>' : '';
+  var waBtn = '<a href="' + waUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;text-decoration:none">WhatsApp</a>';
+  document.getElementById('prog-preview-content').innerHTML =
+    '<div style="text-align:center;padding:24px">' +
+    '<div style="font-size:40px;margin-bottom:12px">' + (isEdit ? '\u26a0\ufe0f' : '\u2705') + '</div>' +
+    '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:var(--ww);margin-bottom:16px">' +
+      (isEdit ? 'Alteracao salva! Email de aviso enviado.' : 'Programacao criada! Email com PDF enviado.') +
+    '</div>' +
+    '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+      pdfBtn + waBtn +
+      '<button class="el-btn el-btn-secondary" onclick="fecharProgModal()" style="font-size:11px">Fechar</button>' +
+    '</div></div>';
+  document.getElementById('prog-preview-bg').classList.add('open');
+}
+
+var _origConfirmarProg = confirmarProg;
+confirmarProg = function() {
+  var data = getProgData();
+  if(!data) return;
+  var isEdit = progModo === 'editar';
+  var btn = document.getElementById('prog-confirm-btn');
+  if(btn) { btn.textContent = 'Enviando...'; btn.disabled = true; }
+  var payload = {
+    action: 'saveProgamacao', modo: progModo,
+    progId: progAtual ? progAtual.id : '',
+    local: data.local, horManha: data.horManha, horTarde: data.horTarde,
+    obs: data.obs, semanaInicio: data.inicio,
+    dias: JSON.stringify(data.dias),
+    email: 'gfaganello@osascosporting.com.br', isEdit: isEdit
+  };
+  fetch(SCRIPT_URL2, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(resp) {
+    if(btn) { btn.textContent = 'Confirmar e Enviar'; btn.disabled = false; }
+    mostrarSucesso(isEdit, resp.pdfLink || '', data);
+    setTimeout(function() { carregarProgramacoes(); }, 2500);
+  })
+  .catch(function() {
+    fetch(SCRIPT_URL2, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(function(){});
+    if(btn) { btn.textContent = 'Confirmar e Enviar'; btn.disabled = false; }
+    fecharProgModal();
+    setTimeout(function() { carregarProgramacoes(); }, 2500);
+  });
+};
 
 </script>
 </body>
