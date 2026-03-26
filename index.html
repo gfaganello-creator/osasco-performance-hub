@@ -2584,7 +2584,8 @@ function confirmarProg() {
     });
   }
   var progId = (progModo === 'editar' && progAtual) ? (progAtual.ID||progAtual.id||'') : gerarUUID();
-  var payload = {
+  // GET com params na URL — mais confiavel que POST no-cors para Apps Script
+  var getParams = new URLSearchParams({
     action: 'saveProgamacao',
     modo: progModo,
     progId: progId,
@@ -2596,15 +2597,10 @@ function confirmarProg() {
     dias: JSON.stringify(data.dias),
     email: 'gfaganello@osascosporting.com.br',
     isEdit: isEdit ? 'true' : 'false'
-  };
-  fetch(SCRIPT_URL2, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: JSON.stringify(payload)
+  });
+  fetch(SCRIPT_URL2 + '?' + getParams.toString(), {
+    method: 'GET', redirect: 'follow'
   }).catch(function(){});
-
-  // Image beacon como fallback extra (GET) — garantia dupla
-  // Beacon GET removido - evita ID duplicado. POST no-cors é suficiente.
 
   // Monta o link da programacao com o ID que foi enviado
   var progLink = 'https://gfaganello-creator.github.io/ozhub/prog.html?id=' + progId;
