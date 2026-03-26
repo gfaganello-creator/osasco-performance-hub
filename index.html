@@ -2584,39 +2584,36 @@ function confirmarProg() {
     });
   }
   var progId = (progModo === 'editar' && progAtual) ? (progAtual.ID||progAtual.id||'') : gerarUUID();
-  // POST com text/plain — funciona com no-cors e Apps Script le via postData.contents
-  var postData = JSON.stringify({
-    action: 'saveProgamacao',
-    modo: progModo,
-    progId: progId,
-    local: data.local,
-    horManha: data.horManha,
-    horTarde: data.horTarde,
-    obs: data.obs,
-    semanaInicio: data.inicio,
+  // Envia via hidden form — garante chegada no Apps Script sem CORS
+  var iframe = document.getElementById('_hidden_iframe');
+  if (!iframe) {
+    iframe = document.createElement('iframe');
+    iframe.id = '_hidden_iframe';
+    iframe.name = '_hidden_iframe';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  }
+  var form = document.createElement('form');
+  form.method = 'POST';
+  form.action = SCRIPT_URL2;
+  form.target = '_hidden_iframe';
+  form.style.display = 'none';
+  var fields = {
+    action: 'saveProgamacao', modo: progModo, progId: progId,
+    local: data.local, horManha: data.horManha, horTarde: data.horTarde,
+    obs: data.obs, semanaInicio: data.inicio,
     dias: JSON.stringify(data.dias),
     email: 'gfaganello@osascosporting.com.br',
     isEdit: isEdit ? 'true' : 'false'
+  };
+  Object.keys(fields).forEach(function(k) {
+    var inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = k; inp.value = fields[k];
+    form.appendChild(inp);
   });
-  // Tenta POST primeiro
-  fetch(SCRIPT_URL2, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {'Content-Type': 'text/plain'},
-    body: postData
-  }).catch(function(){});
-  // GET como backup garantido (Apps Script processa GET sem problemas de CORS)
-  setTimeout(function() {
-    var gp = new URLSearchParams({
-      action: 'saveProgamacao', modo: progModo, progId: progId,
-      local: data.local, horManha: data.horManha, horTarde: data.horTarde,
-      obs: data.obs, semanaInicio: data.inicio,
-      dias: JSON.stringify(data.dias),
-      email: 'gfaganello@osascosporting.com.br',
-      isEdit: isEdit ? 'true' : 'false'
-    });
-    new Image().src = SCRIPT_URL2 + '?' + gp.toString();
-  }, 500);
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(function() { document.body.removeChild(form); }, 3000);
 
   // Link usa semanaInicio para buscar a programacao (mais confiavel que UUID)
   var progLink = 'https://gfaganello-creator.github.io/ozhub/prog.html?semana=' + encodeURIComponent(data.inicio);
