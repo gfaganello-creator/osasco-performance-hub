@@ -1173,7 +1173,7 @@ document.querySelectorAll('.rv').forEach(el=>{
 // SMOOTH SCROLL
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
   a.addEventListener('click',e=>{e.preventDefault();document.querySelector(a.getAttribute('href'))?.scrollIntoView({behavior:'smooth',block:'start'});
-    if(link.getAttribute('href')==='#calendario') setTimeout(carregarProgramacoes,300);
+    if(a.getAttribute('href')==='#calendario') setTimeout(carregarProgramacoes,300);
   });
 });
 
@@ -2496,6 +2496,10 @@ function abrirNovaProgamacao() {
 function fecharProgModal() {
   document.getElementById('prog-modal-bg').classList.remove('open');
   document.getElementById('prog-preview-bg').classList.remove('open');
+  // Limpa estado do preview para proxima abertura
+  var pc = document.getElementById('prog-preview-content');
+  if(pc) pc.innerHTML = '';
+  _progDataPendente = null;
 }
 
 function getProgData() {
@@ -2556,6 +2560,9 @@ function previewProg() {
   document.getElementById('prog-preview-content').innerHTML = html;
   document.getElementById('prog-modal-bg').classList.remove('open');
   document.getElementById('prog-preview-bg').classList.add('open');
+  // Garante que botao confirmar esta visivel
+  var btn = document.getElementById('prog-confirm-btn');
+  if(btn) { btn.style.display=''; btn.disabled=false; btn.textContent='Confirmar e Enviar'; }
 }
 
 function voltarProgForm() {
