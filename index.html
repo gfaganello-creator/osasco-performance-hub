@@ -2615,8 +2615,8 @@ function confirmarProg() {
   form.submit();
   setTimeout(function() { document.body.removeChild(form); }, 3000);
 
-  // Link usa semanaInicio para buscar a programacao (mais confiavel que UUID)
-  var progLink = 'https://gfaganello-creator.github.io/ozhub/prog.html?semana=' + encodeURIComponent(data.inicio);
+  // Link para a pagina da programacao — mostra a mais recente
+  var progLink = 'https://gfaganello-creator.github.io/ozhub/prog.html';
   fecharProgModal();
   mostrarSucesso(isEdit, progLink, data);
   setTimeout(function(){ carregarProgramacoes(); }, 3000);
