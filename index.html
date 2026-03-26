@@ -2646,12 +2646,10 @@ function renderSemanaAtual() {
     if(v==='Viagem') return '#f7a846';
     return 'var(--wh)';
   }
-  // Pega a programacao com mais dados (maior JSON de Dias)
+  // Pega a ultima programacao da lista (mais recente)
   var semanaAtual = null;
-  var validas = window._programacoes.filter(function(p) { return p['Dias'] && p['Dias'] !== '{}' && p['Dias'].length > 50; });
-  if(validas.length) {
-    // Pega a mais recente por data de atualizacao
-    semanaAtual = validas[validas.length - 1];
+  if(window._programacoes.length) {
+    semanaAtual = window._programacoes[window._programacoes.length - 1];
   }
   if(!semanaAtual) { panel.innerHTML = '<div style="color:var(--ts);font-size:12px">Nenhuma programação cadastrada.</div>'; return; }
   var dias = {};
