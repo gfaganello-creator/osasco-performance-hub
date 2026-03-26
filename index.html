@@ -341,6 +341,19 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
 .el-doc-item-row{display:flex;align-items:center;justify-content:space-between;width:100%}
 .el-doc-loading{font-size:10px;color:var(--ts);font-style:italic}
 
+
+.el-edit-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:10000;align-items:center;justify-content:center;padding:20px}
+.el-edit-bg.open{display:flex}
+.el-edit-modal{background:rgba(8,16,26,.98);border:1px solid rgba(70,162,247,.2);border-radius:10px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;padding:32px}
+.el-edit-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--ww);letter-spacing:2px;margin-bottom:24px}
+.el-ficha-actions{display:flex;gap:8px;margin-top:16px}
+.btn-editar{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;background:rgba(70,162,247,.15);color:var(--az);border:1px solid rgba(70,162,247,.3);transition:.2s}
+.btn-editar:hover{background:rgba(70,162,247,.3)}
+.btn-status{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;background:rgba(241,196,15,.1);color:var(--ye);border:1px solid rgba(241,196,15,.3);transition:.2s}
+.btn-status:hover{background:rgba(241,196,15,.2)}
+.btn-rescindir{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;background:rgba(231,76,60,.1);color:var(--re);border:1px solid rgba(231,76,60,.3);transition:.2s}
+.btn-rescindir:hover{background:rgba(231,76,60,.2)}
+
 </style>
 </head>
 <body>
@@ -810,6 +823,11 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
         <div class="el-ficha-name" id="ef-nome">—</div>
         <div class="el-ficha-pos" id="ef-pos">—</div>
         <div style="margin-top:8px" id="ef-badge"></div>
+      <div class="el-ficha-actions">
+        <button class="btn-editar" onclick="abrirEdicao()">✏️ Editar</button>
+        <button class="btn-status" onclick="alterarStatus()">🔄 Status</button>
+        <button class="btn-rescindir" onclick="rescindirAtleta()">✖ Rescindir</button>
+      </div>
       </div>
       <div>
         <div class="el-ficha-camisa" id="ef-camisa">#</div>
@@ -1076,6 +1094,147 @@ function abrirFicha(idx) {
   renderDocs(atletaId);
   document.getElementById('el-ficha-bg').classList.add('open');
 }
+
+var atletaEditando = null;
+
+function abrirEdicao() {
+  var r = atletaEditando;
+  if(!r) return;
+  document.getElementById('edit-title').textContent = 'EDITAR — ' + (r['Apelido']||r['Nome Completo']||'').toUpperCase();
+  document.getElementById('edit-nome').value = r['Nome Completo']||'';
+  document.getElementById('edit-apelido').value = r['Apelido']||'';
+  // Set posicao
+  var posEl = document.getElementById('edit-posicao');
+  var pos = r['Posicao']||r['Posição']||'';
+  for(var i=0;i<posEl.options.length;i++){if(posEl.options[i].value===pos){posEl.selectedIndex=i;break;}}
+  document.getElementById('edit-camisa').value = r['N Camisa']||r['Nº Camisa']||'';
+  // Convert date DD/MM/YYYY to YYYY-MM-DD for input[type=date]
+  function toInputDate(d) {
+    if(!d) return '';
+    var p=d.split('/');
+    return p.length===3?p[2]+'-'+p[1]+'-'+p[0]:'';
+  }
+  document.getElementById('edit-nasc').value = toInputDate(r['Data Nasc.']||'');
+  document.getElementById('edit-natural').value = r['Naturalidade']||'';
+  document.getElementById('edit-contrat').value = toInputDate(r['Data Contratação']||r['Data Contratacao']||'');
+  document.getElementById('edit-validade').value = toInputDate(r['Validade Contrato']||'');
+  var tipoEl=document.getElementById('edit-tipo');
+  var tipo=r['Tipo Contrato']||'';
+  for(var i=0;i<tipoEl.options.length;i++){if(tipoEl.options[i].value===tipo){tipoEl.selectedIndex=i;break;}}
+  var statusEl=document.getElementById('edit-status');
+  var status=r['Status Contrato']||'';
+  for(var i=0;i<statusEl.options.length;i++){if(statusEl.options[i].value===status){statusEl.selectedIndex=i;break;}}
+  document.getElementById('edit-resp').value = r['Registrado por']||'';
+  document.getElementById('edit-obs').value = r['Observações']||r['Observacoes']||'';
+  document.getElementById('el-edit-bg').classList.add('open');
+}
+
+function fecharEdicao() {
+  document.getElementById('el-edit-bg').classList.remove('open');
+}
+
+function toSheetDate(d) {
+  if(!d) return '';
+  var p=d.split('-');
+  return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:'';
+}
+
+function salvarEdicao() {
+  var r = atletaEditando;
+  if(!r) return;
+  var btn = document.querySelector('#el-edit-bg .el-btn-primary');
+  if(btn) btn.textContent = 'Salvando...';
+  fetch(SCRIPT_URL2, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      action: 'updateAtleta',
+      atletaId: r['ID'],
+      nomeCompleto: document.getElementById('edit-nome').value,
+      apelido: document.getElementById('edit-apelido').value,
+      posicao: document.getElementById('edit-posicao').value,
+      camisa: document.getElementById('edit-camisa').value,
+      dataNasc: toSheetDate(document.getElementById('edit-nasc').value),
+      naturalidade: document.getElementById('edit-natural').value,
+      dataContratacao: toSheetDate(document.getElementById('edit-contrat').value),
+      validadeContrato: toSheetDate(document.getElementById('edit-validade').value),
+      tipoContrato: document.getElementById('edit-tipo').value,
+      statusContrato: document.getElementById('edit-status').value,
+      registradoPor: document.getElementById('edit-resp').value,
+      observacoes: document.getElementById('edit-obs').value
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data.success){
+      fecharEdicao();
+      fecharFicha();
+      elCarregar();
+      alert('Atleta atualizado com sucesso!');
+    } else {
+      alert('Erro ao salvar: ' + (data.error||'Tente novamente'));
+    }
+    if(btn) btn.textContent = 'Salvar Alterações';
+  })
+  .catch(function(){
+    alert('Erro de conexão.');
+    if(btn) btn.textContent = 'Salvar Alterações';
+  });
+}
+
+function alterarStatus() {
+  var r = atletaEditando;
+  if(!r) return;
+  var statusAtual = r['Status Contrato']||'Ativo';
+  var opcoes = ['Ativo','Empréstimo','Suspenso','Rescindido'];
+  var msg = 'Status atual: ' + statusAtual + '\n\nEscolha o novo status:\n';
+  opcoes.forEach(function(o,i){ msg += (i+1)+'. '+o+'\n'; });
+  var escolha = prompt(msg + '\nDigite o número:');
+  if(!escolha) return;
+  var idx = parseInt(escolha)-1;
+  if(idx<0||idx>=opcoes.length){ alert('Opção inválida'); return; }
+  var novoStatus = opcoes[idx];
+  fetch(SCRIPT_URL2, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action:'updateAtleta', atletaId:r['ID'], statusContrato:novoStatus})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data.success){
+      fecharFicha();
+      elCarregar();
+      alert('Status alterado para: ' + novoStatus);
+    } else {
+      alert('Erro: '+(data.error||'Tente novamente'));
+    }
+  })
+  .catch(function(){ alert('Erro de conexão.'); });
+}
+
+function rescindirAtleta() {
+  var r = atletaEditando;
+  if(!r) return;
+  var nome = r['Apelido']||r['Nome Completo']||'atleta';
+  if(!confirm('Confirma a rescisão de ' + nome + '?\n\nO atleta será movido para o Histórico.')) return;
+  fetch(SCRIPT_URL2, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action:'deleteAtleta', atletaId:r['ID']})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data.success){
+      fecharFicha();
+      elCarregar();
+      alert(nome + ' foi rescindido e movido para o Histórico.');
+    } else {
+      alert('Erro: '+(data.error||'Tente novamente'));
+    }
+  })
+  .catch(function(){ alert('Erro de conexão.'); });
+}
+
 function fecharFicha() {
   document.getElementById('el-ficha-bg').classList.remove('open');
 }
@@ -1286,8 +1445,24 @@ function abrirFicha(idx) {
   var atletaId = r['ID'] || '0';
   loadDocs(atletaId);
   renderDocs(atletaId);
+  atletaEditando = r;
   document.getElementById('el-ficha-bg').classList.add('open');
 }
+
+var atletaEditando = null;
+
+
+
+
+
+
+
+
+
+
+
+
+
 function fecharFicha() {
   document.getElementById('el-ficha-bg').classList.remove('open');
 }
@@ -1554,5 +1729,46 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
+
+<!-- Modal Edição -->
+<div class="el-edit-bg" id="el-edit-bg" onclick="if(event.target===this)fecharEdicao()">
+  <div class="el-edit-modal">
+    <div class="el-edit-title" id="edit-title">EDITAR ATLETA</div>
+    <div class="el-form-grid">
+      <div class="el-form-group full"><label class="el-label">Nome Completo *</label><input class="el-input" id="edit-nome" placeholder="Nome completo"></div>
+      <div class="el-form-group"><label class="el-label">Apelido</label><input class="el-input" id="edit-apelido" placeholder="Nome de guerra"></div>
+      <div class="el-form-group"><label class="el-label">Posição *</label>
+        <select class="el-input" id="edit-posicao">
+          <option value="">Selecione...</option>
+          <option>Goleiro</option><option>Lateral Dir.</option><option>Lateral Esq.</option>
+          <option>Zagueiro</option><option>Volante</option><option>Meia</option>
+          <option>Meia-atacante</option><option>Atacante</option><option>Centroavante</option>
+        </select>
+      </div>
+      <div class="el-form-group"><label class="el-label">Nº Camisa</label><input class="el-input" id="edit-camisa" type="number"></div>
+      <div class="el-form-group"><label class="el-label">Data Nascimento</label><input class="el-input" id="edit-nasc" type="date"></div>
+      <div class="el-form-group"><label class="el-label">Naturalidade</label><input class="el-input" id="edit-natural"></div>
+      <div class="el-form-group"><label class="el-label">Data Contratação</label><input class="el-input" id="edit-contrat" type="date"></div>
+      <div class="el-form-group"><label class="el-label">Validade Contrato</label><input class="el-input" id="edit-validade" type="date"></div>
+      <div class="el-form-group"><label class="el-label">Tipo Contrato</label>
+        <select class="el-input" id="edit-tipo">
+          <option>Efetivo</option><option>Empréstimo</option><option>Experiência</option>
+        </select>
+      </div>
+      <div class="el-form-group"><label class="el-label">Status Contrato</label>
+        <select class="el-input" id="edit-status">
+          <option>Ativo</option><option>Empréstimo</option><option>Rescindido</option><option>Suspenso</option>
+        </select>
+      </div>
+      <div class="el-form-group"><label class="el-label">Registrado por</label><input class="el-input" id="edit-resp"></div>
+      <div class="el-form-group full"><label class="el-label">Observações</label><input class="el-input" id="edit-obs"></div>
+    </div>
+    <div class="el-modal-footer">
+      <button class="el-btn el-btn-secondary" onclick="fecharEdicao()">Cancelar</button>
+      <button class="el-btn el-btn-primary" onclick="salvarEdicao()">Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
