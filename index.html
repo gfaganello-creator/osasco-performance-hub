@@ -2526,9 +2526,12 @@ function getProgData() {
   return {local:local, horManha:horManha, horTarde:horTarde, obs:obs, dias:dias, inicio:inicio};
 }
 
+var _progDataPendente = null;
+
 function previewProg() {
   var data = getProgData();
   if(!data) return;
+  _progDataPendente = data; // salva para usar no confirmarProg
   var html = '<div style="font-family:monospace;font-size:12px">';
   html += '<div style="font-size:14px;font-weight:700;color:var(--az);margin-bottom:12px">PROGRAMACAO SEMANAL</div>';
   html += '<div style="margin-bottom:8px;color:var(--ts)">Local: '+data.local+' | Manha: '+data.horManha+' | Tarde: '+data.horTarde+'</div>';
@@ -2561,8 +2564,8 @@ function voltarProgForm() {
 }
 
 function confirmarProg() {
-  var data = getProgData();
-  if(!data) return;
+  var data = _progDataPendente;
+  if(!data) { alert('Erro: dados da programacao perdidos. Tente novamente.'); return; }
   var isEdit = progModo==='editar';
 
   // POST no-cors (dispara e esquece — Apps Script processa mesmo sem resposta)
@@ -2619,6 +2622,8 @@ function carregarProgramacoes() {
       var rows=lines.slice(1).filter(function(l){return l.trim();}).map(function(l){
         var vs=pcsv(l);var o={};hdrs.forEach(function(h,i){o[h]=(vs[i]||'').replace(/^"|"$/g,'').trim();});return o;
       });
+      // Filtra linhas sem semana definida (registros de teste/vazios)
+      rows = rows.filter(function(r){ return r['Semana Inicio Raw'] && r['Semana Inicio Raw'].trim(); });
       renderizarProgramacoes(rows);
     }).catch(function(){});
 }
