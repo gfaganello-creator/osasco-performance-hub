@@ -1213,7 +1213,7 @@ function salvarEdicao() {
   if(btn) btn.textContent = 'Salvando...';
   fetch(SCRIPT_URL2, {
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    mode:'no-cors',
     body: JSON.stringify({
       action: 'updateAtleta',
       atletaId: r['ID'],
@@ -1231,21 +1231,18 @@ function salvarEdicao() {
       observacoes: document.getElementById('edit-obs').value
     })
   })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    if(data.success){
-      fecharEdicao();
-      fecharFicha();
-      elCarregar();
-      alert('Atleta atualizado com sucesso!');
-    } else {
-      alert('Erro ao salvar: ' + (data.error||'Tente novamente'));
-    }
+  .then(function(){
+    fecharEdicao();
+    fecharFicha();
     if(btn) btn.textContent = 'Salvar Alterações';
+    setTimeout(function(){ elCarregar(); }, 1500);
+    alert('Atleta atualizado! A lista será atualizada em instantes.');
   })
   .catch(function(){
-    alert('Erro de conexão.');
+    fecharEdicao();
+    fecharFicha();
     if(btn) btn.textContent = 'Salvar Alterações';
+    setTimeout(function(){ elCarregar(); }, 1500);
   });
 }
 
@@ -1284,21 +1281,15 @@ function confirmarStatus(novoStatus) {
   var r = atletaEditando;
   if(!r) return;
   fecharStatus();
+  // Use no-cors POST — fire and forget
   fetch(SCRIPT_URL2, {
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    mode:'no-cors',
     body: JSON.stringify({action:'updateAtleta', atletaId:r['ID'], statusContrato:novoStatus})
-  })
-  .then(function(resp){return resp.json();})
-  .then(function(data){
-    if(data.success){
-      fecharFicha();
-      elCarregar();
-    } else {
-      alert('Erro: '+(data.error||'Tente novamente'));
-    }
-  })
-  .catch(function(){ alert('Erro de conexão.'); });
+  }).catch(function(){});
+  // Update UI optimistically
+  fecharFicha();
+  setTimeout(function(){ elCarregar(); }, 1500);
 }
 
 function rescindirAtleta() {
@@ -1308,20 +1299,12 @@ function rescindirAtleta() {
   if(!confirm('Confirma a rescisão de ' + nome + '?\n\nO atleta será movido para o Histórico.')) return;
   fetch(SCRIPT_URL2, {
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    mode:'no-cors',
     body: JSON.stringify({action:'deleteAtleta', atletaId:r['ID']})
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    if(data.success){
-      fecharFicha();
-      elCarregar();
-      alert(nome + ' foi rescindido e movido para o Histórico.');
-    } else {
-      alert('Erro: '+(data.error||'Tente novamente'));
-    }
-  })
-  .catch(function(){ alert('Erro de conexão.'); });
+  }).catch(function(){});
+  fecharFicha();
+  setTimeout(function(){ elCarregar(); }, 1500);
+  alert(nome + ' foi rescindido. Aguarde a atualização da lista.');
 }
 
 function fecharFicha() {
@@ -1447,7 +1430,7 @@ function cycleDocStatus(atletaId, docType, idx) {
   currentDocs2[docType] = {status:next, link:info.link||''};
   fetch(SCRIPT_URL2, {
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    mode:'no-cors',
     body: JSON.stringify({action:'updateDocStatus', atletaId:atletaId, docType:docType, status:next})
   }).catch(function(){});
   renderDocs(atletaId);
@@ -1465,7 +1448,7 @@ function uploadDoc(atletaId, docType, idx) {
     var atletaNome = document.getElementById('ef-nomec') ? document.getElementById('ef-nomec').textContent : 'Atleta';
     fetch(SCRIPT_URL2, {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      mode:'no-cors',
       body: JSON.stringify({
         action:'uploadDoc',
         atletaId:atletaId, atletaNome:atletaNome,
@@ -1473,16 +1456,10 @@ function uploadDoc(atletaId, docType, idx) {
         fileData:base64, mimeType:file.type
       })
     })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(data.success) {
-        currentDocs2[docType] = {status:'Entregue', link:data.link};
-        if(prog) prog.textContent = 'Enviado!';
-        setTimeout(function(){ if(prog) prog.textContent=''; }, 3000);
-        renderDocs(atletaId);
-      } else {
-        if(prog) prog.textContent = 'Erro ao enviar.';
-      }
+    .then(function(){
+      currentDocs2[docType] = {status:'Entregue', link:''};
+      if(prog) prog.textContent = 'Enviado! Reabra a ficha para ver o link.';
+      setTimeout(function(){ if(prog) prog.textContent=''; renderDocs(atletaId); }, 3000);
     })
     .catch(function(){ if(prog) prog.textContent = 'Erro de conexao.'; });
   };
