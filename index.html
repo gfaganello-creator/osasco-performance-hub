@@ -282,6 +282,62 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
 .badge-soon { background:rgba(122,155,181,.1); color:var(--ts); border:1px solid rgba(122,155,181,.2); }
 @media(max-width:600px){ .hub-cards{ grid-template-columns:1fr; } }
 
+
+/* ═══════════════════════════════
+   MÓDULO GESTÃO DE ELENCO
+═══════════════════════════════ */
+#mod-elenco { display:none; background:var(--bk); min-height:100vh; padding-top:0; }
+.el-header { background:rgba(7,14,22,.98); border-bottom:1px solid rgba(70,162,247,.1); padding:32px clamp(24px,5vw,64px) 24px; }
+.el-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(32px,5vw,52px); color:var(--ww); letter-spacing:2px; line-height:1; }
+.el-title em { color:var(--az); font-style:normal; }
+.el-sub { font-size:12px; color:var(--ts); letter-spacing:1px; margin-top:4px; }
+.el-tabs { display:flex; gap:4px; margin-top:20px; }
+.el-tab { font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:8px 20px; border-radius:3px; cursor:pointer; border:1px solid rgba(70,162,247,.15); color:var(--ts); background:transparent; transition:.2s; }
+.el-tab.active { background:rgba(70,162,247,.12); color:var(--az); border-color:rgba(70,162,247,.4); }
+.el-body { padding:32px clamp(24px,5vw,64px); }
+
+/* Cards de stats */
+.el-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-bottom:28px; }
+.el-stat { background:rgba(15,25,35,.7); border:1px solid rgba(70,162,247,.1); border-radius:6px; padding:16px 20px; }
+.el-stat__val { font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:700; line-height:1; }
+.el-stat__val.az { color:var(--az); }
+.el-stat__val.gr { color:var(--gr); }
+.el-stat__val.ye { color:var(--ye); }
+.el-stat__val.re { color:var(--re); }
+.el-stat__label { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--ts); margin-top:4px; }
+
+/* Tabela */
+.el-toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:12px; }
+.el-search { background:rgba(15,25,35,.7); border:1px solid rgba(70,162,247,.15); border-radius:4px; padding:8px 14px; color:var(--wh); font-family:'Barlow',sans-serif; font-size:13px; width:260px; outline:none; }
+.el-search:focus { border-color:rgba(70,162,247,.4); }
+.el-search::placeholder { color:var(--ts); }
+.el-btn { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:8px 18px; border-radius:3px; cursor:pointer; border:none; transition:.2s; }
+.el-btn-primary { background:var(--az); color:#000; }
+.el-btn-primary:hover { background:#5bb8ff; }
+.el-btn-secondary { background:rgba(70,162,247,.1); color:var(--az); border:1px solid rgba(70,162,247,.3); }
+.el-table-wrap { overflow-x:auto; }
+.el-table { width:100%; border-collapse:collapse; font-size:12px; }
+.el-table th { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--ts); padding:10px 14px; text-align:left; border-bottom:1px solid rgba(70,162,247,.08); background:rgba(7,14,22,.5); }
+.el-table td { padding:12px 14px; border-bottom:1px solid rgba(70,162,247,.05); color:var(--wh); vertical-align:middle; }
+.el-table tr:hover td { background:rgba(70,162,247,.04); }
+.el-badge { display:inline-block; font-family:'Barlow Condensed',sans-serif; font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; padding:3px 8px; border-radius:2px; }
+.el-badge.ativo { background:rgba(46,204,142,.15); color:var(--gr); border:1px solid rgba(46,204,142,.25); }
+.el-badge.rescindido { background:rgba(231,76,60,.15); color:var(--re); border:1px solid rgba(231,76,60,.25); }
+.el-badge.emprestimo { background:rgba(241,196,15,.15); color:var(--ye); border:1px solid rgba(241,196,15,.25); }
+
+/* Modal cadastro */
+.el-modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9998; align-items:center; justify-content:center; }
+.el-modal-bg.open { display:flex; }
+.el-modal { background:rgba(10,20,30,.98); border:1px solid rgba(70,162,247,.2); border-radius:8px; padding:32px; width:100%; max-width:600px; max-height:90vh; overflow-y:auto; }
+.el-modal-title { font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--ww); letter-spacing:2px; margin-bottom:24px; }
+.el-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.el-form-group { display:flex; flex-direction:column; gap:6px; }
+.el-form-group.full { grid-column:1/-1; }
+.el-label { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--ts); }
+.el-input { background:rgba(15,25,35,.8); border:1px solid rgba(70,162,247,.15); border-radius:4px; padding:10px 12px; color:var(--wh); font-family:'Barlow',sans-serif; font-size:13px; outline:none; }
+.el-input:focus { border-color:rgba(70,162,247,.4); }
+.el-modal-footer { display:flex; gap:12px; justify-content:flex-end; margin-top:24px; }
+
 </style>
 </head>
 <body>
@@ -729,10 +785,10 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       <div class="hcard__body"><div class="hcard__label">Finanças</div><div class="hcard__sub">Orçamento · Contratos</div></div>
       <div class="hcard__badge badge-soon">EM BREVE</div>
     </div>
-    <div class="hcard soon">
+    <div class="hcard active" onclick="abrirElenco()">
       <div class="hcard__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
       <div class="hcard__body"><div class="hcard__label">Gestão de Elenco</div><div class="hcard__sub">Contratos · Transfers</div></div>
-      <div class="hcard__badge badge-soon">EM BREVE</div>
+      <div class="hcard__badge badge-live">ATIVO</div>
     </div>
     <div class="hcard soon">
       <div class="hcard__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg></div>
@@ -773,6 +829,262 @@ document.addEventListener('DOMContentLoaded', function() {
     nav.insertBefore(btn, nav.firstChild);
   }
 });
+</script>
+
+
+<!-- ═══ MÓDULO GESTÃO DE ELENCO ═══ -->
+<div id="mod-elenco">
+
+  <div class="el-header">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+      <button onclick="voltarHub()" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);background:none;border:1px solid rgba(70,162,247,.2);border-radius:3px;padding:7px 14px;cursor:pointer">← Hub</button>
+    </div>
+    <div class="el-title">GESTÃO DE <em>ELENCO</em></div>
+    <div class="el-sub">Osasco Sporting · Temporada 2025–26</div>
+    <div class="el-tabs">
+      <div class="el-tab active" onclick="elTab('ativo',this)">Elenco Ativo</div>
+      <div class="el-tab" onclick="elTab('historico',this)">Histórico</div>
+      <div class="el-tab" onclick="elTab('emprestimo',this)">Empréstimos</div>
+    </div>
+  </div>
+
+  <div class="el-body">
+
+    <!-- Stats -->
+    <div class="el-stats">
+      <div class="el-stat"><div class="el-stat__val az" id="el-total">—</div><div class="el-stat__label">Total no Elenco</div></div>
+      <div class="el-stat"><div class="el-stat__val gr" id="el-ativos">—</div><div class="el-stat__label">Contratos Ativos</div></div>
+      <div class="el-stat"><div class="el-stat__val ye" id="el-empr">—</div><div class="el-stat__label">Empréstimos</div></div>
+      <div class="el-stat"><div class="el-stat__val re" id="el-resc">—</div><div class="el-stat__label">Rescindidos</div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="el-toolbar">
+      <input class="el-search" id="el-search" placeholder="Buscar atleta..." oninput="elFiltrar()">
+      <button class="el-btn el-btn-primary" onclick="document.getElementById('el-modal-bg').classList.add('open')">+ Novo Atleta</button>
+    </div>
+
+    <!-- Tabela -->
+    <div class="el-table-wrap">
+      <table class="el-table" id="el-tabela">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nome</th>
+            <th>Apelido</th>
+            <th>Posição</th>
+            <th>Camisa</th>
+            <th>Tipo</th>
+            <th>Validade</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="el-tbody">
+          <tr><td colspan="8" style="text-align:center;color:var(--ts);padding:32px">Carregando dados...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Cadastro -->
+<div class="el-modal-bg" id="el-modal-bg">
+  <div class="el-modal">
+    <div class="el-modal-title">NOVO ATLETA</div>
+    <div class="el-form-grid">
+      <div class="el-form-group full">
+        <label class="el-label">Nome Completo *</label>
+        <input class="el-input" id="el-f-nome" placeholder="Nome completo do atleta">
+      </div>
+      <div class="el-form-group">
+        <label class="el-label">Apelido</label>
+        <input class="el-input" id="el-f-apelido" placeholder="Nome de guerra">
+      </div>
+      <div class="el-form-group">
+        <label class="el-label">Posição *</label>
+        <select class="el-input" id="el-f-posicao">
+          <option value="">Selecione...</option>
+          <option>Goleiro</option><option>Lateral Dir.</option><option>Lateral Esq.</option>
+          <option>Zagueiro</option><option>Volante</option><option>Meia</option>
+          <option>Meia-atacante</option><option>Ponta Dir.</option><option>Ponta Esq.</option>
+          <option>Atacante</option><option>Centroavante</option>
+        </select>
+      </div>
+      <div class="el-form-group">
+        <label class="el-label">Nº Camisa</label>
+        <input class="el-input" id="el-f-camisa" type="number" placeholder="Ex: 9">
+      </div>
+      <div class="el-form-group">
+        <label class="el-label">Data de Nascimento</label>
+        <input class="el-input" id="el-f-nasc" type="date">
+      </div>
+      <div class="el-form-group">
+        <label class="el-label">Naturalidade</label>
+        <input class="el-input" id="el-f-natural" placeholder="Ex: São Paulo-SP">
+      </div>
+      <div class="el-form-group">
+        <label class="el-label">Data Contratação *</label>
+        <input class="el-input" id="el-f-contrat" type="date">
+      </div>
+      <div class="el-form-group">
+        <label class="el-label">Validade Contrato *</label>
+        <input class="el-input" id="el-f-validade" type="date">
+      </div>
+      <div class="el-form-group">
+        <label class="el-label">Tipo Contrato</label>
+        <select class="el-input" id="el-f-tipo">
+          <option>Efetivo</option>
+          <option>Empréstimo</option>
+          <option>Experiência</option>
+        </select>
+      </div>
+      <div class="el-form-group">
+        <label class="el-label">Registrado por</label>
+        <input class="el-input" id="el-f-resp" placeholder="Seu nome">
+      </div>
+      <div class="el-form-group full">
+        <label class="el-label">Observações</label>
+        <input class="el-input" id="el-f-obs" placeholder="Informações adicionais">
+      </div>
+    </div>
+    <div class="el-modal-footer">
+      <button class="el-btn el-btn-secondary" onclick="document.getElementById('el-modal-bg').classList.remove('open')">Cancelar</button>
+      <button class="el-btn el-btn-primary" onclick="elSalvar()">Salvar Atleta</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// MÓDULO GESTÃO DE ELENCO
+// ══════════════════════════════════════
+const EL_SID = '1Fj8RhuKjicvVyF06CPJqF7kiKpEsquCKFSHX3qf3Pus';
+const EL_CSV = `https://docs.google.com/spreadsheets/d/${EL_SID}/gviz/tq?tqx=out:csv&sheet=`;
+let elDados = [];
+let elFiltroAtual = 'ativo';
+
+function abrirElenco() {
+  // Esconde tudo do performance
+  document.getElementById('tela-hub').style.display = 'none';
+  const perf = ['hero-performance','dashboard','calendario','relatorio'];
+  perf.forEach(id => { const el = document.getElementById(id); if(el) el.style.display='none'; });
+  const sbar = document.querySelector('.sbar'); if(sbar) sbar.style.display='none';
+  const header = document.querySelector('header'); if(header) header.style.display='none';
+  const footer = document.querySelector('footer'); if(footer) footer.style.display='none';
+  // Mostra só elenco
+  document.getElementById('mod-elenco').style.display = 'block';
+  window.scrollTo({top:0});
+  elCarregar();
+}
+
+function voltarHub() {
+  document.getElementById('mod-elenco').style.display = 'none';
+  // Restaura header
+  const header = document.querySelector('header'); if(header) header.style.display='';
+  // Esconde sbar e footer (voltou ao hub)
+  const sbar = document.querySelector('.sbar'); if(sbar) sbar.style.display='none';
+  const footer = document.querySelector('footer'); if(footer) footer.style.display='none';
+  document.getElementById('tela-hub').style.display = 'flex';
+  window.scrollTo({top:0});
+}
+
+function elTab(filtro, el) {
+  elFiltroAtual = filtro;
+  document.querySelectorAll('.el-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  elRenderizar();
+}
+
+async function elCarregar() {
+  try {
+    const r = await fetch(EL_CSV + encodeURIComponent('Contratos'));
+    const txt = await r.text();
+    const lines = txt.split('\n');
+    function parseCSVLine(line) {
+      const result = []; let cur = ''; let inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { inQ = !inQ; }
+        else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+        else { cur += c; }
+      }
+      result.push(cur.trim());
+      return result;
+    }
+    const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g,'').trim());
+    elDados = lines.slice(1).filter(l=>l.trim()).map(l => {
+      const vals = parseCSVLine(l);
+      const obj = {};
+      headers.forEach((h,i) => obj[h] = (vals[i]||'').replace(/^"|"$/g,'').trim());
+      return obj;
+    });
+    elStats();
+    elRenderizar();
+  } catch(e) {
+    document.getElementById('el-tbody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--re);padding:32px">Erro ao carregar dados. Verifique a planilha.</td></tr>';
+  } catch(e) {
+    document.getElementById('el-tbody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--re);padding:32px">Erro ao carregar dados. Verifique a planilha.</td></tr>';
+  }
+}
+
+function elStats() {
+  const total = elDados.length;
+  const ativos = elDados.filter(r => r['Status Contrato']==='Ativo' && r['Tipo Contrato']!=='Empréstimo').length;
+  const empr = elDados.filter(r => r['Tipo Contrato']==='Empréstimo' && r['Status Contrato']==='Ativo').length;
+  const resc = elDados.filter(r => r['Status Contrato']==='Rescindido').length;
+  document.getElementById('el-total').textContent = total;
+  document.getElementById('el-ativos').textContent = ativos;
+  document.getElementById('el-empr').textContent = empr;
+  document.getElementById('el-resc').textContent = resc;
+}
+
+function elRenderizar() {
+  const busca = (document.getElementById('el-search').value||'').toLowerCase();
+  let dados = elDados.filter(r => {
+    const nome = (r['Nome Completo']||'').toLowerCase();
+    const apelido = (r['Apelido']||'').toLowerCase();
+    const matchBusca = !busca || nome.includes(busca) || apelido.includes(busca);
+    let matchFiltro = true;
+    if (elFiltroAtual === 'ativo') matchFiltro = r['Status Contrato'] === 'Ativo';
+    if (elFiltroAtual === 'historico') matchFiltro = r['Status Contrato'] === 'Rescindido';
+    if (elFiltroAtual === 'emprestimo') matchFiltro = r['Tipo Contrato'] === 'Empréstimo';
+    return matchBusca && matchFiltro;
+  });
+
+  if (!dados.length) {
+    document.getElementById('el-tbody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ts);padding:32px">Nenhum atleta encontrado</td></tr>';
+    return;
+  }
+
+  const statusBadge = s => {
+    const map = { 'Ativo':'ativo', 'Rescindido':'rescindido', 'Empréstimo':'emprestimo' };
+    return `<span class="el-badge ${map[s]||'ativo'}">${s||'—'}</span>`;
+  };
+
+  document.getElementById('el-tbody').innerHTML = dados.map((r,i) => `
+    <tr>
+      <td style="color:var(--ts)">${r['ID']||i+1}</td>
+      <td style="font-weight:600">${r['Nome Completo']||'—'}</td>
+      <td style="color:var(--ts)">${r['Apelido']||'—'}</td>
+      <td>${r['Posição']||r['Positivo']||'—'}</td>
+      <td style="text-align:center">${r['Nº Camisa']||'—'}</td>
+      <td style="color:var(--ts)">${r['Tipo Contrato']||'—'}</td>
+      <td style="color:var(--ts);font-size:11px">${r['Validade Contrato']||'—'}</td>
+      <td>${statusBadge(r['Status Contrato'])}</td>
+    </tr>
+  `).join('');
+}
+
+function elFiltrar() { elRenderizar(); }
+
+function elSalvar() {
+  const nome = document.getElementById('el-f-nome').value.trim();
+  const posicao = document.getElementById('el-f-posicao').value;
+  if (!nome || !posicao) { alert('Preencha pelo menos Nome e Posição.'); return; }
+  alert('Atleta "' + nome + '" cadastrado!\n\nAdicione manualmente na aba Contratos do Google Sheets para sincronizar com o sistema.');
+  document.getElementById('el-modal-bg').classList.remove('open');
+}
 </script>
 
 </body>
