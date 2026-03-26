@@ -764,8 +764,7 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
       <div class="el-form-group"><label class="el-label">Tipo Contrato</label>
         <select class="el-input" id="el-f-tipo" onchange="toggleEmpFields('novo')">
           <option>Efetivo</option>
-          <option>Empréstimo (Entrada)</option>
-          <option>Cedido</option>
+          <option>Empréstimo</option>
           <option>Experiência</option>
         </select>
       </div>
@@ -1268,16 +1267,11 @@ function toggleEditStatusFields() {
   var extraDiv = document.getElementById('edit-status-extra');
   var title = document.getElementById('edit-status-extra-title');
   var clubeLabel = document.getElementById('edit-status-clube-label');
-  var needsExtra = status==='Empréstimo (Entrada)' || status==='Cedido';
+  var needsExtra = status==='Cedido';
   extraDiv.style.display = needsExtra ? 'block' : 'none';
   if(needsExtra) {
-    if(status==='Cedido') {
-      title.textContent = 'Dados da Cessão';
-      clubeLabel.textContent = 'Clube de Destino';
-    } else {
-      title.textContent = 'Dados do Empréstimo';
-      clubeLabel.textContent = 'Clube de Origem';
-    }
+    title.textContent = 'Dados da Cessão';
+    clubeLabel.textContent = 'Clube de Destino';
   }
 }
 
@@ -1288,16 +1282,11 @@ function toggleEmpFields(prefix) {
   var clubeLabelEl = document.getElementById(prefix+'-clube-label');
   if(!tipoEl||!fieldsEl) return;
   var tipo = tipoEl.value;
-  var show = tipo==='Empréstimo (Entrada)'||tipo==='Cedido';
+  var show = tipo==='Empréstimo';
   fieldsEl.style.display = show ? 'block' : 'none';
   if(show) {
-    if(tipo==='Cedido') {
-      if(labelEl) labelEl.textContent = 'Dados da Cessão';
-      if(clubeLabelEl) clubeLabelEl.textContent = 'Clube de Destino';
-    } else {
-      if(labelEl) labelEl.textContent = 'Dados do Empréstimo';
-      if(clubeLabelEl) clubeLabelEl.textContent = 'Clube de Origem';
-    }
+    if(labelEl) labelEl.textContent = 'Dados do Empréstimo';
+    if(clubeLabelEl) clubeLabelEl.textContent = 'Clube de Origem';
   }
 }
 
@@ -1307,7 +1296,7 @@ function fecharStatus() {
 function confirmarStatus(novoStatus) {
   var r = atletaEditando;
   if(!r) return;
-  var needsExtra = novoStatus==='Empréstimo (Entrada)' || novoStatus==='Cedido';
+  var needsExtra = novoStatus==='Cedido';
   if(needsExtra) {
     // Show extra fields
     var extraDiv = document.getElementById('el-status-extra');
@@ -1349,7 +1338,6 @@ function salvarStatusComExtra(novoStatus) {
   function toSD(d) { if(!d) return ''; var p=d.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:''; }
   enviarStatus(r['ID'], {
     statusContrato: novoStatus,
-    tipoContrato: novoStatus,
     clube: clube,
     empInicio: toSD(inicio),
     empFim: toSD(fim)
@@ -1763,7 +1751,7 @@ async function elCarregar() {
 function elStats2() {
   var t=elDados2.length;
   var a=elDados2.filter(function(r){ return r['Status Contrato']==='Ativo'; }).length;
-  var e=elDados2.filter(function(r){ return r['Status Contrato']==='Empréstimo (Entrada)'; }).length;
+  var e=elDados2.filter(function(r){ return r['Tipo Contrato']==='Empréstimo'; }).length;
   var c=elDados2.filter(function(r){ return r['Status Contrato']==='Cedido'; }).length;
   var rs=elDados2.filter(function(r){ return r['Status Contrato']==='Rescindido'; }).length;
   document.getElementById('el-total').textContent=t;
@@ -1807,8 +1795,8 @@ function elMostrar() {
     var ap=(r['Apelido']||'').toLowerCase();
     var mb=!busca||n.includes(busca)||ap.includes(busca);
     var mf=true;
-    if(elFiltro2==='ativo') mf=r['Status Contrato']==='Ativo'||r['Status Contrato']==='Empréstimo (Entrada)';
-    if(elFiltro2==='emprestimo') mf=r['Status Contrato']==='Empréstimo (Entrada)';
+    if(elFiltro2==='ativo') mf=r['Status Contrato']==='Ativo';
+    if(elFiltro2==='emprestimo') mf=r['Tipo Contrato']==='Empréstimo'&&r['Status Contrato']==='Ativo';
     if(elFiltro2==='cedido') mf=r['Status Contrato']==='Cedido';
     if(elFiltro2==='historico') mf=r['Status Contrato']==='Rescindido'||r['Status Contrato']==='Suspenso';
     return mb&&mf;
@@ -1816,7 +1804,8 @@ function elMostrar() {
   if(!dados.length){ document.getElementById('el-tbody').innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--ts);padding:32px">Nenhum atleta encontrado</td></tr>'; return; }
   var html=dados.map(function(r,i) {
     var s=r['Status Contrato']||'';
-    var cls=s==='Ativo'?'ativo':s==='Rescindido'||s==='Suspenso'?'rescindido':s==='Cedido'?'cedido':'emprestimo';
+    var tipo=r['Tipo Contrato']||'';
+    var cls=s==='Ativo'?(tipo==='Empréstimo'?'emprestimo':'ativo'):s==='Rescindido'||s==='Suspenso'?'rescindido':s==='Cedido'?'cedido':'ativo';
     // find original index in elDados2
     var origIdx = elDados2.indexOf(r);
     return '<tr><td style="color:var(--ts)">'+(r['ID']||i+1)+'</td><td style="font-weight:600;cursor:pointer;color:var(--az)" onclick="abrirFicha('+origIdx+')">'+(r['Nome Completo']||'-')+'</td><td style="color:var(--ts)">'+(r['Apelido']||'-')+'</td><td>'+(r['Posicao']||r['Posição']||'-')+'</td><td style="text-align:center">'+(r['N Camisa']||r['Nº Camisa']||'-')+'</td><td style="color:var(--ts)">'+(r['Tipo Contrato']||'-')+'</td><td style="color:var(--ts);font-size:11px">'+(r['Validade Contrato']||'-')+'</td><td><span class="el-badge '+cls+'">'+s+'</span></td></tr>';
@@ -1917,11 +1906,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="el-status-opts">
       <div class="el-status-opt" onclick="confirmarStatus('Ativo')">
         <div class="el-status-opt-icon" style="background:var(--gr)"></div>
-        <div><div class="el-status-opt-label">Ativo</div><div class="el-status-opt-desc">Contratado — disponível no elenco</div></div>
-      </div>
-      <div class="el-status-opt" onclick="confirmarStatus('Empréstimo (Entrada)')">
-        <div class="el-status-opt-icon" style="background:var(--ye)"></div>
-        <div><div class="el-status-opt-label">Empréstimo (Entrada)</div><div class="el-status-opt-desc">Atleta recebido de outro clube</div></div>
+        <div><div class="el-status-opt-label">Ativo</div><div class="el-status-opt-desc">Disponível no elenco</div></div>
       </div>
       <div class="el-status-opt" onclick="confirmarStatus('Cedido')">
         <div class="el-status-opt-icon" style="background:var(--az)"></div>
@@ -1983,8 +1968,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="el-form-group"><label class="el-label">Tipo Contrato</label>
         <select class="el-input" id="edit-tipo" onchange="toggleEmpFields('edit')">
           <option>Efetivo</option>
-          <option>Empréstimo (Entrada)</option>
-          <option>Cedido</option>
+          <option>Empréstimo</option>
           <option>Experiência</option>
         </select>
       </div>
@@ -2007,7 +1991,6 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="el-form-group"><label class="el-label">Status Contrato</label>
         <select class="el-input" id="edit-status" onchange="toggleEditStatusFields()">
           <option>Ativo</option>
-          <option>Empréstimo (Entrada)</option>
           <option>Cedido</option>
           <option>Suspenso</option>
           <option>Rescindido</option>
