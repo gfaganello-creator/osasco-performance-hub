@@ -2646,25 +2646,23 @@ function renderSemanaAtual() {
     if(v==='Viagem') return '#f7a846';
     return 'var(--wh)';
   }
-  // Pega a programacao da semana atual
+  // Pega a programacao mais proxima da semana atual
   var semanaAtual = null;
-  window._programacoes.forEach(function(prog) {
-    var dias = {};
-    try { dias = JSON.parse(prog['Dias']||'{}'); } catch(e) {}
-    diasNomes.forEach(function(nome) {
-      var dia = dias[nome];
-      if(!dia || !dia.data) return;
-      var parts = dia.data.split('/');
+  var validas = window._programacoes.filter(function(p) { return p['Dias'] && p['Dias'] !== '{}' && p['Dias'].length > 5; });
+  if(validas.length) {
+    // Tenta encontrar a semana atual ou futura mais proxima
+    var melhor = null, melhorDiff = Infinity;
+    validas.forEach(function(prog) {
+      var raw = prog['Semana Inicio Raw'];
+      if(!raw) return;
+      var parts = raw.split('-');
       if(parts.length !== 3) return;
-      var d = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
-      var diff = Math.abs(d - hoje);
-      if(diff < 7 * 24 * 60 * 60 * 1000) semanaAtual = prog;
+      var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+      var diff = hoje - d; // positivo = passado, negativo = futuro
+      // Prefere semana atual ou mais recente passada
+      if(diff >= 0 && diff < melhorDiff) { melhorDiff = diff; melhor = prog; }
     });
-  });
-  if(!semanaAtual) {
-    // Mostra a mais recente
-    var validas = window._programacoes.filter(function(p) { return p['Dias'] && p['Dias'] !== '{}' && p['Dias'].length > 5; });
-    if(validas.length) semanaAtual = validas[validas.length-1];
+    semanaAtual = melhor || validas[validas.length-1];
   }
   if(!semanaAtual) { panel.innerHTML = '<div style="color:var(--ts);font-size:12px">Nenhuma programação cadastrada.</div>'; return; }
   var dias = {};
