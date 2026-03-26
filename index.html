@@ -2564,10 +2564,12 @@ function confirmarProg() {
   var data = getProgData();
   if(!data) return;
   var isEdit = progModo==='editar';
+
+  // POST no-cors (dispara e esquece — Apps Script processa mesmo sem resposta)
   var payload = {
     action: 'saveProgamacao',
     modo: progModo,
-    progId: progAtual ? progAtual.id : '',
+    progId: progAtual ? (progAtual.ID||progAtual.id||'') : '',
     local: data.local,
     horManha: data.horManha,
     horTarde: data.horTarde,
@@ -2575,18 +2577,33 @@ function confirmarProg() {
     semanaInicio: data.inicio,
     dias: JSON.stringify(data.dias),
     email: 'gfaganello@osascosporting.com.br',
-    isEdit: isEdit
+    isEdit: isEdit ? 'true' : 'false'
   };
   fetch(SCRIPT_URL2, {
-    method:'POST', mode:'no-cors',
+    method: 'POST',
+    mode: 'no-cors',
     body: JSON.stringify(payload)
   }).catch(function(){});
+
+  // Image beacon como fallback extra (GET) — garantia dupla
+  var params = new URLSearchParams({
+    action: 'saveProgamacao',
+    modo: progModo,
+    progId: progAtual ? (progAtual.ID||progAtual.id||'') : '',
+    local: data.local,
+    horManha: data.horManha,
+    horTarde: data.horTarde,
+    obs: data.obs,
+    semanaInicio: data.inicio,
+    dias: JSON.stringify(data.dias),
+    email: 'gfaganello@osascosporting.com.br',
+    isEdit: isEdit ? 'true' : 'false'
+  });
+  new Image().src = SCRIPT_URL2 + '?' + params.toString();
+
   fecharProgModal();
-  alert(isEdit ?
-    'Alteracao salva! Email de aviso sera enviado em instantes.' :
-    'Programacao criada! Email sera enviado para os destinatarios em instantes.'
-  );
-  setTimeout(function(){ carregarProgramacoes(); }, 2000);
+  mostrarSucesso(isEdit, '', data);
+  setTimeout(function(){ carregarProgramacoes(); }, 3000);
 }
 
 function carregarProgramacoes() {
@@ -2709,51 +2726,4 @@ function mostrarSucesso(isEdit, pdfLink, data) {
   document.getElementById('prog-preview-bg').classList.add('open');
 }
 
-// Use hidden iframe form submission to bypass CORS for programacao
-confirmarProg = function() {
-  var data = getProgData();
-  if(!data) return;
-  var isEdit = progModo === 'editar';
-  var btn = document.getElementById('prog-confirm-btn');
-  if(btn) { btn.textContent = 'Enviando...'; btn.disabled = true; }
-  
-  // Build GET URL with params (Apps Script handles GET too)
-  var diasStr = JSON.stringify(data.dias);
-  var params = new URLSearchParams({
-    action: 'saveProgamacao',
-    modo: progModo,
-    progId: progAtual ? (progAtual.ID||progAtual.id||'') : '',
-    local: data.local,
-    horManha: data.horManha,
-    horTarde: data.horTarde,
-    obs: data.obs,
-    semanaInicio: data.inicio,
-    dias: diasStr,
-    email: 'gfaganello@osascosporting.com.br',
-    isEdit: isEdit ? 'true' : 'false'
-  });
-  
-  // Use fetch with GET + redirect follow for Apps Script
-  fetch(SCRIPT_URL2 + '?' + params.toString(), {
-    method: 'GET',
-    redirect: 'follow'
-  })
-  .then(function(r) {
-    // Apps Script may return text/plain or redirect
-    var ct = r.headers.get('content-type') || '';
-    if(ct.indexOf('json') >= 0) return r.json();
-    return r.text().then(function(t) {
-      try { return JSON.parse(t); } catch(e) { return {success:true, pdfLink:''}; }
-    });
-  })
-  .then(function(resp) {
-    if(btn) { btn.textContent = 'Confirmar e Enviar'; btn.disabled = false; }
-    mostrarSucesso(isEdit, (resp && resp.pdfLink) ? resp.pdfLink : '', data);
-    setTimeout(function() { carregarProgramacoes(); }, 3000);
-  })
-  .catch(function(err) {
-    console.log('Fetch error:', err);
-    // Even on CORS error, Apps Script likely ran - show success after delay
-    if(btn) { btn.textContent = 'Confirmar e Enviar'; btn.disabled = false; }
-    // Try no-cors fallback to ensure execution
-    fe
+// confirmarProg definida acima (linha única, sem duplicata)
