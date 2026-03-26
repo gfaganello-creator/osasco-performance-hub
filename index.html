@@ -2605,8 +2605,8 @@ function confirmarProg() {
     body: postData
   }).catch(function(){});
 
-  // Monta o link da programacao com o ID que foi enviado
-  var progLink = 'https://gfaganello-creator.github.io/ozhub/prog.html?id=' + progId;
+  // Link usa semanaInicio para buscar a programacao (mais confiavel que UUID)
+  var progLink = 'https://gfaganello-creator.github.io/ozhub/prog.html?semana=' + encodeURIComponent(data.inicio);
   fecharProgModal();
   mostrarSucesso(isEdit, progLink, data);
   setTimeout(function(){ carregarProgramacoes(); }, 3000);

@@ -529,7 +529,8 @@ function showError(msg) {
 
 function init() {
   var id = getParam('id');
-  if (!id) { showError('Nenhum ID de programação informado.'); return; }
+  var semana = getParam('semana');
+  if (!id && !semana) { showError('Nenhuma programação informada.'); return; }
 
   var url = 'https://docs.google.com/spreadsheets/d/' + SID + '/gviz/tq?tqx=out:csv&sheet=Programacao';
   fetch(url)
@@ -544,8 +545,16 @@ function init() {
         hdrs.forEach(function(h, i) { o[h] = (vs[i] || '').replace(/^"|"$/g, '').trim(); });
         return o;
       });
-      var prog = rows.find(function(r) { return r['ID'] === id; });
-      if (!prog) { showError('Programação com ID "' + id + '" não encontrada.'); return; }
+      var prog = null;
+      if (id) {
+        prog = rows.find(function(r) { return r['ID'] === id; });
+      }
+      if (!prog && semana) {
+        // Busca por semanaInicio — pega a mais recente com essa data
+        var matches = rows.filter(function(r) { return r['Semana Inicio Raw'] === semana; });
+        if (matches.length) prog = matches[matches.length - 1];
+      }
+      if (!prog) { showError('Programação não encontrada.'); return; }
       renderProg(prog);
     })
     .catch(function(err) { showError('Erro ao carregar dados: ' + err.message); });
@@ -1085,7 +1094,8 @@ function showError(msg) {
 
 function init() {
   var id = getParam('id');
-  if (!id) { showError('Nenhum ID de programação informado.'); return; }
+  var semana = getParam('semana');
+  if (!id && !semana) { showError('Nenhuma programação informada.'); return; }
 
   var url = 'https://docs.google.com/spreadsheets/d/' + SID + '/gviz/tq?tqx=out:csv&sheet=Programacao';
   fetch(url)
@@ -1100,8 +1110,16 @@ function init() {
         hdrs.forEach(function(h, i) { o[h] = (vs[i] || '').replace(/^"|"$/g, '').trim(); });
         return o;
       });
-      var prog = rows.find(function(r) { return r['ID'] === id; });
-      if (!prog) { showError('Programação com ID "' + id + '" não encontrada.'); return; }
+      var prog = null;
+      if (id) {
+        prog = rows.find(function(r) { return r['ID'] === id; });
+      }
+      if (!prog && semana) {
+        // Busca por semanaInicio — pega a mais recente com essa data
+        var matches = rows.filter(function(r) { return r['Semana Inicio Raw'] === semana; });
+        if (matches.length) prog = matches[matches.length - 1];
+      }
+      if (!prog) { showError('Programação não encontrada.'); return; }
       renderProg(prog);
     })
     .catch(function(err) { showError('Erro ao carregar dados: ' + err.message); });
