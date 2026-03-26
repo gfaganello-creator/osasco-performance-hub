@@ -2757,10 +2757,10 @@ function mostrarSucesso(isEdit, pdfLink, data) {
     '<div style="text-align:center;padding:24px">' +
     '<div style="font-size:40px;margin-bottom:12px">' + (isEdit ? '\u26a0\ufe0f' : '\u2705') + '</div>' +
     '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:var(--ww);margin-bottom:16px">' +
-      (isEdit ? 'Alteracao salva! Email de aviso enviado.' : 'Programacao criada! Email com PDF enviado.') +
+      (isEdit ? 'Alteracao salva! Email de aviso enviado.' : 'Programacao criada! Email e WhatsApp prontos.') +
     '</div>' +
     '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
-      pdfBtn + waBtn +
+      waBtn +
       '<button class="el-btn el-btn-secondary" onclick="fecharProgModal()" style="font-size:11px">Fechar</button>' +
     '</div></div>';
   document.getElementById('prog-preview-bg').classList.add('open');
