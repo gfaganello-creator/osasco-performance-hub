@@ -959,10 +959,10 @@ document.addEventListener('DOMContentLoaded', function() {
 // ══════════════════════════════════════
 // MÓDULO GESTÃO DE ELENCO
 // ══════════════════════════════════════
-const EL_SID = '1Fj8RhuKjicvVyF06CPJqF7kiKpEsquCKFSHX3qf3Pus';
-const EL_CSV = `https://docs.google.com/spreadsheets/d/${EL_SID}/gviz/tq?tqx=out:csv&sheet=`;
-let elDados = [];
-let elFiltroAtual = 'ativo';
+var EL_SID = '1Fj8RhuKjicvVyF06CPJqF7kiKpEsquCKFSHX3qf3Pus';
+var EL_CSV = `https://docs.google.com/spreadsheets/d/${EL_SID}/gviz/tq?tqx=out:csv&sheet=`;
+var elDados = [];
+var elFiltroAtual = 'ativo';
 
 function abrirElenco() {
   // Esconde tudo do performance
