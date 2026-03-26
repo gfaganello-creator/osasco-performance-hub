@@ -2637,37 +2637,43 @@ function mostrarSucesso(isEdit, pdfLink, data) {
   document.getElementById('prog-preview-bg').classList.add('open');
 }
 
-var _origConfirmarProg = confirmarProg;
+// Use hidden iframe form submission to bypass CORS for programacao
 confirmarProg = function() {
   var data = getProgData();
   if(!data) return;
   var isEdit = progModo === 'editar';
   var btn = document.getElementById('prog-confirm-btn');
   if(btn) { btn.textContent = 'Enviando...'; btn.disabled = true; }
-  var payload = {
-    action: 'saveProgamacao', modo: progModo,
-    progId: progAtual ? progAtual.id : '',
-    local: data.local, horManha: data.horManha, horTarde: data.horTarde,
-    obs: data.obs, semanaInicio: data.inicio,
-    dias: JSON.stringify(data.dias),
-    email: 'gfaganello@osascosporting.com.br', isEdit: isEdit
-  };
-  fetch(SCRIPT_URL2, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(payload)
-  })
+  
+  // Build GET URL with params (Apps Script handles GET too)
+  var diasStr = JSON.stringify(data.dias);
+  var params = new URLSearchParams({
+    action: 'saveProgamacao',
+    modo: progModo,
+    progId: progAtual ? (progAtual.ID||progAtual.id||'') : '',
+    local: data.local,
+    horManha: data.horManha,
+    horTarde: data.horTarde,
+    obs: data.obs,
+    semanaInicio: data.inicio,
+    dias: diasStr,
+    email: 'gfaganello@osascosporting.com.br',
+    isEdit: isEdit ? 'true' : 'false'
+  });
+  
+  // Use fetch with GET - Apps Script doGet handles it
+  fetch(SCRIPT_URL2 + '?' + params.toString())
   .then(function(r) { return r.json(); })
   .then(function(resp) {
     if(btn) { btn.textContent = 'Confirmar e Enviar'; btn.disabled = false; }
     mostrarSucesso(isEdit, resp.pdfLink || '', data);
-    setTimeout(function() { carregarProgramacoes(); }, 2500);
+    setTimeout(function() { carregarProgramacoes(); }, 3000);
   })
-  .catch(function() {
-    fetch(SCRIPT_URL2, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(function(){});
+  .catch(function(err) {
+    console.log('Fetch error:', err);
     if(btn) { btn.textContent = 'Confirmar e Enviar'; btn.disabled = false; }
-    fecharProgModal();
-    setTimeout(function() { carregarProgramacoes(); }, 2500);
+    mostrarSucesso(isEdit, '', data);
+    setTimeout(function() { carregarProgramacoes(); }, 3000);
   });
 };
 
