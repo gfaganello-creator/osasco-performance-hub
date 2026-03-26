@@ -412,11 +412,13 @@ function pcsv(line) {
   var r = [], c = '', q = false;
   for (var i = 0; i < line.length; i++) {
     var ch = line[i];
-    if (ch === '"') { q = !q; }
-    else if (ch === ',' && !q) { r.push(c.trim()); c = ''; }
+    if (ch === '"') {
+      if (q && line[i+1] === '"') { c += '"'; i++; } // escaped quote ""
+      else { q = !q; }
+    } else if (ch === ',' && !q) { r.push(c); c = ''; }
     else { c += ch; }
   }
-  r.push(c.trim());
+  r.push(c);
   return r;
 }
 
@@ -541,7 +543,7 @@ function init() {
       var rows = lines.slice(1).filter(function(l) { return l.trim(); }).map(function(l) {
         var vs = pcsv(l);
         var o = {};
-        hdrs.forEach(function(h, i) { o[h] = (vs[i] || '').replace(/^"|"$/g, '').trim(); });
+        hdrs.forEach(function(h, i) { o[h] = (vs[i] || ''); });
         return o;
       });
       // Filtra so linhas com dados reais (tem Dias preenchido)
@@ -979,11 +981,13 @@ function pcsv(line) {
   var r = [], c = '', q = false;
   for (var i = 0; i < line.length; i++) {
     var ch = line[i];
-    if (ch === '"') { q = !q; }
-    else if (ch === ',' && !q) { r.push(c.trim()); c = ''; }
+    if (ch === '"') {
+      if (q && line[i+1] === '"') { c += '"'; i++; } // escaped quote ""
+      else { q = !q; }
+    } else if (ch === ',' && !q) { r.push(c); c = ''; }
     else { c += ch; }
   }
-  r.push(c.trim());
+  r.push(c);
   return r;
 }
 
@@ -1108,7 +1112,7 @@ function init() {
       var rows = lines.slice(1).filter(function(l) { return l.trim(); }).map(function(l) {
         var vs = pcsv(l);
         var o = {};
-        hdrs.forEach(function(h, i) { o[h] = (vs[i] || '').replace(/^"|"$/g, '').trim(); });
+        hdrs.forEach(function(h, i) { o[h] = (vs[i] || ''); });
         return o;
       });
       // Filtra so linhas com dados reais (tem Dias preenchido)
