@@ -2541,7 +2541,7 @@ function previewProg() {
   html += '<th style="padding:6px;border-bottom:1px solid rgba(70,162,247,.2);color:var(--ts);font-size:10px">TARDE</th></tr>';
   DIAS_SEMANA.forEach(function(d) {
     var dia = data.dias[d];
-    function cor(v) { return v==='Treino'?'var(--gr)':v==='Folga'?'var(--re)':v==='Jogo'?'var(--az)':'var(--ts)'; }
+    function cor(v) { return v==='Treino Campo'||v==='Treino Academia'||v==='Treino'?'var(--gr)':v==='Folga'?'var(--re)':v==='Jogo'?'var(--az)':v==='Viagem'?'#f7a846':v==='Descanso Programado'?'var(--ts)':'var(--wh)'; }
     html += '<tr>';
     html += '<td style="padding:6px;font-weight:600;color:var(--wh)">'+d+'</td>';
     html += '<td style="padding:6px;color:var(--ts);font-size:11px">'+dia.data+'</td>';
