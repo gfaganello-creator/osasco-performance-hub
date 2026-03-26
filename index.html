@@ -1168,10 +1168,11 @@ function renderCal(){
     let c='cd2';
     if(isTd)c+=' td';else if(isGm)c+=' gm';
     const progBadges = getProgBadges(y, m, d);
-    h+=`<div class="${c}" style="position:relative;display:flex;flex-direction:column;align-items:center;min-height:36px;cursor:pointer" onclick="mostrarDiaProg(${y},${m},${d})">`
+    const hasProg = progBadges.length > 0;
+    h+=`<div class="${c}" style="position:relative;display:flex;flex-direction:column;align-items:center;min-height:36px;cursor:pointer${hasProg?';outline:1px solid rgba(70,162,247,.3)':''}" onclick="mostrarDiaProg(${y},${m},${d})">`
       + `<span>${d}</span>`
       + (isGm&&!isTd?'<div class="dot"></div>':'')
-      + progBadges
+      + (hasProg?'<div style="width:6px;height:6px;border-radius:50%;background:#46a2f7;margin-top:2px"></div>':'')
       + `</div>`;
   }
   setHtml('cal-d',h);
@@ -2652,22 +2653,18 @@ function renderSemanaAtual() {
     if(v==='Viagem') return '#f7a846';
     return 'var(--wh)';
   }
-  // Pega a programacao onde as datas dos dias batem com a semana inicio
+  // Pega a programacao onde Segunda.data bate exatamente com semanaInicio
   var semanaAtual = null;
   var comDados = window._programacoes.filter(function(p) {
     if(!p['Dias'] || p['Dias'].length < 50) return false;
     try {
-      var d = JSON.parse(p['Dias']);
-      if(!d['Segunda'] || !d['Segunda'].data) return false;
+      var dias = JSON.parse(p['Dias']);
+      if(!dias['Segunda'] || !dias['Segunda'].data) return false;
       var semRaw = p['Semana Inicio Raw'] || '';
       var partsR = semRaw.split('-');
       if(partsR.length !== 3) return false;
-      var dSeg = d['Segunda'].data;
-      var dSegParts = dSeg.split('/');
-      if(dSegParts.length !== 3) return false;
-      var dSegDate = new Date(parseInt(dSegParts[2]), parseInt(dSegParts[1])-1, parseInt(dSegParts[0]));
-      var dSemDate = new Date(parseInt(partsR[0]), parseInt(partsR[1])-1, parseInt(partsR[2]));
-      return Math.abs(dSegDate - dSemDate) < 8 * 86400000;
+      var semFormatted = partsR[2]+'/'+partsR[1]+'/'+partsR[0];
+      return dias['Segunda'].data === semFormatted;
     } catch(e) { return false; }
   });
   if(comDados.length) semanaAtual = comDados[comDados.length - 1];
