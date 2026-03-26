@@ -2604,20 +2604,7 @@ function confirmarProg() {
   }).catch(function(){});
 
   // Image beacon como fallback extra (GET) — garantia dupla
-  var params = new URLSearchParams({
-    action: 'saveProgamacao',
-    modo: progModo,
-    progId: progAtual ? (progAtual.ID||progAtual.id||'') : '',
-    local: data.local,
-    horManha: data.horManha,
-    horTarde: data.horTarde,
-    obs: data.obs,
-    semanaInicio: data.inicio,
-    dias: JSON.stringify(data.dias),
-    email: 'gfaganello@osascosporting.com.br',
-    isEdit: isEdit ? 'true' : 'false'
-  });
-  new Image().src = SCRIPT_URL2 + '?' + params.toString();
+  // Beacon GET removido - evita ID duplicado. POST no-cors é suficiente.
 
   // Monta o link da programacao com o ID que foi enviado
   var progLink = 'https://gfaganello-creator.github.io/ozhub/prog.html?id=' + progId;
