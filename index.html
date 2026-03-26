@@ -319,6 +319,18 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
 .el-ficha-dias{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;text-align:right}
 .el-ficha-dias-label{font-size:9px;color:var(--ts);text-align:right;letter-spacing:1px}
 
+
+.el-docs-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.el-doc-item{display:flex;align-items:center;justify-content:space-between;background:rgba(15,25,35,.6);border:1px solid rgba(70,162,247,.08);border-radius:5px;padding:10px 14px;cursor:pointer;transition:.2s}
+.el-doc-item:hover{border-color:rgba(70,162,247,.25)}
+.el-doc-label{font-size:12px;color:var(--wh);font-weight:500}
+.el-doc-status{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:2px;cursor:pointer;border:none}
+.doc-ok{background:rgba(46,204,142,.15);color:var(--gr);border:1px solid rgba(46,204,142,.25)}
+.doc-pend{background:rgba(241,196,15,.15);color:var(--ye);border:1px solid rgba(241,196,15,.25)}
+.doc-venc{background:rgba(231,76,60,.15);color:var(--re);border:1px solid rgba(231,76,60,.25)}
+.el-doc-hint{font-size:10px;color:var(--ts);margin-top:8px;font-style:italic}
+.doc-alert-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ye);margin-left:4px;vertical-align:middle}
+
 </style>
 </head>
 <body>
@@ -917,10 +929,70 @@ function abrirFicha(idx) {
   } else {
     diasEl.textContent = '—';
   }
+  var atletaId = r['ID'] || '0';
+  loadDocs(atletaId);
+  renderDocs(atletaId);
   document.getElementById('el-ficha-bg').classList.add('open');
 }
 function fecharFicha() {
   document.getElementById('el-ficha-bg').classList.remove('open');
+}
+
+
+var docTypes = ['RG / CPF', 'Contrato assinado', 'Atestado medico', 'Foto oficial'];
+var docStatus = {}; // key: athleteID_docIdx -> 'ok'|'pend'|'venc'
+
+function getDocKey(atletaId, docIdx) {
+  return 'doc_' + atletaId + '_' + docIdx;
+}
+
+function loadDocs(atletaId) {
+  docTypes.forEach(function(d, i) {
+    var key = getDocKey(atletaId, i);
+    var saved = localStorage.getItem(key);
+    docStatus[key] = saved || 'pend';
+  });
+}
+
+function saveDocs(atletaId) {
+  docTypes.forEach(function(d, i) {
+    var key = getDocKey(atletaId, i);
+    localStorage.setItem(key, docStatus[key]);
+  });
+}
+
+function toggleDoc(atletaId, docIdx) {
+  var key = getDocKey(atletaId, docIdx);
+  var current = docStatus[key] || 'pend';
+  var next = current === 'pend' ? 'ok' : current === 'ok' ? 'venc' : 'pend';
+  docStatus[key] = next;
+  saveDocs(atletaId);
+  renderDocs(atletaId);
+}
+
+function renderDocs(atletaId) {
+  var html = docTypes.map(function(d, i) {
+    var key = getDocKey(atletaId, i);
+    var s = docStatus[key] || 'pend';
+    var cls = s === 'ok' ? 'doc-ok' : s === 'venc' ? 'doc-venc' : 'doc-pend';
+    var label = s === 'ok' ? '&#10003; Entregue' : s === 'venc' ? '&#9888; Vencido' : '&#9711; Pendente';
+    return '<div class="el-doc-item" onclick="toggleDoc(\'' + atletaId + '\',' + i + ')">' +
+      '<span class="el-doc-label">' + d + '</span>' +
+      '<span class="el-doc-status ' + cls + '">' + label + '</span>' +
+      '</div>';
+  }).join('');
+  var el = document.getElementById('ef-docs');
+  if(el) el.innerHTML = html;
+}
+
+function getDocSummary(atletaId) {
+  var pendentes = 0;
+  docTypes.forEach(function(d, i) {
+    var key = getDocKey(atletaId, i);
+    var s = localStorage.getItem(key) || 'pend';
+    if(s !== 'ok') pendentes++;
+  });
+  return pendentes;
 }
 
 function elFiltrar() { elMostrar(); }
@@ -1072,6 +1144,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="el-ficha-dias-label">dias restantes</div>
           </div>
         </div>
+      </div>
+      <div class="el-ficha-section">
+        <div class="el-ficha-section-title">Documentacao</div>
+        <div class="el-docs-grid" id="ef-docs"></div>
+        <div class="el-doc-hint">Clique no status para alternar. Os dados sao salvos localmente.</div>
       </div>
       <div class="el-ficha-section">
         <div class="el-ficha-section-title">Informacoes Adicionais</div>
