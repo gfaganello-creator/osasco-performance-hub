@@ -2696,7 +2696,10 @@ function editarProg(idx, rawStr) {
 
 function mostrarSucesso(isEdit, pdfLink, data) {
   var hubUrl = 'https://gfaganello-creator.github.io/ozhub/';
-  var semana = data ? (Object.values(data.dias)[0].data + ' a ' + Object.values(data.dias)[6].data) : '';
+  var diasVals = data ? Object.values(data.dias) : [];
+  var semana = diasVals.length >= 7
+    ? ((diasVals[0] && diasVals[0].data ? diasVals[0].data : '') + ' a ' + (diasVals[6] && diasVals[6].data ? diasVals[6].data : ''))
+    : (diasVals.length > 0 && diasVals[0] && diasVals[0].data ? diasVals[0].data : '');
   // Count treinos
   var treinos = data ? Object.values(data.dias).filter(function(d){
     return d && (d.manha==='Treino Campo'||d.manha==='Treino Academia'||d.tarde==='Treino Campo'||d.tarde==='Treino Academia');
