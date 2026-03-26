@@ -2648,6 +2648,8 @@ var _programacoes = [];
 
 function renderizarProgramacoes(rows) {
   _programacoes = rows;
+  // Atualiza calendario com badges de treino
+  if(typeof renderCal === 'function') renderCal();
   var container = document.getElementById('prog-lista');
   if(!container) return;
   if(!rows.length) {
