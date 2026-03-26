@@ -2584,8 +2584,8 @@ function confirmarProg() {
     });
   }
   var progId = (progModo === 'editar' && progAtual) ? (progAtual.ID||progAtual.id||'') : gerarUUID();
-  // GET com params na URL — mais confiavel que POST no-cors para Apps Script
-  var getParams = new URLSearchParams({
+  // POST com text/plain — funciona com no-cors e Apps Script le via postData.contents
+  var postData = JSON.stringify({
     action: 'saveProgamacao',
     modo: progModo,
     progId: progId,
@@ -2598,8 +2598,11 @@ function confirmarProg() {
     email: 'gfaganello@osascosporting.com.br',
     isEdit: isEdit ? 'true' : 'false'
   });
-  fetch(SCRIPT_URL2 + '?' + getParams.toString(), {
-    method: 'GET', redirect: 'follow'
+  fetch(SCRIPT_URL2, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'text/plain'},
+    body: postData
   }).catch(function(){});
 
   // Monta o link da programacao com o ID que foi enviado
