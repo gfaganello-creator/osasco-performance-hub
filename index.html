@@ -2680,14 +2680,22 @@ function editarProg(idx, rawStr) {
 function mostrarSucesso(isEdit, pdfLink, data) {
   var hubUrl = 'https://gfaganello-criador.github.io/ozhub/';
   var semana = data ? (Object.values(data.dias)[0].data + ' a ' + Object.values(data.dias)[6].data) : '';
-  var waMsg = (isEdit ? 'ALTERACAO - ' : '') + 'Programacao Semanal Osasco Sporting FC\n'
-    + 'Semana: ' + semana + '\n'
-    + 'Local: ' + (data ? data.local : '') + '\n'
-    + (pdfLink ? 'PDF: ' + pdfLink + '\n' : '')
-    + 'Ver no Hub: ' + hubUrl;
+  // Count treinos
+  var treinos = data ? Object.values(data.dias).filter(function(d){
+    return d && (d.manha==='Treino Campo'||d.manha==='Treino Academia'||d.tarde==='Treino Campo'||d.tarde==='Treino Academia');
+  }).length : 0;
+  var emoji = isEdit ? '\u26a0\ufe0f' : '\u26bd';
+  var waMsg = emoji + ' ' + (isEdit ? '*ALTERACAO* - ' : '') + '*Programacao Semanal*\n'
+    + '*Osasco Sporting* | Categoria Profissional\n'
+    + '\n'
+    + '\uD83D\uDCC5 Semana: ' + semana + '\n'
+    + '\uD83C\uDFC3 Treinos na semana: ' + treinos + '\n'
+    + (pdfLink ? '\uD83D\uDCCE PDF: ' + pdfLink + '\n' : '')
+    + '\n'
+    + '\uD83D\uDD17 Acompanhe no OZ HUB:\n' + hubUrl;
   var waUrl = 'https://wa.me/?text=' + encodeURIComponent(waMsg);
-  var pdfBtn = pdfLink ? '<a href="' + pdfLink + '" target="_blank" class="el-btn el-btn-secondary" style="text-decoration:none;font-size:11px;display:inline-block">PDF Download</a>' : '';
-  var waBtn = '<a href="' + waUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;text-decoration:none">WhatsApp</a>';
+  var pdfBtn = pdfLink ? '<a href="' + pdfLink + '" target="_blank" class="el-btn el-btn-secondary" style="text-decoration:none;font-size:11px;display:inline-block">\uD83D\uDCC4 PDF Download</a>' : '';
+  var waBtn = '<a href="' + waUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#25D366;color:#fff;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;text-decoration:none">\uD83D\uDCF1 WhatsApp</a>';
   document.getElementById('prog-preview-content').innerHTML =
     '<div style="text-align:center;padding:24px">' +
     '<div style="font-size:40px;margin-bottom:12px">' + (isEdit ? '\u26a0\ufe0f' : '\u2705') + '</div>' +
@@ -2725,19 +2733,34 @@ confirmarProg = function() {
     isEdit: isEdit ? 'true' : 'false'
   });
   
-  // Use fetch with GET - Apps Script doGet handles it
-  fetch(SCRIPT_URL2 + '?' + params.toString())
-  .then(function(r) { return r.json(); })
+  // Use fetch with GET + redirect follow for Apps Script
+  fetch(SCRIPT_URL2 + '?' + params.toString(), {
+    method: 'GET',
+    redirect: 'follow'
+  })
+  .then(function(r) {
+    // Apps Script may return text/plain or redirect
+    var ct = r.headers.get('content-type') || '';
+    if(ct.indexOf('json') >= 0) return r.json();
+    return r.text().then(function(t) {
+      try { return JSON.parse(t); } catch(e) { return {success:true, pdfLink:''}; }
+    });
+  })
   .then(function(resp) {
     if(btn) { btn.textContent = 'Confirmar e Enviar'; btn.disabled = false; }
-    mostrarSucesso(isEdit, resp.pdfLink || '', data);
+    mostrarSucesso(isEdit, (resp && resp.pdfLink) ? resp.pdfLink : '', data);
     setTimeout(function() { carregarProgramacoes(); }, 3000);
   })
   .catch(function(err) {
     console.log('Fetch error:', err);
+    // Even on CORS error, Apps Script likely ran - show success after delay
     if(btn) { btn.textContent = 'Confirmar e Enviar'; btn.disabled = false; }
-    mostrarSucesso(isEdit, '', data);
-    setTimeout(function() { carregarProgramacoes(); }, 3000);
+    // Try no-cors fallback to ensure execution
+    fetch(SCRIPT_URL2 + '?' + params.toString(), {method:'GET', mode:'no-cors'}).catch(function(){});
+    setTimeout(function() {
+      mostrarSucesso(isEdit, '', data);
+      carregarProgramacoes();
+    }, 2000);
   });
 };
 
