@@ -599,78 +599,78 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
 </section>
 
 <section id="calendario">
-  <div class="sh rv"><div><div class="stag">Agenda</div><div class="sti">Calendário</div></div><div class="sme">Próximos jogos · Programação semanal</div></div>
+  <div class="sh rv"><div><div class="stag">Agenda</div><div class="sti">Calendário</div></div><div class="sme">Jogos · Programação semanal e diária</div></div>
 
-  <!-- LINHA 1: Calendário | Agenda de Partidas | Semana Atual -->
-  <div style="display:grid;grid-template-columns:300px 1fr 280px;gap:16px;align-items:start;margin-bottom:16px">
+  <!-- 4 COLUNAS: Calendário | Jogos | Semanal | Diária -->
+  <div style="display:grid;grid-template-columns:260px 1fr 1fr 1fr;gap:14px;align-items:start" class="rv">
 
-    <!-- Calendário compacto -->
-    <div class="mc" style="padding:18px">
+    <!-- ── 1. CALENDÁRIO ── -->
+    <div class="mc" style="padding:16px">
       <div class="cn2"><button class="cb" onclick="chm(-1)">‹</button><div class="cnt" id="cal-t">MARÇO 2026</div><button class="cb" onclick="chm(1)">›</button></div>
       <div class="cdn"><div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div></div>
       <div class="cday" id="cal-d"></div>
+      <!-- Prog do dia (clique no calendário) -->
+      <div id="cal-day-panel" style="margin-top:14px;border-top:1px solid rgba(70,162,247,.1);padding-top:12px;display:none">
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Programação do Dia</div>
+        <div id="cal-day-content" style="color:var(--ts);font-size:11px"></div>
+      </div>
+      <div id="cal-day-empty" style="margin-top:12px;border-top:1px solid rgba(70,162,247,.08);padding-top:10px">
+        <div style="font-size:10px;color:var(--ts)">Clique em um dia para ver detalhes.</div>
+      </div>
     </div>
 
-    <!-- Agenda de Partidas — destaque central -->
-    <div style="background:var(--c2);border:1px solid rgba(70,162,247,.12);border-radius:4px;padding:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--az)">Agenda de Partidas</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="display:flex;gap:4px" id="jogos-filtro">
-            <button onclick="filtrarJogos('todos')" id="filtro-todos" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:2px;cursor:pointer;background:var(--az);color:var(--bk);border:1px solid var(--az);transition:.2s">Todos</button>
-            <button onclick="filtrarJogos('Profissional')" id="filtro-Profissional" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:2px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Prof</button>
-            <button onclick="filtrarJogos('Sub-20')" id="filtro-Sub-20" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:2px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Sub-20</button>
+    <!-- ── 2. AGENDA DE PARTIDAS ── -->
+    <div style="background:var(--c2);border:1px solid rgba(70,162,247,.12);border-radius:4px;padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--az)">Jogos</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;gap:3px" id="jogos-filtro">
+            <button onclick="filtrarJogos('todos')" id="filtro-todos" style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;cursor:pointer;background:var(--az);color:var(--bk);border:1px solid var(--az);transition:.2s">Todos</button>
+            <button onclick="filtrarJogos('Profissional')" id="filtro-Profissional" style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Prof</button>
+            <button onclick="filtrarJogos('Sub-20')" id="filtro-Sub-20" style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Sub-20</button>
           </div>
-          <div id="jogos-sync" style="font-size:9px;color:var(--ts);display:flex;align-items:center;gap:4px">
-            <span class="spin" style="font-size:10px">↻</span>
-          </div>
-          <button onclick="abrirImportarFPF()" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:2px;cursor:pointer;background:rgba(206,170,120,.12);color:var(--go);border:1px solid rgba(206,170,120,.3);transition:.2s" onmouseover="this.style.background='rgba(206,170,120,.22)'" onmouseout="this.style.background='rgba(206,170,120,.12)'">📋 FPF</button>
+          <div id="jogos-sync" style="font-size:8px;color:var(--ts)"><span class="spin">↻</span></div>
+          <button onclick="abrirImportarFPF()" style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;cursor:pointer;background:rgba(206,170,120,.12);color:var(--go);border:1px solid rgba(206,170,120,.3)" onmouseover="this.style.background='rgba(206,170,120,.22)'" onmouseout="this.style.background='rgba(206,170,120,.12)'">📋 FPF</button>
         </div>
       </div>
       <div class="pts" id="jogos-lista">
-        <div style="color:var(--ts);font-size:12px;padding:16px 0">Carregando jogos...</div>
+        <div style="color:var(--ts);font-size:12px;padding:12px 0">Carregando jogos...</div>
       </div>
     </div>
 
-    <!-- Semana Atual — sempre visível na 3ª coluna -->
-    <div style="background:var(--c2);border:1px solid rgba(70,162,247,.12);border-radius:4px;padding:18px">
+    <!-- ── 3. PROGRAMAÇÃO SEMANAL ── -->
+    <div style="background:var(--c2);border:1px solid rgba(70,162,247,.12);border-radius:4px;padding:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ts)">Semana Atual</div>
-        <div style="display:flex;gap:6px">
-          <button class="ppf-edit-btn" onclick="editarSemanaAtual()" id="btn-editar-semana" style="display:none;font-size:9px;padding:3px 8px">✏️ Editar</button>
-          <button class="prog-new-btn" onclick="abrirNovaProgamacao()" style="font-size:9px;padding:3px 10px">+ Semanal</button>
-          <button class="prog-new-btn" onclick="abrirProgDiaria()" style="font-size:9px;padding:3px 10px;background:rgba(206,170,120,.12);color:var(--go);border:1px solid rgba(206,170,120,.3)">+ Diária</button>
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--az)">Programação Semanal</div>
+          <div id="prog-sem-subtitulo" style="font-size:9px;color:var(--ts);margin-top:2px">Semana atual</div>
+        </div>
+        <div style="display:flex;gap:5px">
+          <button class="ppf-edit-btn" onclick="editarSemanaAtual()" id="btn-editar-semana" style="display:none;font-size:8px;padding:3px 8px">✏️ Editar</button>
+          <button onclick="abrirNovaProgamacao()" style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;cursor:pointer;background:rgba(70,162,247,.12);color:var(--az);border:1px solid rgba(70,162,247,.25)">+ Nova</button>
         </div>
       </div>
       <div id="cal-semana-atual" style="color:var(--ts);font-size:12px">Carregando...</div>
     </div>
 
-  </div>
-
-  <!-- LINHA 2: Prog do Dia + Prog Diária -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-
-    <!-- Programação do Dia (clique no calendário) -->
-    <div id="cal-day-panel" style="background:var(--c2);border:1px solid rgba(70,162,247,.12);border-radius:4px;padding:18px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ts);margin-bottom:10px">Programação do Dia</div>
-      <div id="cal-day-content" style="color:var(--ts);font-size:12px">Clique em um dia no calendário para ver as atividades.</div>
-    </div>
-
-    <!-- Programação Diária de Hoje -->
-    <div style="background:var(--c2);border:1px solid rgba(206,170,120,.15);border-radius:4px;padding:18px">
+    <!-- ── 4. PROGRAMAÇÃO DIÁRIA ── -->
+    <div style="background:var(--c2);border:1px solid rgba(206,170,120,.15);border-radius:4px;padding:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--go)">Programação Diária</div>
-          <div id="prog-diaria-data" style="font-size:10px;color:var(--ts);margin-top:2px">Hoje</div>
+          <div id="prog-diaria-data" style="font-size:9px;color:var(--ts);margin-top:2px">Hoje</div>
         </div>
-        <button class="ppf-edit-btn" onclick="editarProgDiaria()" id="btn-editar-diaria" style="display:none;font-size:9px;padding:3px 8px">✏️ Editar</button>
+        <div style="display:flex;gap:5px">
+          <button class="ppf-edit-btn" onclick="editarProgDiaria()" id="btn-editar-diaria" style="display:none;font-size:8px;padding:3px 8px">✏️ Editar</button>
+          <button onclick="abrirProgDiaria()" style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:2px;cursor:pointer;background:rgba(206,170,120,.12);color:var(--go);border:1px solid rgba(206,170,120,.3)">+ Nova</button>
+        </div>
       </div>
       <div id="prog-diaria-content" style="color:var(--ts);font-size:12px">Carregando...</div>
     </div>
 
   </div>
 
-  <!-- Lista oculta mas ainda carregada para o calendário -->
+  <!-- Lista oculta para o calendário -->
   <div id="prog-lista" style="display:none"></div>
 </section>
 
@@ -2621,16 +2621,14 @@ function voltarProgForm() {
 
 function mostrarDiaProg(y, m, d) {
   var panel = document.getElementById('cal-day-content');
+  var dayPanel = document.getElementById('cal-day-panel');
+  var dayEmpty = document.getElementById('cal-day-empty');
   if(!panel) return;
-  // Remove destaque anterior
   document.querySelectorAll('.cd2.selected').forEach(function(el){ el.classList.remove('selected'); });
-  // Destaca o dia clicado
   var allDays = document.querySelectorAll('.cd2');
   allDays.forEach(function(el) {
     var span = el.querySelector('span');
-    if(span && parseInt(span.textContent) === d) {
-      el.classList.add('selected');
-    }
+    if(span && parseInt(span.textContent) === d) el.classList.add('selected');
   });
   var dd = String(d).padStart(2,'0');
   var mm = String(m+1).padStart(2,'0');
@@ -2645,7 +2643,6 @@ function mostrarDiaProg(y, m, d) {
     if(v==='Viagem') return '#f7a846';
     return 'var(--wh)';
   }
-  // Procura nos dados de programacao
   var found = false;
   if(window._programacoes && window._programacoes.length) {
     window._programacoes.forEach(function(prog) {
@@ -2658,25 +2655,29 @@ function mostrarDiaProg(y, m, d) {
           var manha = dia.manha || '—';
           var tarde = dia.tarde || '—';
           panel.innerHTML =
-            '<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--ww);margin-bottom:16px">'+ dataStr +' · '+ diasPT[i] +'</div>'+
-            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
-              '<div style="background:var(--c1);border-radius:3px;padding:14px">'+
-                '<div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">Manhã · '+(prog['Horario Manha']||'08:00')+'</div>'+
-                '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;color:'+corAtiv(manha)+'">'+manha+'</div>'+
+            '<div style="font-size:11px;font-weight:700;color:var(--ww);margin-bottom:8px">'+ dataStr +' · '+diasPT[i].substring(0,3)+'</div>'+
+            '<div style="display:flex;flex-direction:column;gap:4px">'+
+              '<div style="background:var(--c1);border-radius:3px;padding:8px">'+
+                '<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ts);margin-bottom:3px">Manhã</div>'+
+                '<div style="font-size:11px;font-weight:700;color:'+corAtiv(manha)+'">'+manha+'</div>'+
               '</div>'+
-              '<div style="background:var(--c1);border-radius:3px;padding:14px">'+
-                '<div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">Tarde · '+(prog['Horario Tarde']||'13:30')+'</div>'+
-                '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;color:'+corAtiv(tarde)+'">'+tarde+'</div>'+
+              '<div style="background:var(--c1);border-radius:3px;padding:8px">'+
+                '<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ts);margin-bottom:3px">Tarde</div>'+
+                '<div style="font-size:11px;font-weight:700;color:'+corAtiv(tarde)+'">'+tarde+'</div>'+
               '</div>'+
             '</div>'+
-            '<div style="margin-top:12px;font-size:11px;color:var(--ts)">📍 '+(dia.local||prog['Local']||'Jose Liberatti')+'</div>';
+            '<div style="margin-top:6px;font-size:10px;color:var(--ts)">📍 '+(dia.local||prog['Local']||'Jose Liberatti')+'</div>';
         }
       });
     });
   }
-  if(!found) {
-    panel.innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--ww);margin-bottom:8px">'+ dataStr +'</div>'+
-      '<div style="font-size:12px;color:var(--ts)">Sem programação para este dia.</div>';
+  if(found) {
+    if(dayPanel) { dayPanel.style.display='block'; }
+    if(dayEmpty) { dayEmpty.style.display='none'; }
+  } else {
+    panel.innerHTML = '<div style="font-size:11px;color:var(--ts)">'+ dataStr +' — Sem programação.</div>';
+    if(dayPanel) { dayPanel.style.display='block'; }
+    if(dayEmpty) { dayEmpty.style.display='none'; }
   }
 }
 
@@ -2710,26 +2711,43 @@ function renderSemanaAtual() {
   });
   if(comDados.length) semanaAtual = comDados[comDados.length - 1];
   window._semanaAtualData = semanaAtual;
-  if(!semanaAtual) { panel.innerHTML = '<div style="color:var(--ts);font-size:12px">Nenhuma programação cadastrada.</div>'; return; }
+  if(!semanaAtual) {
+    panel.innerHTML = '<div style="color:var(--ts);font-size:12px">Nenhuma programação cadastrada.</div>';
+    var sub = document.getElementById('prog-sem-subtitulo');
+    if(sub) sub.textContent = 'Semana atual';
+    return;
+  }
+  // Update subtitle with week dates
+  var sub = document.getElementById('prog-sem-subtitulo');
+  if(sub) sub.textContent = semanaAtual['Semana Inicio'] || 'Semana atual';
   var dias = {};
   try { dias = JSON.parse(semanaAtual['Dias']||'{}'); } catch(e) {}
   var rows = diasNomes.map(function(nome, i) {
     var dia = dias[nome] || {};
     var manha = dia.manha || '—';
     var tarde = dia.tarde || '—';
-    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(70,162,247,.06)">'+
-      '<div style="width:32px;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;color:var(--ts)">'+diasPT[i]+'</div>'+
-      '<div style="font-size:11px;color:var(--ts);width:60px">'+(dia.data||'')+'</div>'+
-      '<div style="flex:1;font-size:11px;color:'+corAtiv(manha)+'">'+manha+'</div>'+
-      '<div style="flex:1;font-size:11px;color:'+corAtiv(tarde)+'">'+tarde+'</div>'+
+    var isEmpty = (!dia.manha || dia.manha==='') && (!dia.tarde || dia.tarde==='');
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(70,162,247,.05)">'+
+      '<div style="width:28px;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;color:var(--ts)">'+diasPT[i]+'</div>'+
+      '<div style="font-size:9px;color:var(--ts);width:52px">'+(dia.data||'')+'</div>'+
+      '<div style="flex:1;font-size:10px;color:'+corAtiv(manha)+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+manha+'</div>'+
+      '<div style="flex:1;font-size:10px;color:'+corAtiv(tarde)+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right">'+tarde+'</div>'+
     '</div>';
   }).join('');
   var treinos = Object.values(dias).filter(function(d){
     return d&&(d.manha==='Treino Campo'||d.manha==='Treino Academia'||d.tarde==='Treino Campo'||d.tarde==='Treino Academia');
   }).length;
+  var hubUrl = 'https://gfaganello-creator.github.io/ozhub/prog.html';
+  var diasVals = Object.values(dias);
+  var semStr = (diasVals[0]&&diasVals[0].data?diasVals[0].data:'') + ' a ' + (diasVals[6]&&diasVals[6].data?diasVals[6].data:'');
+  var waMsg = '\u26bd *Programacao Semanal*\nOsasco Sporting | Profissional\n\n\uD83D\uDCC5 Semana: ' + semStr + '\n\uD83C\uDFC3 Treinos: ' + treinos + '\n\n\uD83D\uDD17 ' + hubUrl;
+  var waUrl = 'https://wa.me/?text=' + encodeURIComponent(waMsg);
   panel.innerHTML =
-    '<div style="font-size:10px;color:var(--ts);margin-bottom:4px">'+semanaAtual['Semana Inicio']+'  ·  '+treinos+' treinos</div>'+
-    rows;
+    '<div style="font-size:10px;color:var(--ts);margin-bottom:8px">'+semanaAtual['Semana Inicio']+'  ·  '+treinos+' treinos</div>'+
+    rows +
+    '<div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(70,162,247,.08)">'+
+      '<a href="'+waUrl+'" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:#25D366;color:#fff;font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px;border-radius:2px;text-decoration:none">📱 WhatsApp</a>'+
+    '</div>';
   var btnEdit = document.getElementById('btn-editar-semana');
   if(btnEdit) btnEdit.style.display = '';
 }
@@ -3672,8 +3690,7 @@ function carregarProgDiaria() {
         return;
       }
       function pcsv(line){var r=[],c='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else{q=!q;}}else if(ch===','&&!q){r.push(c);c='';}else{c+=ch;}}r.push(c);return r;}
-      var lines = txt.split('
-');
+      var lines = txt.split('\n');
       var hdrs = pcsv(lines[0]).map(function(h){ return h.replace(/^"|"$/g,'').trim(); });
       var rows = lines.slice(1).filter(function(l){ return l.trim(); }).map(function(l) {
         var vs = pcsv(l); var o = {};
@@ -3729,7 +3746,14 @@ function renderProgDiaria(prog) {
 
   var obs = prog['Obs'] ? '<div style="margin-top:8px;font-size:10px;color:var(--ts);font-style:italic">'+prog['Obs']+'</div>' : '';
 
-  content.innerHTML = titulo + linhas + obs;
+  var dataTxt = (prog['Dia Semana']||'') + ' · ' + (prog['Data BR']||'');
+  var waLines = atividades.map(function(a){ return a.hora + ' — ' + a.atividade + (a.local?' ('+a.local+')':''); }).join('\n');
+  var waMsg = '\uD83D\uDDD3\uFE0F *Programacao Diaria*\nOsasco Sporting\n\n' + dataTxt + (prog['Titulo']?'\n'+prog['Titulo']:'') + '\n\n' + waLines + (prog['Obs']?'\n\nObs: '+prog['Obs']:'');
+  var waUrl = 'https://wa.me/?text=' + encodeURIComponent(waMsg);
+  var waBtn = '<div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(206,170,120,.1)">'+
+    '<a href="'+waUrl+'" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;background:#25D366;color:#fff;font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px;border-radius:2px;text-decoration:none">📱 WhatsApp</a>'+
+  '</div>';
+  content.innerHTML = titulo + linhas + obs + waBtn;
 }
 
 // Carrega ao iniciar
