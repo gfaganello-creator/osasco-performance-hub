@@ -608,13 +608,21 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
       </div>
     </div>
     <div>
-      <div style="font-family:'Barlow Condensed';font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--az);margin-bottom:14px">Agenda de Partidas</div>
-      <div class="pts">
-        <div class="pt"><div class="pd"><div class="pdi">29</div><div class="pm">Mar</div></div><div><div class="pc">Paulista A2 · Final</div><div class="ptm">Osasco Sporting <span class="pvs">vs</span> A definir</div><div class="ploc">📍 Arena Osasco</div></div><div class="ppd"><div class="ppct md">82%</div><div class="pdlbl">Disponível</div></div></div>
-        <div class="pt" style="opacity:.8"><div class="pd"><div class="pdi">05</div><div class="pm">Abr</div></div><div><div class="pc">Copa Paulista · 1ª Fase</div><div class="ptm">Osasco Sporting <span class="pvs">vs</span> A definir</div><div class="ploc">📍 Arena Osasco</div></div><div class="ppd"><div class="ppct" style="color:var(--ts)">—</div><div class="pdlbl">A confirmar</div></div></div>
-        <div style="font-family:'Barlow Condensed';font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin:14px 0 10px">Últimos Resultados</div>
-        <div class="pt" style="opacity:.65"><div class="pd"><div class="pdi">22</div><div class="pm">Mar</div></div><div><div class="pc">Paulista A2 · Semifinal</div><div class="ptm">Osasco Sporting <span class="pvs">vs</span> Adversário</div><div class="ploc">📍 Fora de casa</div></div><div class="ppd"><div class="ppct md">83%</div><div class="pdlbl">Disponível</div></div></div>
-        <div class="pt" style="opacity:.4"><div class="pd"><div class="pdi">15</div><div class="pm">Mar</div></div><div><div class="pc">Paulista A2 · Quartas</div><div class="ptm">Osasco Sporting <span class="pvs">vs</span> Adversário</div><div class="ploc">📍 Arena Osasco</div></div><div class="ppd"><div class="ppct hi">87%</div><div class="pdlbl">Disponível</div></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-family:'Barlow Condensed';font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--az)">Agenda de Partidas</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="display:flex;gap:4px" id="jogos-filtro">
+            <button onclick="filtrarJogos('todos')" id="filtro-todos" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:2px;cursor:pointer;background:var(--az);color:var(--bk);border:1px solid var(--az);transition:.2s">Todos</button>
+            <button onclick="filtrarJogos('Profissional')" id="filtro-Profissional" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:2px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Profissional</button>
+            <button onclick="filtrarJogos('Sub-20')" id="filtro-Sub-20" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:2px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Sub-20</button>
+          </div>
+          <div id="jogos-sync" style="font-size:9px;color:var(--ts);display:flex;align-items:center;gap:4px">
+            <span class="spin" style="font-size:10px">↻</span> carregando
+          </div>
+        </div>
+      </div>
+      <div class="pts" id="jogos-lista">
+        <div style="color:var(--ts);font-size:12px;padding:16px 0">Carregando jogos...</div>
       </div>
     </div>
   </div>
@@ -2916,6 +2924,208 @@ function mostrarSucesso(isEdit, pdfLink, data) {
 }
 
 // confirmarProg definida acima (linha única, sem duplicata)
+
+// ══════════════════════════════════════
+// AGENDA DE PARTIDAS — leitura dinâmica
+// ══════════════════════════════════════
+var _todosJogos = [];
+var _filtroAtual = 'todos';
+
+var MESES_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+var MESES_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function carregarJogos() {
+  var SID = '1Fj8RhuKjicvVyF06CPJqF7kiKpEsquCKFSHX3qf3Pus';
+  var BASE = 'https://docs.google.com/spreadsheets/d/' + SID + '/gviz/tq?tqx=out:csv&sheet=';
+  fetch(BASE + encodeURIComponent('Jogos'))
+    .then(function(r){ return r.text(); })
+    .then(function(txt) {
+      if (!txt || txt.length < 10) {
+        renderJogos([]);
+        return;
+      }
+      function pcsv(line) {
+        var r=[], c='', q=false;
+        for (var i=0; i<line.length; i++) {
+          var ch=line[i];
+          if (ch==='"') { if(q&&line[i+1]==='"'){c+='"';i++;}else{q=!q;} }
+          else if (ch===','&&!q) { r.push(c); c=''; }
+          else { c+=ch; }
+        }
+        r.push(c);
+        return r;
+      }
+      var lines = txt.split('\n');
+      var hdrs = pcsv(lines[0]).map(function(h){ return h.replace(/^"|"$/g,'').trim(); });
+      var rows = lines.slice(1).filter(function(l){ return l.trim(); }).map(function(l) {
+        var vs = pcsv(l);
+        var o = {};
+        hdrs.forEach(function(h,i){ o[h] = (vs[i]||'').replace(/^"|"$/g,'').trim(); });
+        return o;
+      });
+      rows = rows.filter(function(r){ return r['Data'] && r['Data'].trim(); });
+      _todosJogos = rows;
+      renderJogos(rows);
+      // Atualiza sync label
+      var sync = document.getElementById('jogos-sync');
+      if (sync) {
+        var now = new Date();
+        sync.innerHTML = '✓ atualizado ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+        sync.style.color = 'var(--ts)';
+      }
+    })
+    .catch(function() {
+      renderJogos([]);
+      var sync = document.getElementById('jogos-sync');
+      if (sync) { sync.innerHTML = '⚠ erro ao carregar'; sync.style.color = 'var(--re)'; }
+    });
+}
+
+function filtrarJogos(equipe) {
+  _filtroAtual = equipe;
+  // Atualiza botões
+  ['todos','Profissional','Sub-20'].forEach(function(id) {
+    var btn = document.getElementById('filtro-' + id);
+    if (!btn) return;
+    if (id === equipe) {
+      btn.style.background = 'var(--az)';
+      btn.style.color = 'var(--bk)';
+      btn.style.borderColor = 'var(--az)';
+    } else {
+      btn.style.background = 'transparent';
+      btn.style.color = 'var(--ts)';
+      btn.style.borderColor = 'rgba(70,162,247,.2)';
+    }
+  });
+  var filtrados = equipe === 'todos'
+    ? _todosJogos
+    : _todosJogos.filter(function(j){ return (j['Equipe']||'') === equipe; });
+  renderJogos(filtrados);
+}
+
+function renderJogos(rows) {
+  var container = document.getElementById('jogos-lista');
+  if (!container) return;
+  if (!rows || !rows.length) {
+    container.innerHTML = '<div style="color:var(--ts);font-size:12px;padding:16px 0">Nenhum jogo cadastrado.</div>';
+    return;
+  }
+
+  var hoje = new Date();
+  hoje.setHours(0,0,0,0);
+
+  // Separa futuros e passados
+  var proximos = [], anteriores = [];
+  rows.forEach(function(j) {
+    var dataJogo = parseDateBR(j['Data']);
+    if (!dataJogo) return;
+    dataJogo.setHours(0,0,0,0);
+    if (dataJogo >= hoje) proximos.push(j);
+    else anteriores.push(j);
+  });
+
+  // Ordena proximos ASC, anteriores DESC
+  proximos.sort(function(a,b){ return parseDateBR(a['Data']) - parseDateBR(b['Data']); });
+  anteriores.sort(function(a,b){ return parseDateBR(b['Data']) - parseDateBR(a['Data']); });
+
+  var html = '';
+
+  // Próximos jogos
+  if (proximos.length) {
+    html += '<div style="font-family:\'Barlow Condensed\';font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--az);margin-bottom:10px">Próximos Jogos</div>';
+    html += proximos.map(function(j, idx) { return renderCard(j, false, idx); }).join('');
+  }
+
+  // Últimos resultados
+  if (anteriores.length) {
+    html += '<div style="font-family:\'Barlow Condensed\';font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin:14px 0 10px">Últimos Resultados</div>';
+    // Mostra no máximo 4 anteriores
+    html += anteriores.slice(0,4).map(function(j, idx) { return renderCard(j, true, idx); }).join('');
+  }
+
+  if (!proximos.length && !anteriores.length) {
+    html = '<div style="color:var(--ts);font-size:12px;padding:16px 0">Nenhum jogo encontrado.</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+function parseDateBR(str) {
+  // Aceita DD/MM/YYYY ou YYYY-MM-DD
+  if (!str) return null;
+  var m;
+  if ((m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/))) {
+    return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+  }
+  if ((m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
+    return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  }
+  return null;
+}
+
+function renderCard(j, isPast, idx) {
+  var d = parseDateBR(j['Data']);
+  var dia = d ? String(d.getDate()).padStart(2,'0') : '--';
+  var mes = d ? MESES_PT[d.getMonth()] : '--';
+  var adversario = j['Adversario'] || 'A definir';
+  var competicao = j['Competicao'] || '';
+  var fase = j['Fase'] || '';
+  var local = j['Local'] || '';
+  var mandante = (j['Mandante']||'').toLowerCase() === 'sim' || (j['Mandante']||'').toLowerCase() === 'casa';
+  var locIcon = mandante ? '🏠' : '✈️';
+  var locLabel = mandante ? (local || 'José Liberatti') : ('Fora · ' + (local || 'A confirmar'));
+  var equipe = j['Equipe'] || '';
+  var equipeTag = equipe ? '<span style="background:rgba(70,162,247,.12);color:var(--az);font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border-radius:2px;margin-left:6px">' + equipe + '</span>' : '';
+
+  // Resultado
+  var golsMandante = j['Gols Mandante'] || j['Gols Casa'] || '';
+  var golsVisitante = j['Gols Visitante'] || j['Gols Fora'] || '';
+  var temResultado = golsMandante !== '' && golsVisitante !== '';
+  var placarOsasco = mandante ? golsMandante : golsVisitante;
+  var placarAdv = mandante ? golsVisitante : golsMandante;
+
+  // Disponibilidade (mantém se existir)
+  var disp = j['Disponibilidade'] || '';
+
+  var lado_direito = '';
+  if (isPast && temResultado) {
+    var g1 = parseInt(placarOsasco), g2 = parseInt(placarAdv);
+    var corPlacar = g1 > g2 ? 'var(--gr)' : g1 < g2 ? 'var(--re)' : 'var(--ye)';
+    var resultado = g1 > g2 ? 'Vitória' : g1 < g2 ? 'Derrota' : 'Empate';
+    lado_direito = '<div class="ppd"><div class="ppct" style="color:' + corPlacar + ';font-size:22px">' + placarOsasco + ' – ' + placarAdv + '</div><div class="pdlbl" style="color:' + corPlacar + '">' + resultado + '</div></div>';
+  } else if (!isPast) {
+    var hora = j['Hora'] || j['Horario'] || '';
+    if (hora) {
+      lado_direito = '<div class="ppd"><div class="ppct" style="color:var(--ts);font-size:16px">' + hora + '</div><div class="pdlbl">Horário</div></div>';
+    } else if (disp) {
+      var corDisp = parseFloat(disp) >= 85 ? 'var(--gr)' : parseFloat(disp) >= 75 ? 'var(--ye)' : 'var(--re)';
+      lado_direito = '<div class="ppd"><div class="ppct" style="color:' + corDisp + '">' + disp + '</div><div class="pdlbl">Disponível</div></div>';
+    } else {
+      lado_direito = '<div class="ppd"><div class="ppct" style="color:var(--ts)">—</div><div class="pdlbl">A confirmar</div></div>';
+    }
+  } else {
+    lado_direito = '<div class="ppd"><div class="ppct" style="color:var(--ts)">—</div><div class="pdlbl">S/ resultado</div></div>';
+  }
+
+  var opcao = isPast ? 'opacity:' + (idx === 0 ? '.65' : '.4' ) + ';' : '';
+
+  return '<div class="pt" style="' + opcao + '">' +
+    '<div class="pd"><div class="pdi">' + dia + '</div><div class="pm">' + mes + '</div></div>' +
+    '<div>' +
+      '<div class="pc">' + competicao + (fase ? ' · ' + fase : '') + equipeTag + '</div>' +
+      '<div class="ptm">Osasco Sporting <span class="pvs">vs</span> ' + adversario + '</div>' +
+      '<div class="ploc">' + locIcon + ' ' + locLabel + '</div>' +
+    '</div>' +
+    lado_direito +
+  '</div>';
+}
+
+// Carrega ao iniciar
+document.addEventListener('DOMContentLoaded', function() {
+  carregarJogos();
+  // Recarrega a cada 30 minutos
+  setInterval(carregarJogos, 30 * 60 * 1000);
+});
 </script>
 </body>
 </html>
