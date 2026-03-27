@@ -2724,7 +2724,8 @@ function confirmarProg() {
       return v.toString(16);
     });
   }
-  var progId = (progModo === 'editar' && progAtual) ? (progAtual.ID||progAtual.id||'') : gerarUUID();
+  var progId = (progModo === 'editar' && progAtual) ? (progAtual['ID']||progAtual['id']||progAtual.ID||progAtual.id||'') : gerarUUID();
+  console.log('Modo:', progModo, 'progId:', progId, 'progAtual:', progAtual ? JSON.stringify(progAtual).substring(0,100) : 'null');
   // Envia via POST no-cors com Content-Type text/plain
   // Apps Script le via e.postData.contents
   var diasStr = JSON.stringify(data.dias);
