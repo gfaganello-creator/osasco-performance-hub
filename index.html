@@ -619,6 +619,7 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
           <div id="jogos-sync" style="font-size:9px;color:var(--ts);display:flex;align-items:center;gap:4px">
             <span class="spin" style="font-size:10px">↻</span> carregando
           </div>
+          <button onclick="abrirImportarFPF()" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 12px;border-radius:2px;cursor:pointer;background:rgba(206,170,120,.12);color:var(--go);border:1px solid rgba(206,170,120,.3);transition:.2s" onmouseover="this.style.background='rgba(206,170,120,.22)'" onmouseout="this.style.background='rgba(206,170,120,.12)'">📋 Importar FPF</button>
         </div>
       </div>
       <div class="pts" id="jogos-lista">
@@ -2783,9 +2784,11 @@ function carregarProgramacoes() {
 
 // Global store for programações (for calendar integration)
 var _programacoes = [];
+window._programacoes = [];
 
 function renderizarProgramacoes(rows) {
   _programacoes = rows;
+  window._programacoes = rows;
   // Atualiza calendario com badges de treino
   if(typeof renderCal === 'function') renderCal();
   if(typeof renderSemanaAtual === 'function') renderSemanaAtual();
@@ -2977,7 +2980,7 @@ function carregarJogos() {
     .catch(function() {
       renderJogos([]);
       var sync = document.getElementById('jogos-sync');
-      if (sync) { sync.innerHTML = '⚠ erro ao carregar'; sync.style.color = 'var(--re)'; }
+      if (sync) { sync.innerHTML = 'aba Jogos não criada ainda'; sync.style.color = 'var(--ts)'; }
     });
 }
 
@@ -3007,7 +3010,7 @@ function renderJogos(rows) {
   var container = document.getElementById('jogos-lista');
   if (!container) return;
   if (!rows || !rows.length) {
-    container.innerHTML = '<div style="color:var(--ts);font-size:12px;padding:16px 0">Nenhum jogo cadastrado.</div>';
+    container.innerHTML = '<div style="color:var(--ts);font-size:12px;padding:16px 0">Nenhum jogo cadastrado na aba <b style="color:var(--az)">Jogos</b> da planilha ainda.</div>';
     return;
   }
 
@@ -3127,5 +3130,405 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(carregarJogos, 30 * 60 * 1000);
 });
 </script>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MODAL IMPORTAR TABELA FPF              -->
+<!-- ═══════════════════════════════════════ -->
+<div id="fpf-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:20000;align-items:center;justify-content:center;padding:20px">
+  <div style="background:rgba(8,16,26,.98);border:1px solid rgba(206,170,120,.25);border-radius:10px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;padding:32px">
+
+    <!-- Cabeçalho -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:var(--ww);letter-spacing:2px">Importar Tabela FPF</div>
+        <div style="font-size:11px;color:var(--ts);margin-top:2px">Upload do PDF da FPF — Claude extrai os jogos automaticamente</div>
+      </div>
+      <button onclick="fecharImportarFPF()" style="background:none;border:none;color:var(--ts);cursor:pointer;font-size:22px;padding:4px;line-height:1">✕</button>
+    </div>
+
+    <!-- Etapa 1: Upload -->
+    <div id="fpf-step-upload">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:16px">Passo 1 — Selecione o PDF da FPF</div>
+
+      <!-- Qual equipe? -->
+      <div style="margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Equipe</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="selecionarEquipeFPF('Profissional',this)" id="fpf-eq-prof" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:7px 16px;border-radius:3px;cursor:pointer;background:var(--az);color:var(--bk);border:1px solid var(--az);transition:.2s">Profissional</button>
+          <button onclick="selecionarEquipeFPF('Sub-20',this)" id="fpf-eq-sub20" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:7px 16px;border-radius:3px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Sub-20</button>
+        </div>
+      </div>
+
+      <!-- Área de drop -->
+      <div id="fpf-dropzone" onclick="document.getElementById('fpf-file-input').click()" style="border:2px dashed rgba(206,170,120,.3);border-radius:6px;padding:40px 24px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:16px" onmouseover="this.style.borderColor='rgba(206,170,120,.6)';this.style.background='rgba(206,170,120,.04)'" onmouseout="this.style.borderColor='rgba(206,170,120,.3)';this.style.background='transparent'">
+        <div style="font-size:32px;margin-bottom:10px">📄</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--go);letter-spacing:1px">Clique para selecionar o PDF</div>
+        <div style="font-size:11px;color:var(--ts);margin-top:6px">ou arraste e solte aqui</div>
+        <div id="fpf-file-name" style="font-size:11px;color:var(--az);margin-top:10px;display:none"></div>
+      </div>
+      <input type="file" id="fpf-file-input" accept=".pdf" style="display:none" onchange="onFPFFileSelect(event)">
+
+      <!-- Drag & Drop handlers via JS -->
+
+      <button onclick="processarPDFFPF()" id="fpf-btn-processar" disabled style="width:100%;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px;border-radius:3px;cursor:not-allowed;background:rgba(70,162,247,.15);color:rgba(70,162,247,.4);border:1px solid rgba(70,162,247,.2);transition:.3s">
+        🤖 Extrair Jogos com IA
+      </button>
+    </div>
+
+    <!-- Etapa 2: Processando -->
+    <div id="fpf-step-loading" style="display:none;text-align:center;padding:32px 0">
+      <div style="font-size:40px;margin-bottom:16px">🤖</div>
+      <div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:var(--ww);letter-spacing:1px;margin-bottom:8px">Analisando PDF...</div>
+      <div id="fpf-loading-msg" style="font-size:12px;color:var(--ts)">Claude está lendo a tabela da FPF</div>
+      <div style="margin-top:20px;width:100%;height:3px;background:rgba(70,162,247,.1);border-radius:2px;overflow:hidden">
+        <div style="height:100%;background:var(--az);border-radius:2px;animation:progressBar 3s ease-in-out infinite"></div>
+      </div>
+    </div>
+
+    <!-- Etapa 3: Revisão -->
+    <div id="fpf-step-review" style="display:none">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:4px">Passo 2 — Revise os jogos extraídos</div>
+      <div id="fpf-review-summary" style="font-size:12px;color:var(--az);margin-bottom:16px"></div>
+      <div id="fpf-review-table" style="max-height:320px;overflow-y:auto;margin-bottom:20px"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="voltarImportarFPF()" style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px;border-radius:3px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">← Voltar</button>
+        <button onclick="confirmarImportarFPF()" id="fpf-btn-confirmar" style="flex:2;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px;border-radius:3px;cursor:pointer;background:var(--gr);color:var(--bk);border:1px solid var(--gr);transition:.2s">✓ Salvar na Planilha</button>
+      </div>
+    </div>
+
+    <!-- Etapa 4: Sucesso -->
+    <div id="fpf-step-success" style="display:none;text-align:center;padding:32px 0">
+      <div style="font-size:48px;margin-bottom:16px">✅</div>
+      <div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--ww);letter-spacing:1px;margin-bottom:8px" id="fpf-success-msg">Jogos importados!</div>
+      <div style="font-size:12px;color:var(--ts);margin-bottom:24px">A Agenda de Partidas foi atualizada automaticamente.</div>
+      <button onclick="fecharImportarFPF()" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 28px;border-radius:3px;cursor:pointer;background:var(--az);color:var(--bk);border:none">Fechar</button>
+    </div>
+
+  </div>
+</div>
+
+<style>
+@keyframes progressBar {
+  0%{width:0%;margin-left:0}
+  50%{width:60%;margin-left:20%}
+  100%{width:0%;margin-left:100%}
+}
+</style>
+
+<script>
+// ══════════════════════════════════════
+// IMPORTAR TABELA FPF
+// ══════════════════════════════════════
+var _fpfEquipeSelecionada = 'Profissional';
+var _fpfJogosExtraidos = [];
+var _fpfFileBase64 = '';
+
+function abrirImportarFPF() {
+  document.getElementById('fpf-modal-bg').style.display = 'flex';
+  fpfResetarParaStep('upload');
+}
+
+function fecharImportarFPF() {
+  document.getElementById('fpf-modal-bg').style.display = 'none';
+  fpfResetarParaStep('upload');
+  // Recarrega a agenda se houve importação
+  if (_fpfJogosExtraidos.length) carregarJogos();
+  _fpfJogosExtraidos = [];
+  _fpfFileBase64 = '';
+}
+
+function fpfResetarParaStep(step) {
+  ['upload','loading','review','success'].forEach(function(s) {
+    document.getElementById('fpf-step-' + s).style.display = 'none';
+  });
+  document.getElementById('fpf-step-' + step).style.display = step === 'loading' ? 'block' : 'block';
+  if (step === 'upload') {
+    document.getElementById('fpf-file-name').style.display = 'none';
+    document.getElementById('fpf-file-name').textContent = '';
+    document.getElementById('fpf-btn-processar').disabled = true;
+    document.getElementById('fpf-btn-processar').style.cssText = 'width:100%;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px;border-radius:3px;cursor:not-allowed;background:rgba(70,162,247,.15);color:rgba(70,162,247,.4);border:1px solid rgba(70,162,247,.2);transition:.3s';
+    _fpfFileBase64 = '';
+  }
+}
+
+function selecionarEquipeFPF(equipe, btn) {
+  _fpfEquipeSelecionada = equipe;
+  ['fpf-eq-prof','fpf-eq-sub20'].forEach(function(id) {
+    var b = document.getElementById(id);
+    b.style.background = 'transparent';
+    b.style.color = 'var(--ts)';
+    b.style.borderColor = 'rgba(70,162,247,.2)';
+  });
+  btn.style.background = 'var(--az)';
+  btn.style.color = 'var(--bk)';
+  btn.style.borderColor = 'var(--az)';
+}
+
+function onFPFFileSelect(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  fpfCarregarArquivo(file);
+}
+
+// Drag & Drop
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    var dz = document.getElementById('fpf-dropzone');
+    if (!dz) return;
+    dz.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dz.style.borderColor = 'rgba(206,170,120,.8)';
+      dz.style.background = 'rgba(206,170,120,.08)';
+    });
+    dz.addEventListener('dragleave', function() {
+      dz.style.borderColor = 'rgba(206,170,120,.3)';
+      dz.style.background = 'transparent';
+    });
+    dz.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dz.style.borderColor = 'rgba(206,170,120,.3)';
+      dz.style.background = 'transparent';
+      var file = e.dataTransfer.files[0];
+      if (file && file.type === 'application/pdf') fpfCarregarArquivo(file);
+    });
+  });
+})();
+
+function fpfCarregarArquivo(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    _fpfFileBase64 = e.target.result.split(',')[1];
+    var nameEl = document.getElementById('fpf-file-name');
+    nameEl.textContent = '📎 ' + file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+    nameEl.style.display = 'block';
+    var btn = document.getElementById('fpf-btn-processar');
+    btn.disabled = false;
+    btn.style.cssText = 'width:100%;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px;border-radius:3px;cursor:pointer;background:var(--az);color:var(--bk);border:1px solid var(--az);transition:.3s';
+  };
+  reader.readAsDataURL(file);
+}
+
+function voltarImportarFPF() {
+  fpfResetarParaStep('upload');
+}
+
+async function processarPDFFPF() {
+  if (!_fpfFileBase64) return;
+  fpfResetarParaStep('loading');
+
+  var msgs = [
+    'Claude está lendo a tabela da FPF...',
+    'Identificando datas e adversários...',
+    'Verificando competições e fases...',
+    'Organizando os dados...'
+  ];
+  var mi = 0;
+  var interval = setInterval(function() {
+    var el = document.getElementById('fpf-loading-msg');
+    if (el) el.textContent = msgs[mi % msgs.length];
+    mi++;
+  }, 1800);
+
+  try {
+    var prompt = 'Você está analisando uma tabela de jogos da FPF (Federação Paulista de Futebol) para o time Osasco Sporting, equipe ' + _fpfEquipeSelecionada + '.
+
+' +
+      'Extraia TODOS os jogos encontrados no documento e retorne APENAS um JSON válido (sem markdown, sem explicação, só o JSON) no formato:
+' +
+      '{"jogos": [{"data":"DD/MM/YYYY","hora":"HH:MM","adversario":"Nome do Adversário","competicao":"Nome da Competição","fase":"Nome da Fase","mandante":"Sim ou Nao","local":"Nome do Estádio se houver"}]}
+
+' +
+      'Regras importantes:
+' +
+      '- "mandante" = "Sim" se o Osasco Sporting jogar EM CASA, "Nao" se jogar FORA
+' +
+      '- Se não tiver horário, use "A definir"
+' +
+      '- Se não tiver local, use "A definir"
+' +
+      '- Extraia TODOS os jogos, passados e futuros
+' +
+      '- Retorne SOMENTE o JSON, sem nenhum texto antes ou depois';
+
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'document',
+              source: {type: 'base64', media_type: 'application/pdf', data: _fpfFileBase64}
+            },
+            {type: 'text', text: prompt}
+          ]
+        }]
+      })
+    });
+
+    clearInterval(interval);
+
+    var data = await response.json();
+    var text = (data.content || []).map(function(b){ return b.text || ''; }).join('');
+
+    // Limpa possível markdown
+    text = text.replace(/```json/g,'').replace(/```/g,'').trim();
+
+    var parsed = JSON.parse(text);
+    _fpfJogosExtraidos = parsed.jogos || [];
+
+    if (!_fpfJogosExtraidos.length) throw new Error('Nenhum jogo encontrado no PDF.');
+
+    fpfMostrarRevisao();
+
+  } catch(err) {
+    clearInterval(interval);
+    fpfResetarParaStep('upload');
+    var msg = err.message || 'Erro ao processar PDF.';
+    alert('❌ Erro: ' + msg + '
+
+Verifique se o PDF é da FPF e tente novamente.');
+  }
+}
+
+function fpfMostrarRevisao() {
+  fpfResetarParaStep('review');
+
+  var novos = 0, atualizados = 0, ignorados = 0;
+  var jogosExistentes = _todosJogos || [];
+
+  var rows = _fpfJogosExtraidos.map(function(j) {
+    // Verifica duplicata: mesma data + adversário + competição
+    var existe = jogosExistentes.find(function(ex) {
+      return ex['Data'] === j.data &&
+             (ex['Adversario']||'').toLowerCase() === (j.adversario||'').toLowerCase() &&
+             (ex['Competicao']||'').toLowerCase() === (j.competicao||'').toLowerCase();
+    });
+
+    var status, corStatus, bgStatus;
+    if (existe) {
+      var temResultado = (existe['Gols Casa']||'') !== '' && (existe['Gols Fora']||'') !== '';
+      if (temResultado) {
+        status = 'Ignorado (já tem resultado)'; corStatus = 'var(--ts)'; bgStatus = 'rgba(122,155,181,.08)';
+        ignorados++;
+      } else {
+        status = 'Atualizar'; corStatus = 'var(--ye)'; bgStatus = 'rgba(245,158,11,.08)';
+        atualizados++;
+      }
+    } else {
+      status = 'Novo'; corStatus = 'var(--gr)'; bgStatus = 'rgba(46,204,142,.08)';
+      novos++;
+    }
+
+    return '<tr style="border-bottom:1px solid rgba(70,162,247,.06)">' +
+      '<td style="padding:7px 8px;font-size:11px;color:var(--ww);font-weight:600">' + j.data + '</td>' +
+      '<td style="padding:7px 8px;font-size:11px;color:var(--ts)">' + (j.hora||'-') + '</td>' +
+      '<td style="padding:7px 8px;font-size:12px;color:var(--ww)">' + j.adversario + '</td>' +
+      '<td style="padding:7px 8px;font-size:10px;color:var(--ts)">' + j.competicao + '</td>' +
+      '<td style="padding:7px 8px;font-size:10px;color:var(--ts)">' + (j.mandante==='Sim'?'🏠':'✈️') + '</td>' +
+      '<td style="padding:7px 8px"><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:2px;background:' + bgStatus + ';color:' + corStatus + '">' + status + '</span></td>' +
+    '</tr>';
+  }).join('');
+
+  document.getElementById('fpf-review-summary').textContent =
+    _fpfJogosExtraidos.length + ' jogos encontrados — ' +
+    novos + ' novos, ' + atualizados + ' para atualizar, ' + ignorados + ' ignorados';
+
+  document.getElementById('fpf-review-table').innerHTML =
+    '<table style="width:100%;border-collapse:collapse">' +
+    '<thead><tr>' +
+      '<th style="padding:6px 8px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.15)">Data</th>' +
+      '<th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.15)">Hora</th>' +
+      '<th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.15)">Adversário</th>' +
+      '<th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.15)">Competição</th>' +
+      '<th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.15)">Local</th>' +
+      '<th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.15)">Status</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '</table>';
+}
+
+async function confirmarImportarFPF() {
+  var btn = document.getElementById('fpf-btn-confirmar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Salvando...';
+
+  try {
+    var SID = '1Fj8RhuKjicvVyF06CPJqF7kiKpEsquCKFSHX3qf3Pus';
+    var BASE = 'https://docs.google.com/spreadsheets/d/' + SID + '/gviz/tq?tqx=out:csv&sheet=';
+
+    // Busca dados atuais da planilha para checar duplicatas
+    var txt = await fetch(BASE + encodeURIComponent('Jogos')).then(function(r){ return r.text(); }).catch(function(){ return ''; });
+    var jogosAtuais = fpfParseCsv(txt);
+
+    // Monta payload para salvar
+    var paraEnviar = _fpfJogosExtraidos.filter(function(j) {
+      var existe = jogosAtuais.find(function(ex) {
+        return ex['Data'] === j.data &&
+               (ex['Adversario']||'').toLowerCase() === (j.adversario||'').toLowerCase() &&
+               (ex['Competicao']||'').toLowerCase() === (j.competicao||'').toLowerCase() &&
+               (ex['Gols Casa']||'') !== '';
+      });
+      return !existe; // só envia os que não têm resultado ainda
+    });
+
+    // Envia para o Apps Script salvar na planilha
+    var payload = {
+      action: 'salvarJogosFPF',
+      equipe: _fpfEquipeSelecionada,
+      jogos: JSON.stringify(paraEnviar)
+    };
+    var formBody = Object.keys(payload).map(function(k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(payload[k]);
+    }).join('&');
+
+    await fetch(SCRIPT_URL2, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: formBody
+    });
+
+    var novos = paraEnviar.length;
+    var ignorados = _fpfJogosExtraidos.length - novos;
+
+    document.getElementById('fpf-success-msg').textContent =
+      novos + ' jogo' + (novos !== 1 ? 's' : '') + ' importado' + (novos !== 1 ? 's' : '') + ' com sucesso!';
+    if (ignorados) {
+      document.querySelector('#fpf-step-success div:nth-child(3)').textContent =
+        ignorados + ' jogo(s) ignorado(s) por já ter resultado. Agenda atualizada!';
+    }
+
+    fpfResetarParaStep('success');
+    // Recarrega jogos na agenda após 1s
+    setTimeout(carregarJogos, 1000);
+
+  } catch(err) {
+    btn.disabled = false;
+    btn.textContent = '✓ Salvar na Planilha';
+    alert('Erro ao salvar: ' + (err.message || err));
+  }
+}
+
+function fpfParseCsv(txt) {
+  if (!txt || txt.length < 10) return [];
+  function pcsv(line) {
+    var r=[],c='',q=false;
+    for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){if(q&&line[i+1]==='"'){c+='"';i++;}else{q=!q;}}else if(ch===','&&!q){r.push(c);c='';}else{c+=ch;}}
+    r.push(c);return r;
+  }
+  var lines = txt.split('\n');
+  var hdrs = pcsv(lines[0]).map(function(h){ return h.replace(/^"|"$/g,'').trim(); });
+  return lines.slice(1).filter(function(l){ return l.trim(); }).map(function(l) {
+    var vs = pcsv(l); var o = {};
+    hdrs.forEach(function(h,i){ o[h] = (vs[i]||'').replace(/^"|"$/g,'').trim(); });
+    return o;
+  });
+}
+</script>
+
 </body>
 </html>
