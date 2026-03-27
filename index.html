@@ -3342,25 +3342,13 @@ async function processarPDFFPF() {
   }, 1800);
 
   try {
-    var prompt = 'Você está analisando uma tabela de jogos da FPF (Federação Paulista de Futebol) para o time Osasco Sporting, equipe ' + _fpfEquipeSelecionada + '.
-
-' +
-      'Extraia TODOS os jogos encontrados no documento e retorne APENAS um JSON válido (sem markdown, sem explicação, só o JSON) no formato:
-' +
-      '{"jogos": [{"data":"DD/MM/YYYY","hora":"HH:MM","adversario":"Nome do Adversário","competicao":"Nome da Competição","fase":"Nome da Fase","mandante":"Sim ou Nao","local":"Nome do Estádio se houver"}]}
-
-' +
-      'Regras importantes:
-' +
-      '- "mandante" = "Sim" se o Osasco Sporting jogar EM CASA, "Nao" se jogar FORA
-' +
-      '- Se não tiver horário, use "A definir"
-' +
-      '- Se não tiver local, use "A definir"
-' +
-      '- Extraia TODOS os jogos, passados e futuros
-' +
-      '- Retorne SOMENTE o JSON, sem nenhum texto antes ou depois';
+    var prompt = [
+      'Voce esta analisando uma tabela de jogos da FPF para o time Osasco Sporting, equipe ' + _fpfEquipeSelecionada + '.',
+      'Extraia TODOS os jogos e retorne APENAS um JSON valido (sem markdown, sem explicacao) no formato:',
+      '{"jogos": [{"data":"DD/MM/YYYY","hora":"HH:MM","adversario":"Nome","competicao":"Nome","fase":"Nome","mandante":"Sim ou Nao","local":"Nome do Estadio"}]}',
+      'Regras: mandante=Sim se Osasco jogar em casa. Se sem horario use A definir. Se sem local use A definir.',
+      'Extraia TODOS os jogos passados e futuros. Retorne SOMENTE o JSON, sem nenhum texto antes ou depois.'
+    ].join(' ');
 
     var response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -3400,9 +3388,7 @@ async function processarPDFFPF() {
     clearInterval(interval);
     fpfResetarParaStep('upload');
     var msg = err.message || 'Erro ao processar PDF.';
-    alert('❌ Erro: ' + msg + '
-
-Verifique se o PDF é da FPF e tente novamente.');
+    alert('Erro: ' + msg + ' Verifique se o PDF e da FPF e tente novamente.');
   }
 }
 
