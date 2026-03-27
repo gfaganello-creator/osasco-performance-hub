@@ -143,9 +143,9 @@ section{padding:96px 80px}
 .cnt{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--wh)}
 .cb{width:26px;height:26px;background:rgba(70,162,247,.1);border:1px solid rgba(70,162,247,.2);border-radius:3px;color:var(--az);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:.2s}
 .cb:hover{background:rgba(70,162,247,.2)}
-.cdn{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px}
+.cdn{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-bottom:6px}
 .cdn div{text-align:center;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ts);padding:3px 0}
-.cday{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cday{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
 .cd2{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:300;color:var(--ts);border-radius:3px;position:relative;transition:.15s;cursor:default}
 .cd2.gm{background:rgba(70,162,247,.15);color:var(--az);font-weight:700;cursor:pointer}
 .cd2.gm:hover{background:rgba(70,162,247,.25)}
@@ -602,20 +602,17 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
   <div class="sh rv"><div><div class="stag">Agenda</div><div class="sti">Calendário</div></div><div class="sme">Jogos · Programação semanal e diária</div></div>
 
   <!-- 4 COLUNAS: Calendário | Jogos | Semanal | Diária -->
-  <div style="display:grid;grid-template-columns:260px 1fr 1fr 1fr;gap:14px;align-items:start" class="rv">
+  <div style="display:grid;grid-template-columns:minmax(240px,280px) 1fr 1fr 1fr;gap:14px;align-items:start" class="rv">
 
     <!-- ── 1. CALENDÁRIO ── -->
-    <div class="mc" style="padding:16px">
+    <div class="mc" style="padding:16px;overflow:hidden">
       <div class="cn2"><button class="cb" onclick="chm(-1)">‹</button><div class="cnt" id="cal-t">MARÇO 2026</div><button class="cb" onclick="chm(1)">›</button></div>
       <div class="cdn"><div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div></div>
       <div class="cday" id="cal-d"></div>
       <!-- Prog do dia (clique no calendário) -->
-      <div id="cal-day-panel" style="margin-top:14px;border-top:1px solid rgba(70,162,247,.1);padding-top:12px;display:none">
-        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Programação do Dia</div>
-        <div id="cal-day-content" style="color:var(--ts);font-size:11px"></div>
-      </div>
-      <div id="cal-day-empty" style="margin-top:12px;padding-top:10px">
-        <div style="font-size:10px;color:var(--ts)">Clique em um dia para ver detalhes.</div>
+      <div id="cal-day-panel" style="margin-top:12px;border-top:1px solid rgba(70,162,247,.1);padding-top:10px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">Programação do Dia</div>
+        <div id="cal-day-content" style="color:var(--ts);font-size:11px">Clique em um dia acima.</div>
       </div>
     </div>
 
@@ -2671,9 +2668,6 @@ function mostrarDiaProg(y, m, d) {
       });
     });
   }
-  // Always show panel, hide empty hint
-  if(dayPanel) dayPanel.style.display = 'block';
-  if(dayEmpty) dayEmpty.style.display = 'none';
   if(!found) {
     panel.innerHTML = '<div style="font-size:11px;color:var(--ts)">'+ dataStr +' — Sem programação cadastrada.</div>';
   }
