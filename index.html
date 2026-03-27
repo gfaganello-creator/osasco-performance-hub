@@ -632,7 +632,10 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ts)">Semana Atual</div>
-        <button class="prog-new-btn" onclick="abrirNovaProgamacao()">+ Nova Programacao</button>
+        <div style="display:flex;gap:8px">
+          <button class="ppf-edit-btn" onclick="editarSemanaAtual()" id="btn-editar-semana" style="display:none">✏️ Editar</button>
+          <button class="prog-new-btn" onclick="abrirNovaProgamacao()">+ Nova Programacao</button>
+        </div>
       </div>
       <div id="cal-semana-atual" style="color:var(--ts);font-size:13px">Carregando...</div>
     </div>
@@ -2678,6 +2681,7 @@ function renderSemanaAtual() {
     } catch(e) { return false; }
   });
   if(comDados.length) semanaAtual = comDados[comDados.length - 1];
+  window._semanaAtualData = semanaAtual;
   if(!semanaAtual) { panel.innerHTML = '<div style="color:var(--ts);font-size:12px">Nenhuma programação cadastrada.</div>'; return; }
   var dias = {};
   try { dias = JSON.parse(semanaAtual['Dias']||'{}'); } catch(e) {}
@@ -2698,6 +2702,8 @@ function renderSemanaAtual() {
   panel.innerHTML =
     '<div style="font-size:10px;color:var(--ts);margin-bottom:4px">'+semanaAtual['Semana Inicio']+'  ·  '+treinos+' treinos</div>'+
     rows;
+  var btnEdit = document.getElementById('btn-editar-semana');
+  if(btnEdit) btnEdit.style.display = '';
 }
 
 var _confirmando = false;
@@ -2829,16 +2835,43 @@ function editarProg(idx, rawStr) {
     DIAS_SEMANA.forEach(function(d) {
       var m = document.getElementById('prog-manha-'+d);
       var t = document.getElementById('prog-tarde-'+d);
+      if(m) m.value = '';
+      if(t) t.value = '';
       if(dias[d]) {
-        if(m) m.value = dias[d].manha||'Treino Campo';
-        if(t) t.value = dias[d].tarde||'Descanso Programado';
-
+        if(m) m.value = dias[d].manha || '';
+        if(t) t.value = dias[d].tarde || '';
       }
     });
     document.getElementById('prog-modal-bg').classList.add('open');
   } catch(e) { alert('Erro ao carregar programacao.'); }
 }
 
+
+function editarSemanaAtual() {
+  if(!window._semanaAtualData) { alert('Nenhuma programacao carregada.'); return; }
+  var r = window._semanaAtualData;
+  progModo = 'editar';
+  progAtual = r;
+  document.getElementById('prog-modal-title').textContent = 'EDITAR PROGRAMACAO';
+  document.getElementById('prog-semana-inicio').value = r['Semana Inicio Raw']||'';
+  document.getElementById('prog-local').value = r['Local']||'Jose Liberatti';
+  document.getElementById('prog-horario-manha').value = r['Horario Manha']||'08:00';
+  document.getElementById('prog-horario-tarde').value = r['Horario Tarde']||'13:30';
+  document.getElementById('prog-obs').value = r['Obs']||'';
+  var dias = {};
+  try { dias = JSON.parse(r['Dias']||'{}'); } catch(e) {}
+  DIAS_SEMANA.forEach(function(d) {
+    var m = document.getElementById('prog-manha-'+d);
+    var t = document.getElementById('prog-tarde-'+d);
+    if(m) m.value = '';
+    if(t) t.value = '';
+    if(dias[d]) {
+      if(m) m.value = dias[d].manha || '';
+      if(t) t.value = dias[d].tarde || '';
+    }
+  });
+  document.getElementById('prog-modal-bg').classList.add('open');
+}
 
 function mostrarSucesso(isEdit, pdfLink, data) {
   var hubUrl = 'https://gfaganello-creator.github.io/ozhub/';
