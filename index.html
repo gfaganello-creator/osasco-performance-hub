@@ -614,7 +614,7 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
         <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Programação do Dia</div>
         <div id="cal-day-content" style="color:var(--ts);font-size:11px"></div>
       </div>
-      <div id="cal-day-empty" style="margin-top:12px;border-top:1px solid rgba(70,162,247,.08);padding-top:10px">
+      <div id="cal-day-empty" style="margin-top:12px;padding-top:10px">
         <div style="font-size:10px;color:var(--ts)">Clique em um dia para ver detalhes.</div>
       </div>
     </div>
@@ -2671,13 +2671,11 @@ function mostrarDiaProg(y, m, d) {
       });
     });
   }
-  if(found) {
-    if(dayPanel) { dayPanel.style.display='block'; }
-    if(dayEmpty) { dayEmpty.style.display='none'; }
-  } else {
-    panel.innerHTML = '<div style="font-size:11px;color:var(--ts)">'+ dataStr +' — Sem programação.</div>';
-    if(dayPanel) { dayPanel.style.display='block'; }
-    if(dayEmpty) { dayEmpty.style.display='none'; }
+  // Always show panel, hide empty hint
+  if(dayPanel) dayPanel.style.display = 'block';
+  if(dayEmpty) dayEmpty.style.display = 'none';
+  if(!found) {
+    panel.innerHTML = '<div style="font-size:11px;color:var(--ts)">'+ dataStr +' — Sem programação cadastrada.</div>';
   }
 }
 
