@@ -3640,10 +3640,13 @@ function salvarProgDiaria() {
   var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
   var diaSemana = diasSemana[d.getDay()];
 
+  var _diariaId = (_progDiariaModo === 'editar' && _progDiariaAtual) ? (_progDiariaAtual['ID'] || '') : ('D' + new Date().getTime());
+  var _diariaLink = 'https://gfaganello-creator.github.io/ozhub/prog-diaria.html?id=' + _diariaId;
+
   var payload = {
     action: 'saveProgDiaria',
     modo: _progDiariaModo,
-    progId: (_progDiariaModo === 'editar' && _progDiariaAtual) ? (_progDiariaAtual['ID'] || '') : '',
+    progId: _diariaId,
     dataRaw: dataRaw,
     dataBR: dataBR,
     diaSemana: diaSemana,
@@ -3667,12 +3670,15 @@ function salvarProgDiaria() {
 
   // Monta mensagem WhatsApp
   var waLines = atividades.map(function(a){
-    return a.hora + ' — ' + a.atividade + (a.local ? ' (' + a.local + ')' : '');
-  }).join('%0A');
-  var waTitulo = titulo ? '%0A' + encodeURIComponent(titulo) : '';
-  var waObs = obs ? '%0A%0AObs: ' + encodeURIComponent(obs) : '';
-  var waMsgRaw = '\uD83D\uDDD3\uFE0F *Programacao Diaria*\nOsasco Sporting\n\n' +
-    diaSemana + ' · ' + dataBR + waTitulo + '\n\n' + waLines + waObs;
+    return a.hora + ' - ' + a.atividade + (a.local ? ' (' + a.local + ')' : '');
+  }).join('\n');
+  var waTitulo = titulo ? '\n' + titulo : '';
+  var waObs = obs ? '\n\nObs: ' + obs : '';
+  var waMsgRaw = '\uD83D\uDDD3\uFE0F *Programacao Diaria*' +
+    '\nOsasco Sporting' +
+    '\n\n' + diaSemana + ' - ' + dataBR + waTitulo +
+    '\n\n' + waLines + waObs +
+    '\n\n\uD83D\uDD17 ' + _diariaLink;
   var waUrl = 'https://wa.me/?text=' + encodeURIComponent(waMsgRaw);
 
   // Mostra modal de sucesso igual à semanal
