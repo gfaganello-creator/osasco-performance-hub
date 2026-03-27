@@ -2769,6 +2769,7 @@ function carregarProgramacoes() {
   fetch(BASE + encodeURIComponent('Programacao'))
     .then(function(r){return r.text();})
     .then(function(txt){
+      console.log('[OZ] Programacao CSV length:', txt ? txt.length : 0, '| preview:', txt ? txt.substring(0,80) : 'EMPTY');
       if(!txt||txt.length<10) {
         var panel = document.getElementById('cal-semana-atual');
         if(panel) panel.innerHTML = '<div style="font-size:12px;color:var(--ts)">Nenhuma programação cadastrada ainda.</div>';
@@ -3246,14 +3247,19 @@ function fecharImportarFPF() {
 
 function fpfResetarParaStep(step) {
   ['upload','loading','review','success'].forEach(function(s) {
-    document.getElementById('fpf-step-' + s).style.display = 'none';
+    var el = document.getElementById('fpf-step-' + s);
+    if (el) el.style.display = 'none';
   });
-  document.getElementById('fpf-step-' + step).style.display = step === 'loading' ? 'block' : 'block';
+  var target = document.getElementById('fpf-step-' + step);
+  if (target) target.style.display = 'block';
   if (step === 'upload') {
-    document.getElementById('fpf-file-name').style.display = 'none';
-    document.getElementById('fpf-file-name').textContent = '';
-    document.getElementById('fpf-btn-processar').disabled = true;
-    document.getElementById('fpf-btn-processar').style.cssText = 'width:100%;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px;border-radius:3px;cursor:not-allowed;background:rgba(70,162,247,.15);color:rgba(70,162,247,.4);border:1px solid rgba(70,162,247,.2);transition:.3s';
+    var fn = document.getElementById('fpf-file-name');
+    if (fn) { fn.style.display = 'none'; fn.textContent = ''; }
+    var bp = document.getElementById('fpf-btn-processar');
+    if (bp) {
+      bp.disabled = true;
+      bp.style.cssText = 'width:100%;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px;border-radius:3px;cursor:not-allowed;background:rgba(70,162,247,.15);color:rgba(70,162,247,.4);border:1px solid rgba(70,162,247,.2);transition:.3s';
+    }
     _fpfFileBase64 = '';
   }
 }
