@@ -2531,11 +2531,10 @@ function getProgData() {
   var obs = document.getElementById('prog-obs').value.trim();
   var dias = {};
   DIAS_SEMANA.forEach(function(d,i) {
-    var date = new Date(inicio);
-    // inicio must be monday; adjust
-    var dayOfWeek = date.getDay(); // 0=Sun
-    var mondayOffset = dayOfWeek===0?-6:1-dayOfWeek;
-    date.setDate(date.getDate() + mondayOffset + i);
+    // Parse date as local to avoid UTC timezone shift
+    var parts = inicio.split('-');
+    var date = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+    date.setDate(date.getDate() + i); // Segunda=0, Terca=1, ..., Domingo=6
     var dd = String(date.getDate()).padStart(2,'0');
     var mm = String(date.getMonth()+1).padStart(2,'0');
     var yyyy = date.getFullYear();
