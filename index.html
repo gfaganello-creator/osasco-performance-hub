@@ -2199,10 +2199,71 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <section id="plantel-perf">
-  <div class="pp-title">PLANTEL</div>
-  <div class="pp-sub">Osasco Sporting &middot; Elenco ativo &middot; Nucleo de Performance</div>
-  <input class="pp-search" id="pp-search" placeholder="Buscar atleta..." oninput="ppFiltrar()">
-  <div class="pp-grid" id="pp-grid"><div style="color:var(--ts);font-size:13px">Carregando...</div></div>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+    <div>
+      <div class="pp-title">NSP</div>
+      <div class="pp-sub">Nucleo de Saude e Performance &middot; Osasco Sporting</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button onclick="nspVerPlantel()" id="btn-nsp-plantel" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;background:var(--az);color:var(--bk);border:none;transition:.2s">Plantel</button>
+      <button onclick="nspVerPreTreino()" id="btn-nsp-pre" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Pre Treino</button>
+      <button onclick="nspVerPosTreino()" id="btn-nsp-pos" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Pos Treino</button>
+      <button onclick="nspVerRecuperacao()" id="btn-nsp-rec" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Recuperacao</button>
+      <button onclick="nspVerCarga()" id="btn-nsp-carga" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Controle de Carga</button>
+    </div>
+  </div>
+
+  <!-- STATS RÁPIDOS -->
+  <div id="nsp-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:24px">
+    <div style="background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:4px;padding:14px;text-align:center">
+      <div style="font-family:Bebas Neue,sans-serif;font-size:32px;color:var(--gr)" id="nsp-stat-atletas">—</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Atletas</div>
+    </div>
+    <div style="background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:4px;padding:14px;text-align:center">
+      <div style="font-family:Bebas Neue,sans-serif;font-size:32px;color:var(--az)" id="nsp-stat-posicoes">—</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Posicoes</div>
+    </div>
+    <div style="background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:4px;padding:14px;text-align:center">
+      <div style="font-family:Bebas Neue,sans-serif;font-size:32px;color:var(--ye)" id="nsp-stat-destros">—</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Destros</div>
+    </div>
+    <div style="background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:4px;padding:14px;text-align:center">
+      <div style="font-family:Bebas Neue,sans-serif;font-size:32px;color:var(--go)" id="nsp-stat-canhotos">—</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Canhotos</div>
+    </div>
+    <div style="background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:4px;padding:14px;text-align:center">
+      <div style="font-family:Bebas Neue,sans-serif;font-size:32px;color:var(--ts)" id="nsp-stat-registros">—</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Registros Pre</div>
+    </div>
+    <div style="background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:4px;padding:14px;text-align:center">
+      <div style="font-family:Bebas Neue,sans-serif;font-size:32px;color:var(--gr)" id="nsp-stat-aptos">—</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Aptos Hoje</div>
+    </div>
+  </div>
+
+  <!-- BUSCA -->
+  <input class="pp-search" id="nsp-search" placeholder="Buscar atleta..." oninput="nspFiltrar()" style="display:none;margin-bottom:16px">
+
+  <!-- CONTEÚDO DINÂMICO -->
+  <div id="nsp-content"><div style="color:var(--ts);font-size:13px">Carregando...</div></div>
+
+  <!-- FICHA DO ATLETA (modal) -->
+  <div class="ppf-bg" id="ppf-bg">
+    <div class="ppf-modal">
+      <div class="ppf-top">
+        <div class="ppf-avatar" id="ppf-avatar">?</div>
+        <div style="flex:1">
+          <div class="ppf-name" id="ppf-name">—</div>
+          <div class="ppf-pos" id="ppf-pos">—</div>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap" id="ppf-badges"></div>
+        </div>
+        <button onclick="fecharFichaPerf()" style="background:none;border:none;color:var(--ts);cursor:pointer;font-size:20px;padding:4px">✕</button>
+      </div>
+      <div class="ppf-body" id="ppf-body">
+        <div style="color:var(--ts);font-size:13px">Carregando ficha...</div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <div class="ppf-bg" id="ppf-bg" onclick="if(event.target===this)fecharFichaPerf()">
@@ -2259,262 +2320,432 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <script>
 var ppDados=[], ppAtletaAtual=null, ppLesoes=[];
-function abrirPlantelPerf(e){
-  if(e) e.preventDefault();
-  var el=document.getElementById("plantel-perf");
-  el.style.display="block";
-  setTimeout(function(){el.scrollIntoView({behavior:"smooth"});},100);
-  ppCarregar();
+// ══════════════════════════════════════
+// NSP — NUCLEO DE SAUDE E PERFORMANCE
+// Fonte: Planilha Volt
+// ══════════════════════════════════════
+var NSP_SID = '1O1Mx6wbrd1pGNpim0-OnWcymwqIuUKbrLBA8GipoF28';
+var NSP_BASE = 'https://docs.google.com/spreadsheets/d/' + NSP_SID + '/gviz/tq?tqx=out:csv&sheet=';
+var nspCadastro = [];
+var nspPreTreino = [];
+var nspPosTreino = [];
+var nspRecuperacao = [];
+var nspCarga = [];
+var nspVista = 'plantel';
+
+function nspPcsv(line) {
+  var r=[], c='', q=false;
+  for(var i=0; i<line.length; i++) {
+    var ch=line[i];
+    if(ch==='"'){q=!q;}
+    else if(ch===','&&!q){r.push(c.trim());c='';}
+    else{c+=ch;}
+  }
+  r.push(c.trim());
+  return r;
 }
-async function ppCarregar(){
-  try{
-    var SID="1Fj8RhuKjicvVyF06CPJqF7kiKpEsquCKFSHX3qf3Pus";
-    var BASE="https://docs.google.com/spreadsheets/d/"+SID+"/gviz/tq?tqx=out:csv&sheet=";
-    var PLANTEL_SHEET="\uD83D\uDC65 Plantel";
-    var LESOES_SHEET="\uD83C\uDFE5 Les\u00f5es";
-    var r1=await fetch(BASE+encodeURIComponent(PLANTEL_SHEET));
-    var r2=await fetch(BASE+encodeURIComponent(LESOES_SHEET));
-    var t1=await r1.text(), t2=await r2.text();
-    function pcsv(line){var r=[],c="",q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){q=!q;}else if(ch===","&&!q){r.push(c.trim());c="";}else{c+=ch;}}r.push(c.trim());return r;}
-    function psheet(txt){var ls=txt.split("\n");var hs=pcsv(ls[0]).map(function(h){return h.replace(/^"|"$/g,"").trim();});return ls.slice(1).filter(function(l){return l.trim();}).map(function(l){var vs=pcsv(l);var o={};hs.forEach(function(h,i){o[h]=(vs[i]||"").replace(/^"|"$/g,"").trim();});return o;});}
-    ppDados=psheet(t1); ppLesoes=psheet(t2);
-    ppRenderizar();
-  }catch(ex){
-    document.getElementById("pp-grid").innerHTML="<div style='color:var(--re);font-size:12px'>Erro ao carregar plantel.</div>";
+
+function nspParseSheet(txt) {
+  var ls = txt.split('\n');
+  if(ls.length < 2) return [];
+  var hs = nspPcsv(ls[0]).map(function(h){ return h.replace(/^"|"$/g,'').trim(); });
+  return ls.slice(1).filter(function(l){ return l.trim(); }).map(function(l){
+    var vs = nspPcsv(l); var o = {};
+    hs.forEach(function(h,i){ o[h] = (vs[i]||'').replace(/^"|"$/g,'').trim(); });
+    return o;
+  });
+}
+
+function nspSetBtnAtivo(id) {
+  ['btn-nsp-plantel','btn-nsp-pre','btn-nsp-pos','btn-nsp-rec','btn-nsp-carga'].forEach(function(b){
+    var el = document.getElementById(b);
+    if(!el) return;
+    if(b === id) { el.style.background='var(--az)'; el.style.color='var(--bk)'; el.style.border='none'; }
+    else { el.style.background='transparent'; el.style.color='var(--ts)'; el.style.border='1px solid rgba(70,162,247,.2)'; }
+  });
+}
+
+function nspCorPos(pos) {
+  var mapa = {'Goleiro':'#46a2f7','Lateral':'#2ecc8e','Zagueiro':'#2ecc8e','Volante':'#f59e0b','Medio':'#f59e0b','Meia':'#f59e0b','Atacante':'#ef4444','Extremo':'#ef4444'};
+  for(var k in mapa) { if((pos||'').indexOf(k) >= 0) return mapa[k]; }
+  return 'var(--ts)';
+}
+
+async function abrirPlantelPerf(e) {
+  if(e) e.preventDefault();
+  var el = document.getElementById('plantel-perf');
+  el.style.display = 'block';
+  setTimeout(function(){ el.scrollIntoView({behavior:'smooth'}); }, 100);
+  await nspCarregar();
+}
+
+async function nspCarregar() {
+  document.getElementById('nsp-content').innerHTML = '<div style="color:var(--ts);font-size:13px;padding:20px 0">Carregando dados da Volt...</div>';
+  try {
+    var r1 = await fetch(NSP_BASE + encodeURIComponent('Cadastro'));
+    var t1 = await r1.text();
+    nspCadastro = nspParseSheet(t1).filter(function(r){ return r['Nome'] && r['Nome'].trim(); });
+
+    var r2 = await fetch(NSP_BASE + encodeURIComponent('Pré Treino'));
+    var t2 = await r2.text();
+    nspPreTreino = nspParseSheet(t2).filter(function(r){ return r['Nome:']; });
+
+    var r3 = await fetch(NSP_BASE + encodeURIComponent('Pós Treino'));
+    var t3 = await r3.text();
+    nspPosTreino = nspParseSheet(t3).filter(function(r){ return r['Nome:']; });
+
+    var r4 = await fetch(NSP_BASE + encodeURIComponent('BD Recuperação e Prontidão'));
+    var t4 = await r4.text();
+    nspRecuperacao = nspParseSheet(t4).filter(function(r){ return r['Nome']; });
+
+    var r5 = await fetch(NSP_BASE + encodeURIComponent('BD Controle de Carga'));
+    var t5 = await r5.text();
+    nspCarga = nspParseSheet(t5).filter(function(r){ return r['Nome']; });
+
+    nspAtualizarStats();
+    nspRenderPlantel();
+  } catch(ex) {
+    document.getElementById('nsp-content').innerHTML = '<div style="color:var(--re);font-size:13px">Erro ao carregar dados: ' + ex.message + '</div>';
   }
 }
-function ppRenderizar(){
-  var busca=(document.getElementById("pp-search").value||"").toLowerCase();
-  var dados=ppDados.filter(function(r){return !busca||(r["Nome Completo"]||"").toLowerCase().includes(busca)||(r["Apelido"]||"").toLowerCase().includes(busca);});
-  if(!dados.length){document.getElementById("pp-grid").innerHTML="<div style='color:var(--ts);font-size:13px'>Nenhum atleta.</div>";return;}
-  document.getElementById("pp-grid").innerHTML=dados.map(function(r){
-    var ini=(r["Nome Completo"]||"?").charAt(0).toUpperCase();
-    var st=r["Status"]||"Disponivel";
-    var sc=st.toLowerCase().includes("disp")?"ok":st.toLowerCase().includes("rehab")?"rehab":"warn";
-    var oi=ppDados.indexOf(r);
-    return "<div class='pp-card' onclick='abrirFichaPerf("+oi+")'>"
-      +"<div class='pp-avatar'>"+ini+"</div>"
-      +"<div class='pp-card-info'><div class='pp-card-name'>"+(r["Nome Completo"]||"-")+"</div>"
-      +"<div class='pp-card-pos'>"+(r["Posi\u00e7\u00e3o"]||r["Posicao"]||"-")+" &middot; #"+(r["N\u00ba Camisa"]||r["N Camisa"]||"-")+"</div></div>"
-      +"<span class='pp-card-status "+sc+"'>"+st+"</span></div>";
-  }).join("");
-}
-function ppFiltrar(){ppRenderizar();}
-function abrirFichaPerf(idx){
-  var r=ppDados[idx]; if(!r) return;
-  ppAtletaAtual=r;
-  document.getElementById("ppf-avatar").textContent=(r["Nome Completo"]||"?").charAt(0).toUpperCase();
-  document.getElementById("ppf-name").textContent=r["Nome Completo"]||"-";
-  document.getElementById("ppf-pos").textContent=(r["Posi\u00e7\u00e3o"]||r["Posicao"]||"-")+(r["Apelido"]?" - "+r["Apelido"]:"");
-  var st=r["Status"]||"Disponivel";
-  var sc=st.toLowerCase().includes("disp")?"ativo":st.toLowerCase().includes("rehab")?"rescindido":"emprestimo";
-  document.getElementById("ppf-status-badge").innerHTML="<span class='el-badge "+sc+"'>"+st+"</span>";
-  document.getElementById("ppf-altura").textContent=r["Altura (cm)"]?r["Altura (cm)"]+" cm":"-";
-  document.getElementById("ppf-peso").textContent=r["Peso Inicial (kg)"]?r["Peso Inicial (kg)"]+" kg":"-";
-  document.getElementById("ppf-pe").textContent=r["P\u00e9 Dominante"]||r["Pe Dominante"]||"-";
-  document.getElementById("ppf-nasc").textContent=r["Data Nasc."]||"-";
-  document.getElementById("ppf-natural").textContent=r["Naturalidade"]||"-";
-  document.getElementById("ppf-contato").textContent=r["Contato Emerg\u00eancia"]||r["Contato Emergencia"]||"-";
-  document.getElementById("ppf-gordura").textContent=r["% Gordura"]?r["% Gordura"]+"%":"-";
-  document.getElementById("ppf-magra").textContent=r["Massa Magra"]?r["Massa Magra"]+" kg":"-";
-  var h=parseFloat(r["Altura (cm)"]),p=parseFloat(r["Peso Inicial (kg)"]);
-  document.getElementById("ppf-imc").textContent=(h&&p)?((p/((h/100)*(h/100))).toFixed(1)):"-";
-  var nome=r["Apelido"]||r["Nome Completo"]||"";
-  var les=ppLesoes.filter(function(l){return (l["Atleta"]||"")===nome;});
-  document.getElementById("ppf-lesoes").innerHTML=les.length?les.map(function(l){
-    return "<div class='ppf-lesao-item'><div class='ppf-lesao-nome'>"+(l["Tipo Les\u00e3o"]||"-")+" - "+(l["Localiza\u00e7\u00e3o"]||"-")+"</div>"
-      +"<div class='ppf-lesao-det'>"+(l["Data Ocorr\u00eancia"]||"-")+" - "+(l["Gravidade"]||"-")+" - "+(l["Dias Afastado (Est.)"]||"-")+" dias</div></div>";
-  }).join(""):"<div style='color:var(--ts);font-size:12px'>Sem lesoes registradas</div>";
-  document.getElementById("ppf-bg").classList.add("open");
-}
-function fecharFichaPerf(){document.getElementById("ppf-bg").classList.remove("open");}
-function abrirEdicaoFisica(){
-  var r=ppAtletaAtual; if(!r) return;
-  document.getElementById("ppf-edit-title").textContent="DADOS FISICOS - "+(r["Apelido"]||r["Nome Completo"]||"").toUpperCase();
-  document.getElementById("ppf-f-altura").value=r["Altura (cm)"]||"";
-  document.getElementById("ppf-f-peso").value=r["Peso Inicial (kg)"]||"";
-  document.getElementById("ppf-f-contato").value=r["Contato Emerg\u00eancia"]||r["Contato Emergencia"]||"";
-  document.getElementById("ppf-f-gordura").value=r["% Gordura"]||"";
-  document.getElementById("ppf-f-magra").value=r["Massa Magra"]||"";
-  document.getElementById("ppf-f-historico").value=r["Hist\u00f3rico Les\u00e3o"]||r["Historico Lesao"]||"";
-  var peEl=document.getElementById("ppf-f-pe"); var pe=r["P\u00e9 Dominante"]||"";
-  for(var i=0;i<peEl.options.length;i++){if(peEl.options[i].value===pe){peEl.selectedIndex=i;break;}}
-  var stEl=document.getElementById("ppf-f-status"); var st=r["Status"]||"";
-  for(var i=0;i<stEl.options.length;i++){if(stEl.options[i].value===st||stEl.options[i].textContent===st){stEl.selectedIndex=i;break;}}
-  document.getElementById("ppf-edit-bg").classList.add("open");
-}
-function fecharEdicaoFisica(){document.getElementById("ppf-edit-bg").classList.remove("open");}
-function salvarFisica(){
-  var r=ppAtletaAtual; if(!r) return;
-  fetch(SCRIPT_URL2,{method:"POST",mode:"no-cors",body:JSON.stringify({
-    action:"updatePlantel",atletaId:r["ID"],
-    altura:document.getElementById("ppf-f-altura").value,
-    peso:document.getElementById("ppf-f-peso").value,
-    peDominante:document.getElementById("ppf-f-pe").value,
-    contato:document.getElementById("ppf-f-contato").value,
-    gordura:document.getElementById("ppf-f-gordura").value,
-    massaMagra:document.getElementById("ppf-f-magra").value,
-    status:document.getElementById("ppf-f-status").value,
-    historico:document.getElementById("ppf-f-historico").value
-  })}).catch(function(){});
-  fecharEdicaoFisica(); fecharFichaPerf();
-  setTimeout(function(){ppCarregar();},1500);
-  alert("Dados fisicos salvos!");
+
+function nspAtualizarStats() {
+  var total = nspCadastro.length;
+  var posicoes = [...new Set(nspCadastro.map(function(r){ return r['Posição']||r['Posicao']||''; }).filter(Boolean))].length;
+  var destros = nspCadastro.filter(function(r){ return (r['Lateralidade']||'').toLowerCase() === 'destro'; }).length;
+  var canhotos = nspCadastro.filter(function(r){ return (r['Lateralidade']||'').toLowerCase() === 'canhoto'; }).length;
+  var hoje = new Date().toLocaleDateString('pt-BR');
+  var registrosHoje = nspPreTreino.filter(function(r){
+    var d = (r['Carimbo de data/hora']||'');
+    return d.indexOf(hoje.split('/')[0] + '/' + hoje.split('/')[1]) >= 0 || d.indexOf(hoje) >= 0;
+  }).length;
+
+  // Aptos hoje = atletas com Característica "Apronto" na recuperação mais recente
+  var aptosMap = {};
+  nspRecuperacao.forEach(function(r){
+    if(r['Nome']) aptosMap[r['Nome']] = r['Característica']||r['Caracteristica']||'';
+  });
+  var aptos = Object.values(aptosMap).filter(function(v){ return v.toLowerCase().indexOf('apronto') >= 0; }).length;
+
+  var el = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
+  el('nsp-stat-atletas', total);
+  el('nsp-stat-posicoes', posicoes);
+  el('nsp-stat-destros', destros);
+  el('nsp-stat-canhotos', canhotos);
+  el('nsp-stat-registros', registrosHoje);
+  el('nsp-stat-aptos', aptos || '—');
 }
 
-</script>
+function nspVerPlantel() { nspVista='plantel'; nspSetBtnAtivo('btn-nsp-plantel'); nspRenderPlantel(); }
+function nspVerPreTreino() { nspVista='pre'; nspSetBtnAtivo('btn-nsp-pre'); nspRenderPreTreino(); }
+function nspVerPosTreino() { nspVista='pos'; nspSetBtnAtivo('btn-nsp-pos'); nspRenderPosTreino(); }
+function nspVerRecuperacao() { nspVista='rec'; nspSetBtnAtivo('btn-nsp-rec'); nspRenderRecuperacao(); }
+function nspVerCarga() { nspVista='carga'; nspSetBtnAtivo('btn-nsp-carga'); nspRenderCarga(); }
 
-<!-- Modal Nova Programacao -->
-<div class="prog-modal-bg" id="prog-modal-bg" onclick="if(event.target===this)fecharProgModal()">
-  <div class="prog-modal">
-    <div class="prog-modal-head">
-      <div class="prog-modal-title" id="prog-modal-title">NOVA PROGRAMACAO SEMANAL</div>
-      <button class="ppf-close" onclick="fecharProgModal()">&#10005;</button>
-    </div>
-    <div class="prog-modal-body">
-      <!-- Info geral -->
-      <div class="el-form-grid" style="margin-bottom:20px">
-        <div class="el-form-group">
-          <label class="el-label">Semana (data da segunda-feira)</label>
-          <input class="el-input" id="prog-semana-inicio" type="date">
-        </div>
-        <div class="el-form-group">
-          <label class="el-label">Local</label>
-          <input class="el-input" id="prog-local" value="Jose Liberatti">
-        </div>
-        <div class="el-form-group">
-          <label class="el-label">Horario Manha</label>
-          <input class="el-input" id="prog-horario-manha" type="time" value="08:00">
-        </div>
-        <div class="el-form-group">
-          <label class="el-label">Horario Tarde</label>
-          <input class="el-input" id="prog-horario-tarde" type="time" value="13:30">
-        </div>
-      </div>
-      <!-- Dias -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:12px">Programacao por dia</div>
-      <div class="prog-dias-grid">
-        <!-- Segunda -->
-        <div class="prog-dia-card">
-          <div class="prog-dia-label">Segunda</div>
-          <div class="prog-turno-label">Manha</div>
-          <select class="prog-select" id="prog-manha-Segunda">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-          <div class="prog-turno-label">Tarde</div>
-          <select class="prog-select" id="prog-tarde-Segunda">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-        </div>
-        <!-- Terca -->
-        <div class="prog-dia-card">
-          <div class="prog-dia-label">Terca</div>
-          <div class="prog-turno-label">Manha</div>
-          <select class="prog-select" id="prog-manha-Terca">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-          <div class="prog-turno-label">Tarde</div>
-          <select class="prog-select" id="prog-tarde-Terca">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-        </div>
-        <!-- Quarta -->
-        <div class="prog-dia-card">
-          <div class="prog-dia-label">Quarta</div>
-          <div class="prog-turno-label">Manha</div>
-          <select class="prog-select" id="prog-manha-Quarta">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-          <div class="prog-turno-label">Tarde</div>
-          <select class="prog-select" id="prog-tarde-Quarta">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-        </div>
-        <!-- Quinta -->
-        <div class="prog-dia-card">
-          <div class="prog-dia-label">Quinta</div>
-          <div class="prog-turno-label">Manha</div>
-          <select class="prog-select" id="prog-manha-Quinta">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-          <div class="prog-turno-label">Tarde</div>
-          <select class="prog-select" id="prog-tarde-Quinta">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-        </div>
-        <!-- Sexta -->
-        <div class="prog-dia-card">
-          <div class="prog-dia-label">Sexta</div>
-          <div class="prog-turno-label">Manha</div>
-          <select class="prog-select" id="prog-manha-Sexta">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-          <div class="prog-turno-label">Tarde</div>
-          <select class="prog-select" id="prog-tarde-Sexta">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-        </div>
-        <!-- Sabado -->
-        <div class="prog-dia-card">
-          <div class="prog-dia-label">Sabado</div>
-          <div class="prog-turno-label">Manha</div>
-          <select class="prog-select" id="prog-manha-Sabado">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-          <div class="prog-turno-label">Tarde</div>
-          <select class="prog-select" id="prog-tarde-Sabado">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-        </div>
-        <!-- Domingo -->
-        <div class="prog-dia-card">
-          <div class="prog-dia-label">Domingo</div>
-          <div class="prog-turno-label">Manha</div>
-          <select class="prog-select" id="prog-manha-Domingo">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-          <div class="prog-turno-label">Tarde</div>
-          <select class="prog-select" id="prog-tarde-Domingo">
-            <option value="">—</option><option>Treino Campo - Liberatti</option><option>Treino Campo - Exercito</option><option>Treino Academia</option><option>Descanso Programado</option><option>Folga</option><option>Jogo</option><option>Viagem</option>
-          </select>
-        </div>
-      </div>
-      <!-- Obs -->
-      <div class="el-form-group full" style="margin-top:8px">
-        <label class="el-label">Observacoes</label>
-        <input class="el-input" id="prog-obs" value="Programacao sujeita a alteracao.">
-      </div>
-      <!-- Footer -->
-      <div class="el-modal-footer" style="margin-top:20px">
-        <button class="el-btn el-btn-secondary" onclick="fecharProgModal()">Cancelar</button>
-        <button class="el-btn el-btn-primary" onclick="previewProg()">Revisar Programacao</button>
-      </div>
-    </div>
-  </div>
-</div>
+function nspFiltrar() {
+  if(nspVista==='plantel') nspRenderPlantel();
+  else if(nspVista==='pre') nspRenderPreTreino();
+  else if(nspVista==='pos') nspRenderPosTreino();
+  else if(nspVista==='rec') nspRenderRecuperacao();
+  else if(nspVista==='carga') nspRenderCarga();
+}
 
-<!-- Modal Preview -->
-<div class="prog-modal-bg" id="prog-preview-bg" onclick="if(event.target===this)fecharProgModal()">
-  <div class="prog-modal" style="max-width:600px">
-    <div class="prog-modal-head">
-      <div class="prog-modal-title">REVISAR PROGRAMACAO</div>
-      <button class="ppf-close" onclick="fecharProgModal()">&#10005;</button>
-    </div>
-    <div class="prog-modal-body">
-      <div id="prog-preview-content"></div>
-      <div style="background:rgba(70,162,247,.06);border:1px solid rgba(70,162,247,.15);border-radius:6px;padding:14px;margin-top:16px">
-        <div style="font-size:11px;font-weight:700;color:var(--az);margin-bottom:6px">Email sera enviado para:</div>
-        <div style="font-size:12px;color:var(--ts)" id="prog-email-lista"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="95f2f3f4f2f4fbf0f9f9fad5fae6f4e6f6fae6e5fae7e1fcfbf2bbf6faf8bbf7e7">[email&#160;protected]</a></div>
-      </div>
-      <div class="el-modal-footer" style="margin-top:20px">
-        <button class="el-btn el-btn-secondary" onclick="voltarProgForm()">Voltar e Editar</button>
-        <button class="el-btn el-btn-primary" id="prog-confirm-btn" onclick="confirmarProg()">Confirmar e Enviar</button>
-      </div>
-    </div>
-  </div>
-</div>
+function nspBusca() {
+  var el = document.getElementById('nsp-search');
+  return el ? (el.value||'').toLowerCase().trim() : '';
+}
 
-<script>
+function nspRenderPlantel() {
+  var busca = nspBusca();
+  var search = document.getElementById('nsp-search');
+  if(search) search.style.display = 'block';
+
+  // Build aptidão map from recuperação
+  var aptMap = {};
+  nspRecuperacao.forEach(function(r){ if(r['Nome']) aptMap[r['Nome']] = r['Característica']||r['Caracteristica']||''; });
+
+  var dados = nspCadastro.filter(function(r){
+    return !busca || (r['Nome']||'').toLowerCase().indexOf(busca)>=0 || (r['Nome Completo']||'').toLowerCase().indexOf(busca)>=0;
+  });
+
+  if(!dados.length) {
+    document.getElementById('nsp-content').innerHTML = '<div style="color:var(--ts);font-size:13px">Nenhum atleta encontrado.</div>';
+    return;
+  }
+
+  var html = '<div class="pp-grid">';
+  dados.forEach(function(r, i) {
+    var nome = r['Nome']||r['Nome Completo']||'?';
+    var pos = r['Posição']||r['Posicao']||'—';
+    var lat = r['Lateralidade']||'—';
+    var nasc = r['Data de Nascimento']||r['Data Nascimento']||'';
+    var apt = aptMap[nome] || '';
+    var aptColor = apt.toLowerCase().indexOf('apronto')>=0 ? 'var(--gr)' : apt ? 'var(--re)' : 'var(--ts)';
+    var aptLabel = apt || 'Sem registro';
+    var inicial = nome.charAt(0).toUpperCase();
+    var corPos = nspCorPos(pos);
+    html += '<div class="pp-card" onclick="nspAbrirFicha('+i+')">' +
+      '<div class="pp-avatar" style="color:'+corPos+';border-color:'+corPos+'40">'+inicial+'</div>' +
+      '<div class="pp-card-info">' +
+        '<div class="pp-card-name">'+nome+'</div>' +
+        '<div class="pp-card-pos">'+pos+' &middot; '+lat+'</div>' +
+        (nasc ? '<div style="font-size:10px;color:var(--ts);margin-top:2px">'+nasc+'</div>' : '') +
+      '</div>' +
+      '<div class="pp-card-status" style="background:'+aptColor+'20;color:'+aptColor+';border:1px solid '+aptColor+'40">'+aptLabel+'</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  document.getElementById('nsp-content').innerHTML = html;
+}
+
+function nspRenderPreTreino() {
+  var search = document.getElementById('nsp-search');
+  if(search) search.style.display = 'block';
+  var busca = nspBusca();
+  var dados = nspPreTreino.filter(function(r){
+    return !busca || (r['Nome:']||'').toLowerCase().indexOf(busca)>=0;
+  }).slice(-50).reverse();
+
+  if(!dados.length) {
+    document.getElementById('nsp-content').innerHTML = '<div style="color:var(--ts);font-size:13px">Nenhum registro encontrado.</div>';
+    return;
+  }
+
+  var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+    '<thead><tr>' +
+    '<th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Data</th>' +
+    '<th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Atleta</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Qualidade Total</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Fadiga</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Dor Muscular</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Humor</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Pontos de Dor</th>' +
+    '</tr></thead><tbody>';
+
+  dados.forEach(function(r, i) {
+    var qt = parseFloat(r['Qualidade Total de Recuperação']||r['Qualidade Total de Recu']||0);
+    var cor = qt >= 14 ? 'var(--gr)' : qt >= 10 ? 'var(--ye)' : 'var(--re)';
+    html += '<tr style="border-bottom:1px solid rgba(70,162,247,.05)'+(i%2===1?';background:rgba(70,162,247,.02)':'')+'">' +
+      '<td style="padding:10px 12px;color:var(--ts);font-size:11px">'+(r['Carimbo de data/hora']||'').split(' ')[0]+'</td>' +
+      '<td style="padding:10px 12px;color:var(--wh);font-weight:600">'+(r['Nome:']||r['Nome']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;font-family:Bebas Neue,sans-serif;font-size:18px;color:'+cor+'">'+(qt||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--wh)">'+(r['Bem Estar [Fadiga]']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--wh)">'+(r['Bem Estar [Dor Muscular]']||r['Bem Estar [Dor Muscula']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--wh)">'+(r['Bem Estar [Humor]']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--go)">'+(r['Pontos de Dor']||'—')+'</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('nsp-content').innerHTML = html;
+}
+
+function nspRenderPosTreino() {
+  var search = document.getElementById('nsp-search');
+  if(search) search.style.display = 'block';
+  var busca = nspBusca();
+  var dados = nspPosTreino.filter(function(r){
+    return !busca || (r['Nome:']||'').toLowerCase().indexOf(busca)>=0;
+  }).slice(-50).reverse();
+
+  if(!dados.length) {
+    document.getElementById('nsp-content').innerHTML = '<div style="color:var(--ts);font-size:13px">Nenhum registro encontrado.</div>';
+    return;
+  }
+
+  var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+    '<thead><tr>' +
+    '<th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Data</th>' +
+    '<th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Atleta</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Turno</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">PSE</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Duracao (min)</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">AU</th>' +
+    '</tr></thead><tbody>';
+
+  dados.forEach(function(r, i) {
+    var pse = parseFloat(r['Percepção Subjetiva de Esforço plo: apenas número = 90']||r['PSE']||0);
+    var au = parseFloat(r['AU']||0);
+    var corPSE = pse >= 8 ? 'var(--re)' : pse >= 6 ? 'var(--ye)' : 'var(--gr)';
+    html += '<tr style="border-bottom:1px solid rgba(70,162,247,.05)'+(i%2===1?';background:rgba(70,162,247,.02)':'')+'">' +
+      '<td style="padding:10px 12px;color:var(--ts);font-size:11px">'+(r['Carimbo de data/hora']||'').split(' ')[0]+'</td>' +
+      '<td style="padding:10px 12px;color:var(--wh);font-weight:600">'+(r['Nome:']||r['Nome']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--ts)">'+(r['Turno']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;font-family:Bebas Neue,sans-serif;font-size:18px;color:'+corPSE+'">'+(pse||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--wh)">'+(r['Percepção Subjetiva de Esforço plo: apenas número = 90']||r['duracao']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--az);font-weight:600">'+(au||'—')+'</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('nsp-content').innerHTML = html;
+}
+
+function nspRenderRecuperacao() {
+  var search = document.getElementById('nsp-search');
+  if(search) search.style.display = 'block';
+  var busca = nspBusca();
+  var dados = nspRecuperacao.filter(function(r){
+    return !busca || (r['Nome']||'').toLowerCase().indexOf(busca)>=0;
+  }).slice(-60).reverse();
+
+  if(!dados.length) {
+    document.getElementById('nsp-content').innerHTML = '<div style="color:var(--ts);font-size:13px">Nenhum registro encontrado.</div>';
+    return;
+  }
+
+  var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+    '<thead><tr>' +
+    '<th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Data</th>' +
+    '<th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Atleta</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Tipo</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Dist. Jogo</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Caracteristica</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">CMJ 1</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">CMJ 2</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">CMJ 3</th>' +
+    '</tr></thead><tbody>';
+
+  dados.forEach(function(r, i) {
+    var car = r['Característica']||r['Caracteristica']||'';
+    var carColor = car.toLowerCase().indexOf('apronto')>=0 ? 'var(--gr)' : car.toLowerCase().indexOf('atencao')>=0||car.toLowerCase().indexOf('atenção')>=0 ? 'var(--ye)' : car ? 'var(--re)' : 'var(--ts)';
+    html += '<tr style="border-bottom:1px solid rgba(70,162,247,.05)'+(i%2===1?';background:rgba(70,162,247,.02)':'')+'">' +
+      '<td style="padding:10px 12px;color:var(--ts);font-size:11px">'+(r['Data']||'—')+'</td>' +
+      '<td style="padding:10px 12px;color:var(--wh);font-weight:600">'+(r['Nome']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--ts)">'+(r['Tipo']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--az)">'+(r['Dist. Para o Jogo']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;font-weight:700;color:'+carColor+'">'+car+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--wh)">'+(r['CMJ 1']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--wh)">'+(r['CMJ 2']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--wh)">'+(r['CMJ 3']||'—')+'</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('nsp-content').innerHTML = html;
+}
+
+function nspRenderCarga() {
+  var search = document.getElementById('nsp-search');
+  if(search) search.style.display = 'block';
+  var busca = nspBusca();
+  var dados = nspCarga.filter(function(r){
+    return !busca || (r['Nome']||'').toLowerCase().indexOf(busca)>=0;
+  }).slice(-60).reverse();
+
+  if(!dados.length) {
+    document.getElementById('nsp-content').innerHTML = '<div style="color:var(--ts);font-size:13px">Nenhum registro encontrado.</div>';
+    return;
+  }
+
+  var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">' +
+    '<thead><tr>' +
+    '<th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Data</th>' +
+    '<th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Atleta</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Tipo</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Dist. Jogo</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Dist. Bruta</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Vol. Liquido</th>' +
+    '<th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);border-bottom:1px solid rgba(70,162,247,.1)">Sprints</th>' +
+    '</tr></thead><tbody>';
+
+  dados.forEach(function(r, i) {
+    html += '<tr style="border-bottom:1px solid rgba(70,162,247,.05)'+(i%2===1?';background:rgba(70,162,247,.02)':'')+'">' +
+      '<td style="padding:10px 12px;color:var(--ts);font-size:11px">'+(r['Data']||'—')+'</td>' +
+      '<td style="padding:10px 12px;color:var(--wh);font-weight:600">'+(r['Nome']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--ts)">'+(r['Tipo']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--az)">'+(r['Dist. Para o Jogo']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--wh)">'+(r['Distância Bruta']||r['Distancia Bruta']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--gr)">'+(r['Volume Líquido']||r['Volume Liquido']||'—')+'</td>' +
+      '<td style="padding:10px 12px;text-align:center;color:var(--ye)">'+(r['Nº Sprints']||r['No Sprints']||'—')+'</td>' +
+    '</tr>';
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('nsp-content').innerHTML = html;
+}
+
+function nspAbrirFicha(idx) {
+  var r = nspCadastro[idx];
+  if(!r) return;
+  var nome = r['Nome']||r['Nome Completo']||'?';
+  var pos = r['Posição']||r['Posicao']||'—';
+  var lat = r['Lateralidade']||'—';
+  document.getElementById('ppf-avatar').textContent = nome.charAt(0).toUpperCase();
+  document.getElementById('ppf-name').textContent = nome;
+  document.getElementById('ppf-pos').textContent = pos + ' · ' + lat;
+
+  // Badges
+  var badges = '<span style="background:rgba(46,204,142,.15);color:var(--gr);border:1px solid rgba(46,204,142,.25);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:2px">Ativo</span>';
+  document.getElementById('ppf-badges').innerHTML = badges;
+
+  // Pré-treinos do atleta (últimos 5)
+  var pres = nspPreTreino.filter(function(p){ return (p['Nome:']||p['Nome']||'') === nome; }).slice(-5).reverse();
+  var posTs = nspPosTreino.filter(function(p){ return (p['Nome:']||p['Nome']||'') === nome; }).slice(-5).reverse();
+  var recs = nspRecuperacao.filter(function(p){ return p['Nome'] === nome; }).slice(-3).reverse();
+
+  var html = '';
+
+  // Dados pessoais
+  html += '<div class="ppf-section">' +
+    '<div class="ppf-section-title">Dados Pessoais</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    nspFichaRow('Nome Completo', r['Nome Completo']||nome) +
+    nspFichaRow('Posicao', pos) +
+    nspFichaRow('Lateralidade', lat) +
+    nspFichaRow('Data Nascimento', r['Data de Nascimento']||r['Data Nascimento']||'—') +
+    nspFichaRow('Inicio Monitoramento', r['Início de Monitoramento']||r['Inicio Monitoramento']||'—') +
+    '</div></div>';
+
+  // Últimos pré-treinos
+  if(pres.length) {
+    html += '<div class="ppf-section"><div class="ppf-section-title">Ultimos Pre-Treinos</div>';
+    html += '<table style="width:100%;font-size:11px;border-collapse:collapse">' +
+      '<tr><th style="text-align:left;padding:4px 8px;color:var(--ts);font-size:9px">Data</th>' +
+      '<th style="text-align:center;padding:4px 8px;color:var(--ts);font-size:9px">Total</th>' +
+      '<th style="text-align:center;padding:4px 8px;color:var(--ts);font-size:9px">Fadiga</th>' +
+      '<th style="text-align:center;padding:4px 8px;color:var(--ts);font-size:9px">Dor</th>' +
+      '<th style="text-align:center;padding:4px 8px;color:var(--ts);font-size:9px">Humor</th></tr>';
+    pres.forEach(function(p){
+      var qt = parseFloat(p['Qualidade Total de Recuperação']||p['Qualidade Total de Recु']||0);
+      var cor = qt >= 14 ? 'var(--gr)' : qt >= 10 ? 'var(--ye)' : 'var(--re)';
+      html += '<tr><td style="padding:4px 8px;color:var(--ts)">'+(p['Carimbo de data/hora']||'').split(' ')[0]+'</td>' +
+        '<td style="padding:4px 8px;text-align:center;color:'+cor+';font-weight:700">'+qt+'</td>' +
+        '<td style="padding:4px 8px;text-align:center;color:var(--wh)">'+(p['Bem Estar [Fadiga]']||'—')+'</td>' +
+        '<td style="padding:4px 8px;text-align:center;color:var(--wh)">'+(p['Bem Estar [Dor Muscular]']||p['Bem Estar [Dor Muscula']||'—')+'</td>' +
+        '<td style="padding:4px 8px;text-align:center;color:var(--wh)">'+(p['Bem Estar [Humor]']||'—')+'</td></tr>';
+    });
+    html += '</table></div>';
+  }
+
+  // Últimas recuperações
+  if(recs.length) {
+    html += '<div class="ppf-section"><div class="ppf-section-title">Ultimas Recuperacoes</div>';
+    recs.forEach(function(rec){
+      var car = rec['Característica']||rec['Caracteristica']||'—';
+      var cor = car.toLowerCase().indexOf('apronto')>=0 ? 'var(--gr)' : 'var(--re)';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(70,162,247,.06)">' +
+        '<span style="color:var(--ts);font-size:11px">'+(rec['Data']||'')+'</span>' +
+        '<span style="color:var(--ts);font-size:11px">'+(rec['Tipo']||'')+'</span>' +
+        '<span style="color:'+cor+';font-weight:700;font-size:11px">'+car+'</span>' +
+        '<span style="color:var(--az);font-size:11px">'+(rec['Dist. Para o Jogo']||'')+'</span>' +
+      '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('ppf-body').innerHTML = html;
+  document.getElementById('ppf-bg').classList.add('open');
+}
+
+function nspFichaRow(label, value) {
+  return '<div style="background:rgba(70,162,247,.04);border:1px solid rgba(70,162,247,.08);border-radius:3px;padding:8px 10px">' +
+    '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);margin-bottom:3px">'+label+'</div>' +
+    '<div style="font-size:12px;color:var(--wh)">'+value+'</div>' +
+  '</div>';
+}
+
+function fecharFichaPerf() { document.getElementById('ppf-bg').classList.remove('open'); }
+
+// Manter compatibilidade com ppCarregar chamado em outros lugares
+function ppCarregar() { nspCarregar(); }
+
 // ══════════════════════════════════════
 // PROGRAMAÇÃO SEMANAL
 // ══════════════════════════════════════
