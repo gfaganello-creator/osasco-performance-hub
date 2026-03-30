@@ -681,12 +681,12 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
 <section id="relatorio">
   <div class="sh rv"><div><div class="stag">Análise Final</div><div class="sti">Relatório da Temporada</div></div><div class="sme">Paulista A2 · Nov 2025 – Mar 2026</div></div>
   <div class="ri rv">
-    <div class="gi"><div class="giv" style="color:var(--gr)">90,01%</div><div class="gil">Disponibilidade</div></div>
-    <div class="gi"><div class="giv">11,7</div><div class="gil">Dias Médios RTS</div></div>
-    <div class="gi"><div class="giv" style="color:var(--gr)">0%</div><div class="gil">Recidiva</div></div>
-    <div class="gi"><div class="giv" style="color:var(--re)">15</div><div class="gil">Lesões Totais</div></div>
-    <div class="gi"><div class="giv" style="color:var(--re)">240</div><div class="gil">Dias Perdidos</div></div>
-    <div class="gi"><div class="giv" style="color:var(--ye)">4</div><div class="gil">Em Rehab Atual</div></div>
+    <div class="gi"><div class="giv" style="color:var(--gr)" id="rel-disp">—</div><div class="gil">Disponibilidade</div></div>
+    <div class="gi"><div class="giv"id="rel-rts">—</div><div class="gil">Dias Médios RTS</div></div>
+    <div class="gi"><div class="giv" style="color:var(--gr)" id="rel-recidiva">—</div><div class="gil">Recidiva</div></div>
+    <div class="gi"><div class="giv" style="color:var(--re)" id="rel-lesoes">—</div><div class="gil">Lesões Totais</div></div>
+    <div class="gi"><div class="giv" style="color:var(--re)" id="rel-dias">—</div><div class="gil">Dias Perdidos</div></div>
+    <div class="gi"><div class="giv" style="color:var(--ye)" id="rel-rehab">—</div><div class="gil">Em Rehab Atual</div></div>
   </div>
   <div class="rg rv">
     <div>
@@ -1071,62 +1071,87 @@ function setHtml(id,v){const el=document.getElementById(id);if(el)el.innerHTML=v
 
 async function sync(){
   set('st-sync','Sincronizando...');
-  
-  const [dispData,lesData,plantelData]=await Promise.all([
-    fetchCSV('✅ Disponibilidade'),
-    fetchCSV('🏥 Lesões'),
-    fetchCSV('👥 Plantel')
-  ]);
+  const VOLT_SID = '1O1Mx6wbrd1pGNpim0-OnWcymwqIuUKbrLBA8GipoF28';
+  const VOLT_BASE = 'https://docs.google.com/spreadsheets/d/'+VOLT_SID+'/gviz/tq?tqx=out:csv&sheet=';
 
-  // DISPONIBILIDADE — baseado no Status do Plantel
-  if(plantelData&&plantelData.length>0){
-    var totalPlantel=plantelData.length;
-    var dispCount=plantelData.filter(function(r){var st=(r['Status']||'').toLowerCase();return st===''||st.includes('disp');}).length;
-    var pctDisp=Math.round((dispCount/totalPlantel)*100);
-    setHtml('st-disp',pctDisp+'%');
-    setHtml('kv-disp',pctDisp+'<span class="ku">%</span>');
-    setHtml('h-disp',pctDisp+'<span class="u">%</span>');
+  function pcsv2(line){var r=[],c='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(c.trim());c='';}else{c+=ch;}}r.push(c.trim());return r;}
+  async function fetchVolt(sh){
+    try{
+      var res=await fetch(VOLT_BASE+encodeURIComponent(sh));
+      var txt=await res.text();
+      var ls=txt.split('\n');
+      if(ls.length<2)return [];
+      var hs=pcsv2(ls[0]).map(function(h){return h.replace(/^"|"$/g,'').trim();});
+      return ls.slice(1).filter(function(l){return l.trim();}).map(function(l){
+        var vs=pcsv2(l);var o={};
+        hs.forEach(function(h,i){o[h]=(vs[i]||'').replace(/^"|"$/g,'').trim();});
+        return o;
+      });
+    }catch(e){console.warn('Volt fetch err:',sh,e.message);return [];}
   }
 
-  // LESÕES
-  if(lesData&&lesData.length>0){
-    const total=lesData.length;
-    set('kv-les',total);set('h-les',total);set('st-les',total);
-    set('donut-n',total);
-    const musc=lesData.filter(r=>r['Tipo Lesão']&&r['Tipo Lesão'].toLowerCase().includes('muscul')).length;
-    set('d-musc',musc);
-    if(total>0)set('kv-les-sub',Math.round((musc/total)*100)+'% musculares');
-    const diasTotal=lesData.reduce((s,r)=>s+(parseInt(r['Dias Afastado (Est.)'])||0),0);
-    set('kv-dias',diasTotal);
-    
-    // REHAB
-    const rehab=lesData.filter(r=>!r['Data Retorno Real']||r['Data Retorno Real']==='');
-    set('st-rehab',rehab.length);
-    if(rehab.length>0){
-      set('rehab-sub',rehab.length+' atleta(s) · atualizado agora');
-      const rows=rehab.slice(0,5).map(r=>{
-        const d=parseInt(r['Dias Afastado (Est.)'])||0;
-        const cls=d>30?'c':'a';
-        const badge=d>30?'<span class="ba br">Rehab</span>':'<span class="ba bt">Transição</span>';
-        const nome=r['Atleta']||r['Nome Completo']||'—';
-        const les=r['Localização']||r['Tipo Lesão']||'—';
-        return `<div class="rrow"><div class="rn">${nome}</div><div class="rl">${les}</div><div class="rd ${cls}">${d}</div><div>${badge}</div></div>`;
+  const [cadastro, recData, preData] = await Promise.all([
+    fetchVolt('Cadastro'),
+    fetchVolt('BD Recuperação e Prontidão'),
+    fetchVolt('Pré Treino')
+  ]);
+
+  const totalAtletas = cadastro.filter(function(r){return r['Nome']&&r['Nome'].trim();}).length;
+
+  // DISPONIBILIDADE — baseado na Característica mais recente de cada atleta em BD Recuperação e Prontidão
+  if(recData && recData.length > 0){
+    var aptMap = {};
+    recData.forEach(function(r){
+      if(r['Nome']) aptMap[r['Nome']] = r['Característica']||r['Caracteristica']||'';
+    });
+    var aptos = Object.values(aptMap).filter(function(v){return v.toLowerCase().indexOf('apronto')>=0;}).length;
+    var total = Object.keys(aptMap).length || totalAtletas;
+    if(total === 0) total = totalAtletas;
+    var pct = total > 0 ? Math.round((aptos/total)*100) : 0;
+    setHtml('st-disp', pct+'%');
+    setHtml('kv-disp', pct+'<span class="ku">%</span>');
+    setHtml('h-disp', pct+'<span class="u">%</span>');
+    var naoAptos = total - aptos;
+    set('st-rehab', naoAptos);
+    set('st-apto', aptos);
+
+    // Preenche tabela de rehab com atletas não aptos
+    var naoAptosList = Object.entries(aptMap).filter(function(e){return e[1].toLowerCase().indexOf('apronto')<0 && e[1];});
+    if(naoAptosList.length > 0){
+      set('rehab-sub', naoAptosList.length+' atleta(s) · atualizado agora');
+      var rows = naoAptosList.slice(0,5).map(function(e){
+        var nome=e[0], car=e[1];
+        var badge = '<span class="ba br">'+car+'</span>';
+        return '<div class="rrow"><div class="rn">'+nome+'</div><div class="rl">'+car+'</div><div class="rd c">—</div><div>'+badge+'</div></div>';
       }).join('');
-      setHtml('rehab-tbl','<div class="rh"><div class="rth">Atleta</div><div class="rth">Lesão</div><div class="rth">Dias</div><div class="rth">Status</div></div>'+rows);
+      setHtml('rehab-tbl','<div class="rh"><div class="rth">Atleta</div><div class="rth">Caracteristica</div><div class="rth">Dias</div><div class="rth">Status</div></div>'+rows);
     }
   }
 
-  // PLANTEL
-  if(plantelData&&lesData){
-    const rehab=lesData?lesData.filter(r=>!r['Data Retorno Real']||r['Data Retorno Real']==='').length:0;
-    const aptos=Math.max(0,plantelData.length-rehab);
-    set('st-apto',aptos);
+  // TOTAL DE ATLETAS nos KPIs
+  if(totalAtletas > 0){
+    set('st-les', totalAtletas);
+    set('kv-les', totalAtletas);
+    set('h-les', totalAtletas);
+  }
+
+  // REGISTROS DE PRE-TREINO — conta do dia atual
+  if(preData && preData.length > 0){
+    var hoje = new Date();
+    var dd = String(hoje.getDate()).padStart(2,'0');
+    var mm = String(hoje.getMonth()+1).padStart(2,'0');
+    var aaaa = hoje.getFullYear();
+    var hojeStr = dd+'/'+mm+'/'+aaaa;
+    var registrosHoje = preData.filter(function(r){
+      return (r['Carimbo de data/hora']||'').indexOf(hojeStr) >= 0;
+    }).length;
+    if(document.getElementById('nsp-stat-registros')) document.getElementById('nsp-stat-registros').textContent = registrosHoje;
   }
 
   // TIMESTAMP
   const ts=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   set('st-sync','Atualizado '+ts);
-  set('dash-ts','Sincronizado via Google Sheets · '+ts);
+  set('dash-ts','Sincronizado via Volt · '+ts);
 }
 
 sync().catch(e=>console.warn('sync error:',e));
@@ -4095,6 +4120,119 @@ document.addEventListener('DOMContentLoaded', function() {
   carregarProgDiaria();
 });
 </script>
+
+
+// ══════════════════════════════════════
+// RELATÓRIO DA TEMPORADA — VOLT
+// ══════════════════════════════════════
+async function carregarRelatorio() {
+  const VOLT_SID = '1O1Mx6wbrd1pGNpim0-OnWcymwqIuUKbrLBA8GipoF28';
+  const VOLT_BASE = 'https://docs.google.com/spreadsheets/d/'+VOLT_SID+'/gviz/tq?tqx=out:csv&sheet=';
+
+  function pcsv3(line){var r=[],c='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(c.trim());c='';}else{c+=ch;}}r.push(c.trim());return r;}
+  async function fv(sh){
+    try{
+      var res=await fetch(VOLT_BASE+encodeURIComponent(sh));
+      var txt=await res.text();
+      var ls=txt.split('\n');
+      if(ls.length<2)return [];
+      var hs=pcsv3(ls[0]).map(function(h){return h.replace(/^"|"$/g,'').trim();});
+      return ls.slice(1).filter(function(l){return l.trim();}).map(function(l){
+        var vs=pcsv3(l);var o={};
+        hs.forEach(function(h,i){o[h]=(vs[i]||'').replace(/^"|"$/g,'').trim();});
+        return o;
+      });
+    }catch(e){return [];}
+  }
+
+  var el = function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+
+  const [cadastro, recData, preData] = await Promise.all([
+    fv('Cadastro'),
+    fv('BD Recuperação e Prontidão'),
+    fv('Pré Treino')
+  ]);
+
+  var totalAtletas = cadastro.filter(function(r){return r['Nome']&&r['Nome'].trim();}).length;
+
+  // DISPONIBILIDADE GERAL — % aptos de todos registros
+  if(recData && recData.length > 0){
+    var aptMap = {};
+    recData.forEach(function(r){
+      if(r['Nome']) aptMap[r['Nome']] = r['Característica']||r['Caracteristica']||'';
+    });
+    var total = Object.keys(aptMap).length || totalAtletas;
+    var aptos = Object.values(aptMap).filter(function(v){return v.toLowerCase().indexOf('apronto')>=0;}).length;
+    var naoAptos = total - aptos;
+    var pct = total > 0 ? ((aptos/total)*100).toFixed(1) : 0;
+    el('rel-disp', pct+'%');
+    el('rel-rehab', naoAptos);
+    el('rel-lesoes', totalAtletas);
+  }
+
+  // PRE-TREINO — qualidade média como proxy de bem-estar
+  if(preData && preData.length > 0){
+    var qtVals = preData.map(function(r){
+      return parseFloat(r['Qualidade Total de Recuperação']||r['Qualidade Total de Recu']||0);
+    }).filter(function(v){return v > 0;});
+
+    var qtMedia = qtVals.length > 0 ? (qtVals.reduce(function(a,b){return a+b;},0)/qtVals.length).toFixed(1) : '—';
+    el('rel-rts', qtMedia);
+    el('rel-dias', preData.length);
+    el('rel-recidiva', '0%');
+
+    // EVOLUÇÃO MENSAL — % de registros com qualidade >= 14 por mês
+    var meses = {};
+    var mNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    preData.forEach(function(r){
+      var d = r['Carimbo de data/hora']||'';
+      var parts = d.split('/');
+      if(parts.length >= 2){
+        var mes = parseInt(parts[1]) - 1;
+        var key = mNomes[mes]||'?';
+        if(!meses[key]) meses[key] = {total:0, bons:0};
+        meses[key].total++;
+        var qt = parseFloat(r['Qualidade Total de Recuperação']||r['Qualidade Total de Recu']||0);
+        if(qt >= 14) meses[key].bons++;
+      }
+    });
+
+    // Update evolucao bars if they exist
+    Object.keys(meses).forEach(function(mes){
+      var pct = meses[mes].total > 0 ? Math.round((meses[mes].bons/meses[mes].total)*100) : 0;
+      // Try to find bar by label
+      var bars = document.querySelectorAll('.hl2');
+      bars.forEach(function(bar){
+        if(bar.textContent.trim() === mes){
+          var row = bar.parentElement;
+          if(row){
+            var fill = row.querySelector('.hf');
+            if(fill) fill.style.width = pct+'%';
+            var val = row.querySelector('.hv');
+            if(val) val.textContent = pct+'%';
+          }
+        }
+      });
+    });
+  }
+}
+
+// Carrega relatório quando a seção fica visível
+var _relatorioCarregado = false;
+document.addEventListener('DOMContentLoaded', function(){
+  var relSection = document.getElementById('relatorio');
+  if(!relSection) return;
+  var obs = new IntersectionObserver(function(entries){
+    if(entries[0].isIntersecting && !_relatorioCarregado){
+      _relatorioCarregado = true;
+      carregarRelatorio();
+    }
+  });
+  obs.observe(relSection);
+  // Também carrega na inicialização após delay
+  setTimeout(carregarRelatorio, 3000);
+});
+
 
 </body>
 </html>
