@@ -524,79 +524,68 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
 <section id="dashboard">
   <div class="sh rv">
     <div><div class="stag">Monitoramento</div><div class="sti">Dashboard</div></div>
-    <div class="sme" id="dash-ts">Conectando ao Google Sheets...</div>
+    <div class="sme" id="dash-ts">Conectando...</div>
   </div>
+
+  <!-- KPIs PRINCIPAIS -->
   <div class="kg rv">
-    <div class="k"><div class="kl">Disponibilidade Geral</div><div class="kv g" id="kv-disp">90<span class="ku">%</span></div><div class="kt dn">↓ Tendência: 93%→82% (mar)</div></div>
-    <div class="k"><div class="kl">Lesões na Temporada</div><div class="kv" id="kv-les">15</div><div class="kt n" id="kv-les-sub">46,7% musculares</div></div>
-    <div class="k"><div class="kl">Dias Perdidos</div><div class="kv r" id="kv-dias">240</div><div class="kt n">RTS médio: 11,7 dias</div></div>
-    <div class="k"><div class="kl">Taxa de Recidiva</div><div class="kv g">0<span class="ku">%</span></div><div class="kt up">↑ Zero recidivas</div></div>
+    <div class="k">
+      <div class="kl">Disponibilidade Hoje</div>
+      <div class="kv g" id="kv-disp">—<span class="ku">%</span></div>
+      <div class="kt n" id="kv-disp-sub">carregando...</div>
+    </div>
+    <div class="k">
+      <div class="kl">Plantel Apto</div>
+      <div class="kv g" id="kv-apto">—</div>
+      <div class="kt n" id="kv-apto-sub">carregando...</div>
+    </div>
+    <div class="k">
+      <div class="kl">Lesões na Temporada</div>
+      <div class="kv r" id="kv-les">—</div>
+      <div class="kt n" id="kv-les-sub">carregando...</div>
+    </div>
+    <div class="k">
+      <div class="kl">Próximo Jogo</div>
+      <div class="kv" id="kv-prox-jogo" style="font-size:18px">—</div>
+      <div class="kt n" id="kv-prox-sub">carregando...</div>
+    </div>
   </div>
+
+  <!-- LINHA 2: Rehab + Lesões por Região -->
   <div class="cr rv">
-    <div class="cd">
-      <div class="cdt">Disponibilidade Mensal</div>
-      <div class="cds">% plantel disponível · Paulista A2 2025–26</div>
-      <div class="bc">
-        <div class="bg2"><div class="bw"><div class="b" style="height:68%;background:linear-gradient(180deg,#7a9bb5,#4a6a7a)"><div class="btt">68% · Nov</div></div></div><div class="bv">68%</div><div class="bl">Nov</div></div>
-        <div class="bg2"><div class="bw"><div class="b" style="height:85%;background:linear-gradient(180deg,#46a2f7,#1a6fa8)"><div class="btt">85% · Dez</div></div></div><div class="bv">85%</div><div class="bl">Dez</div></div>
-        <div class="bg2"><div class="bw"><div class="b" style="height:93%;background:linear-gradient(180deg,#2ecc8e,#16a34a)"><div class="btt">93% · Jan</div></div></div><div class="bv" style="color:#4ade80">93%</div><div class="bl">Jan</div></div>
-        <div class="bg2"><div class="bw"><div class="b" style="height:89.6%;background:linear-gradient(180deg,#46a2f7,#1a6fa8)"><div class="btt">89,6% · Fev</div></div></div><div class="bv">89,6%</div><div class="bl">Fev</div></div>
-        <div class="bg2"><div class="bw"><div class="b" style="height:82.7%;background:linear-gradient(180deg,#f59e0b,#d97706)"><div class="btt">82,7% · Mar</div></div></div><div class="bv" style="color:#fbbf24">82,7%</div><div class="bl">Mar</div></div>
+    <div class="cd" style="flex:1.2">
+      <div class="cdt">Atletas em Reabilitação</div>
+      <div class="cds" id="rehab-sub">status atual · BD Recuperação e Prontidão</div>
+      <div id="rehab-tbl" style="margin-top:12px">
+        <div style="color:var(--ts);font-size:12px">Carregando...</div>
       </div>
     </div>
-    <div class="cd">
+    <div class="cd" style="flex:1">
+      <div class="cdt">Lesões por Região</div>
+      <div class="cds">Temporada atual · Top regiões afetadas</div>
+      <div id="dash-regioes" class="hb2" style="margin-top:12px">
+        <div style="color:var(--ts);font-size:12px">Carregando...</div>
+      </div>
+    </div>
+    <div class="cd" style="flex:1">
       <div class="cdt">Lesões por Tipo</div>
       <div class="cds">Distribuição por categoria · temporada</div>
-      <div class="dw">
-        <svg width="110" height="110" viewBox="0 0 110 110" style="flex-shrink:0">
+      <div class="dw" style="margin-top:12px">
+        <svg width="110" height="110" viewBox="0 0 110 110" style="flex-shrink:0" id="dash-donut-svg">
           <circle cx="55" cy="55" r="42" fill="none" stroke="#1c2a38" stroke-width="16"/>
-          <circle cx="55" cy="55" r="42" fill="none" stroke="#46a2f7" stroke-width="16" stroke-dasharray="175 264" stroke-dashoffset="66"/>
-          <circle cx="55" cy="55" r="42" fill="none" stroke="#2ecc8e" stroke-width="16" stroke-dasharray="79 264" stroke-dashoffset="-109"/>
-          <circle cx="55" cy="55" r="42" fill="none" stroke="#f59e0b" stroke-width="16" stroke-dasharray="53 264" stroke-dashoffset="-188"/>
-          <circle cx="55" cy="55" r="42" fill="none" stroke="#2a3f52" stroke-width="16" stroke-dasharray="53 264" stroke-dashoffset="-241"/>
-          <text x="55" y="50" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="20" fill="#f0f4f8" id="donut-n">15</text>
+          <circle cx="55" cy="55" r="42" fill="none" stroke="#46a2f7" stroke-width="16" stroke-dasharray="0 264" stroke-dashoffset="66" id="dd-musc"/>
+          <circle cx="55" cy="55" r="42" fill="none" stroke="#2ecc8e" stroke-width="16" stroke-dasharray="0 264" stroke-dashoffset="0" id="dd-arti"/>
+          <circle cx="55" cy="55" r="42" fill="none" stroke="#f59e0b" stroke-width="16" stroke-dasharray="0 264" stroke-dashoffset="0" id="dd-ossea"/>
+          <circle cx="55" cy="55" r="42" fill="none" stroke="#2a3f52" stroke-width="16" stroke-dasharray="264 0" stroke-dashoffset="66" id="dd-outras"/>
+          <text x="55" y="50" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="20" fill="#f0f4f8" id="donut-n">—</text>
           <text x="55" y="63" text-anchor="middle" font-size="8" fill="#7a9bb5" font-family="Barlow Condensed,sans-serif" letter-spacing="1">LESÕES</text>
         </svg>
-        <div style="flex:1">
-          <div class="li"><div class="ld" style="background:#46a2f7"></div><div class="ll">Musculares</div><div class="lv" id="d-musc">7</div></div>
-          <div class="li"><div class="ld" style="background:#2ecc8e"></div><div class="ll">Articulares</div><div class="lv">3</div></div>
-          <div class="li"><div class="ld" style="background:#f59e0b"></div><div class="ll">Osso/Tendão</div><div class="lv">2</div></div>
-          <div class="li"><div class="ld" style="background:#2a3f52;border:1px solid #46a2f7"></div><div class="ll">Outras</div><div class="lv">3</div></div>
+        <div style="flex:1" id="dash-donut-legend">
+          <div class="li"><div class="ld" style="background:#46a2f7"></div><div class="ll">Musculares</div><div class="lv" id="d-musc">—</div></div>
+          <div class="li"><div class="ld" style="background:#2ecc8e"></div><div class="ll">Articulares</div><div class="lv" id="d-arti">—</div></div>
+          <div class="li"><div class="ld" style="background:#f59e0b"></div><div class="ll">Óssea/Tendão</div><div class="lv" id="d-ossea">—</div></div>
+          <div class="li"><div class="ld" style="background:#2a3f52;border:1px solid #46a2f7"></div><div class="ll">Outras</div><div class="lv" id="d-outras">—</div></div>
         </div>
-      </div>
-    </div>
-  </div>
-  <div class="cr2 rv">
-    <div class="cd">
-      <div class="cdt">Regiões Afetadas</div>
-      <div class="cds">Lesões por localização</div>
-      <div class="hb2">
-        <div class="hr"><div class="hl2">Adut.</div><div class="ht2"><div class="hf" style="width:100%;background:linear-gradient(90deg,#46a2f7,#1a6fa8)"></div></div><div class="hv">4</div></div>
-        <div class="hr"><div class="hl2">Torn.</div><div class="ht2"><div class="hf" style="width:75%;background:linear-gradient(90deg,#2ecc8e,#16a34a)"></div></div><div class="hv">3</div></div>
-        <div class="hr"><div class="hl2">Isqui.</div><div class="ht2"><div class="hf" style="width:50%;background:linear-gradient(90deg,#46a2f7,#1a6fa8)"></div></div><div class="hv">2</div></div>
-        <div class="hr"><div class="hl2">Joelho</div><div class="ht2"><div class="hf" style="width:50%;background:linear-gradient(90deg,#f59e0b,#d97706)"></div></div><div class="hv">2</div></div>
-        <div class="hr"><div class="hl2">Outros</div><div class="ht2"><div class="hf" style="width:100%;background:#2a3f52"></div></div><div class="hv">4</div></div>
-      </div>
-    </div>
-    <div class="cd">
-      <div class="cdt">Tempo Médio RTS</div>
-      <div class="cds">Retorno ao esporte por categoria</div>
-      <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px">
-        <div><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--ts)">Muscular</span><span style="font-family:Bebas Neue;font-size:17px;color:var(--wh)">14 dias</span></div><div class="ht2"><div class="hf" style="width:100%;background:linear-gradient(90deg,#ef4444,#dc2626)"></div></div></div>
-        <div><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--ts)">Articular</span><span style="font-family:Bebas Neue;font-size:17px;color:var(--wh)">12 dias</span></div><div class="ht2"><div class="hf" style="width:85%;background:linear-gradient(90deg,#f59e0b,#d97706)"></div></div></div>
-        <div><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--ts)">Outras</span><span style="font-family:Bebas Neue;font-size:17px;color:var(--wh)">8 dias</span></div><div class="ht2"><div class="hf" style="width:57%;background:linear-gradient(90deg,#2ecc8e,#16a34a)"></div></div></div>
-        <div style="margin-top:6px;padding-top:10px;border-top:1px solid rgba(70,162,247,.1);display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;color:var(--ts);letter-spacing:2px;text-transform:uppercase">Média Geral</span><span style="font-family:Bebas Neue;font-size:26px;color:var(--az)">11,7 dias</span></div>
-      </div>
-    </div>
-    <div class="cd">
-      <div class="cdt">Atletas em Reabilitação</div>
-      <div class="cds" id="rehab-sub">Março 2026 · status atual</div>
-      <div id="rehab-tbl">
-        <div class="rh"><div class="rth">Atleta</div><div class="rth">Lesão</div><div class="rth">Dias</div><div class="rth">Status</div></div>
-        <div class="rrow"><div class="rn">Matheus de Araújo</div><div class="rl">Isquiotibiais D</div><div class="rd c">50</div><div><span class="ba br">Rehab</span></div></div>
-        <div class="rrow"><div class="rn">Léo Ceará</div><div class="rl">Adutor esq.</div><div class="rd c">42</div><div><span class="ba br">Rehab</span></div></div>
-        <div class="rrow"><div class="rn">Grigor</div><div class="rl">Tornozelo D</div><div class="rd a">21</div><div><span class="ba bt">Transição</span></div></div>
-        <div class="rrow"><div class="rn">Gabriel</div><div class="rl">Muscular</div><div class="rd a">14</div><div><span class="ba bt">Transição</span></div></div>
       </div>
     </div>
   </div>
@@ -1033,88 +1022,193 @@ function setHtml(id,v){const el=document.getElementById(id);if(el)el.innerHTML=v
 async function sync(){
   set('st-sync','Sincronizando...');
   const VOLT_SID = '1O1Mx6wbrd1pGNpim0-OnWcymwqIuUKbrLBA8GipoF28';
+  const LES_SID  = '1zAE3Z04cpdVrdysAIyKu0xmjjOQkbIHgUD_KDIqNVZo';
   const VOLT_BASE = 'https://docs.google.com/spreadsheets/d/'+VOLT_SID+'/gviz/tq?tqx=out:csv&sheet=';
+  const LES_BASE  = 'https://docs.google.com/spreadsheets/d/'+LES_SID+'/gviz/tq?tqx=out:csv&sheet=';
 
-  function pcsv2(line){var r=[],c='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(c.trim());c='';}else{c+=ch;}}r.push(c.trim());return r;}
-  async function fetchVolt(sh){
+  function pcsv4(line){var r=[],c='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){r.push(c.trim());c='';}else{c+=ch;}}r.push(c.trim());return r;}
+  async function fvolt(sh){
     try{
       var res=await fetch(VOLT_BASE+encodeURIComponent(sh));
       var txt=await res.text();
       var ls=txt.split('\n');
       if(ls.length<2)return [];
-      var hs=pcsv2(ls[0]).map(function(h){return h.replace(/^"|"$/g,'').trim();});
+      var hs=pcsv4(ls[0]).map(function(h){return h.replace(/^"|"$/g,'').trim();});
       return ls.slice(1).filter(function(l){return l.trim();}).map(function(l){
-        var vs=pcsv2(l);var o={};
+        var vs=pcsv4(l);var o={};
         hs.forEach(function(h,i){o[h]=(vs[i]||'').replace(/^"|"$/g,'').trim();});
         return o;
       });
-    }catch(e){console.warn('Volt fetch err:',sh,e.message);return [];}
+    }catch(e){return [];}
+  }
+  async function fles(sh){
+    try{
+      var res=await fetch(LES_BASE+encodeURIComponent(sh));
+      var txt=await res.text();
+      var ls=txt.split('\n');
+      if(ls.length<2)return [];
+      var hs=pcsv4(ls[0]).map(function(h){return h.replace(/^"|"$/g,'').trim();});
+      return ls.slice(1).filter(function(l){return l.trim();}).map(function(l){
+        var vs=pcsv4(l);var o={};
+        hs.forEach(function(h,i){o[h]=(vs[i]||'').replace(/^"|"$/g,'').trim();});
+        return o;
+      });
+    }catch(e){return [];}
   }
 
-  const [cadastro, recData, preData] = await Promise.all([
-    fetchVolt('Cadastro'),
-    fetchVolt('BD Recuperação e Prontidão'),
-    fetchVolt('Pré Treino')
+  const [cadastro, recData, jogosData, lesData] = await Promise.all([
+    fvolt('Cadastro'),
+    fvolt('BD Recuperação e Prontidão'),
+    fvolt('Jogos'),
+    fles('ALTA ANO')
   ]);
 
-  const totalAtletas = cadastro.filter(function(r){return r['Nome']&&r['Nome'].trim();}).length;
+  // ── DISPONIBILIDADE E REHAB ──────────────────────
+  var aptMap = {};
+  recData.forEach(function(r){
+    var nome = r['Nome']||'';
+    var car  = r['Característica']||r['Caracteristica']||'';
+    if(nome) aptMap[nome] = car;
+  });
+  var totalAtletas = cadastro.filter(function(r){return r['Nome']&&r['Nome'].trim();}).length || Object.keys(aptMap).length;
+  var aptos   = Object.values(aptMap).filter(function(v){return v.toLowerCase().indexOf('apronto')>=0;}).length;
+  var naoAptos = Object.keys(aptMap).length - aptos;
+  var pctDisp  = totalAtletas > 0 ? Math.round((aptos/totalAtletas)*100) : 0;
 
-  // DISPONIBILIDADE — baseado na Característica mais recente de cada atleta em BD Recuperação e Prontidão
-  if(recData && recData.length > 0){
-    var aptMap = {};
-    recData.forEach(function(r){
-      if(r['Nome']) aptMap[r['Nome']] = r['Característica']||r['Caracteristica']||'';
+  setHtml('st-disp', pctDisp+'%');
+  setHtml('kv-disp', pctDisp+'<span class="ku">%</span>');
+  set('kv-disp-sub', aptos+' aptos de '+totalAtletas+' atletas');
+  set('kv-apto', aptos);
+  set('kv-apto-sub', naoAptos > 0 ? naoAptos+' em reab/transição' : 'Plantel 100% disponível');
+  set('st-apto', aptos);
+  set('st-rehab', naoAptos);
+
+  // Tabela rehab — atletas não aptos
+  var naoAptosList = Object.entries(aptMap).filter(function(e){
+    return e[1].toLowerCase().indexOf('apronto') < 0 && e[1].trim();
+  });
+  if(naoAptosList.length > 0){
+    set('rehab-sub', naoAptosList.length+' atleta(s) · status atual');
+    var rows = '<div class="rh"><div class="rth">Atleta</div><div class="rth">Status</div><div class="rth">Situação</div></div>';
+    rows += naoAptosList.map(function(e){
+      var nome=e[0], car=e[1];
+      var isRehab = car.toLowerCase().indexOf('rehab')>=0 || car.toLowerCase().indexOf('reab')>=0;
+      var badge = isRehab ?
+        '<span class="ba br">Rehab</span>' :
+        '<span class="ba bt">'+car+'</span>';
+      return '<div class="rrow"><div class="rn">'+nome+'</div><div class="rl">'+car+'</div><div>'+badge+'</div></div>';
+    }).join('');
+    setHtml('rehab-tbl', rows);
+  } else {
+    setHtml('rehab-tbl', '<div style="color:var(--gr);font-size:12px;padding:12px 0">✓ Nenhum atleta em reabilitação</div>');
+    set('rehab-sub', 'status atual · BD Recuperação e Prontidão');
+  }
+
+  // ── PRÓXIMO JOGO ────────────────────────────────
+  if(jogosData && jogosData.length > 0){
+    var hoje = new Date();
+    var proxJogo = null;
+    jogosData.forEach(function(j){
+      var dataStr = j['Data']||j['DATA']||'';
+      if(!dataStr) return;
+      var p = dataStr.split('/');
+      if(p.length < 3) return;
+      var dt = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+      if(dt >= hoje && (!proxJogo || dt < proxJogo.dt)){
+        proxJogo = {dt:dt, jogo:j};
+      }
     });
-    var aptos = Object.values(aptMap).filter(function(v){return v.toLowerCase().indexOf('apronto')>=0;}).length;
-    var total = Object.keys(aptMap).length || totalAtletas;
-    if(total === 0) total = totalAtletas;
-    var pct = total > 0 ? Math.round((aptos/total)*100) : 0;
-    setHtml('st-disp', pct+'%');
-    setHtml('kv-disp', pct+'<span class="ku">%</span>');
-    setHtml('h-disp', pct+'<span class="u">%</span>');
-    var naoAptos = total - aptos;
-    set('st-rehab', naoAptos);
-    set('st-apto', aptos);
-
-    // Preenche tabela de rehab com atletas não aptos
-    var naoAptosList = Object.entries(aptMap).filter(function(e){return e[1].toLowerCase().indexOf('apronto')<0 && e[1];});
-    if(naoAptosList.length > 0){
-      set('rehab-sub', naoAptosList.length+' atleta(s) · atualizado agora');
-      var rows = naoAptosList.slice(0,5).map(function(e){
-        var nome=e[0], car=e[1];
-        var badge = '<span class="ba br">'+car+'</span>';
-        return '<div class="rrow"><div class="rn">'+nome+'</div><div class="rl">'+car+'</div><div class="rd c">—</div><div>'+badge+'</div></div>';
-      }).join('');
-      setHtml('rehab-tbl','<div class="rh"><div class="rth">Atleta</div><div class="rth">Caracteristica</div><div class="rth">Dias</div><div class="rth">Status</div></div>'+rows);
+    if(proxJogo){
+      var j = proxJogo.jogo;
+      var adv = j['Adversário']||j['Adversario']||j['ADVERSÁRIO']||'—';
+      var dias = Math.ceil((proxJogo.dt - hoje)/(1000*60*60*24));
+      var dtFmt = proxJogo.dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+      set('kv-prox-jogo', adv);
+      set('kv-prox-sub', dtFmt + (dias===0?' · Hoje':dias===1?' · Amanhã':' · em '+dias+'d'));
+      set('st-les', adv);
     }
   }
 
-  // TOTAL DE ATLETAS nos KPIs
-  if(totalAtletas > 0){
-    set('st-les', totalAtletas);
-    set('kv-les', totalAtletas);
-    set('h-les', totalAtletas);
+  // ── LESÕES POR REGIÃO E TIPO (temporada atual) ──
+  var TEMP_INICIO = new Date(2025, 10, 1);
+  var TEMP_FIM    = new Date(2026,  2, 31);
+  var lesoes = (lesData||[]).filter(function(r){
+    var nome = (r['Nome Completo']||'').trim();
+    var diag = (r['Diagnóstico / Queixas']||'').trim();
+    var data = (r['Data de Entrada']||'').trim();
+    var nomeOk = nome.length > 5 && nome.indexOf(' ') > 0 && !/^[\d\s]+$/.test(nome);
+    var diagOk = diag.length > 2 && diag !== '0';
+    var dataOk = false;
+    if(/^\d{2}\/\d{2}\/\d{4}$/.test(data)){
+      var p2 = data.split('/');
+      var dt2 = new Date(parseInt(p2[2]), parseInt(p2[1])-1, parseInt(p2[0]));
+      dataOk = dt2 >= TEMP_INICIO && dt2 <= TEMP_FIM;
+    }
+    return nomeOk && diagOk && dataOk;
+  });
+
+  var totalLes = lesoes.length;
+  set('kv-les', totalLes || '—');
+
+  if(totalLes > 0){
+    // Tipos
+    var tipoMap = {muscular:0, articular:0, ossea:0, outras:0};
+    lesoes.forEach(function(r){
+      var t = (r['Tipo']||'').toLowerCase();
+      if(t.indexOf('muscul')>=0) tipoMap.muscular++;
+      else if(t.indexOf('articu')>=0 || t.indexOf('ligam')>=0) tipoMap.articular++;
+      else if(t.indexOf('oss')>=0 || t.indexOf('tend')>=0) tipoMap.ossea++;
+      else tipoMap.outras++;
+    });
+    set('d-musc',  tipoMap.muscular);
+    set('d-arti',  tipoMap.articular);
+    set('d-ossea', tipoMap.ossea);
+    set('d-outras',tipoMap.outras);
+    set('donut-n', totalLes);
+    set('kv-les-sub', Math.round((tipoMap.muscular/totalLes)*100)+'% musculares');
+
+    // Donut arcs
+    var circ = 264;
+    var offsets = [66, 0, 0, 0];
+    var counts = [tipoMap.muscular, tipoMap.articular, tipoMap.ossea, tipoMap.outras];
+    var ids = ['dd-musc','dd-arti','dd-ossea','dd-outras'];
+    var cumulative = 0;
+    counts.forEach(function(cnt, i){
+      var arc = Math.round((cnt/totalLes)*circ);
+      var el2 = document.getElementById(ids[i]);
+      if(el2){
+        el2.setAttribute('stroke-dasharray', arc+' '+circ);
+        el2.setAttribute('stroke-dashoffset', -(cumulative - 66));
+      }
+      cumulative += arc;
+    });
+
+    // Regiões
+    var regMap = {};
+    lesoes.forEach(function(r){
+      var reg = (r['Região']||r['Regiao']||'').trim();
+      if(!reg||reg==='-'||reg==='x'||reg==='0') return;
+      regMap[reg] = (regMap[reg]||0) + 1;
+    });
+    var topReg = Object.entries(regMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+    var maxReg = topReg.length > 0 ? topReg[0][1] : 1;
+    var coresReg = ['#46a2f7','#2ecc8e','#f59e0b','#ef4444','#9b59b6'];
+    var regHtml = topReg.map(function(e,i){
+      var w = Math.round((e[1]/maxReg)*100);
+      return '<div class="hr">'+
+        '<div class="hl2" style="min-width:60px">'+e[0].split('/')[0].substring(0,6)+'</div>'+
+        '<div class="ht2"><div class="hf" style="width:'+w+'%;background:'+coresReg[i]+'"></div></div>'+
+        '<div class="hv">'+e[1]+'</div>'+
+      '</div>';
+    }).join('');
+    setHtml('dash-regioes', regHtml || '<div style="color:var(--ts);font-size:12px">Sem dados</div>');
   }
 
-  // REGISTROS DE PRE-TREINO — conta do dia atual
-  if(preData && preData.length > 0){
-    var hoje = new Date();
-    var dd = String(hoje.getDate()).padStart(2,'0');
-    var mm = String(hoje.getMonth()+1).padStart(2,'0');
-    var aaaa = hoje.getFullYear();
-    var hojeStr = dd+'/'+mm+'/'+aaaa;
-    var registrosHoje = preData.filter(function(r){
-      return (r['Carimbo de data/hora']||'').indexOf(hojeStr) >= 0;
-    }).length;
-    if(document.getElementById('nsp-stat-registros')) document.getElementById('nsp-stat-registros').textContent = registrosHoje;
-  }
-
-  // TIMESTAMP
-  const ts=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  // ── TIMESTAMP ────────────────────────────────────
+  const ts = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   set('st-sync','Atualizado '+ts);
   set('dash-ts','Sincronizado via Volt · '+ts);
 }
-
 sync().catch(e=>console.warn('sync error:',e));
 setInterval(()=>sync().catch(console.warn),5*60*1000);
 
