@@ -1050,11 +1050,17 @@ async function sync(){
     }catch(e){return [];}
   }
 
-  const [cadastro, recData, jogosData, lesData] = await Promise.all([
+  // Garante valores padrão caso filtrarDashboard ainda não tenha rodado
+  if(!window._tempInicio) window._tempInicio = new Date(2025, 10, 1);
+  if(!window._tempFim)    window._tempFim    = new Date(2026,  2, 31);
+  if(window._tempTodas === undefined) window._tempTodas = false;
+
+  const [cadastro, recData, jogosData, lesData, preData] = await Promise.all([
     fvolt('Cadastro'),
     fvolt('BD Recuperação e Prontidão'),
     fvolt('Jogos'),
-    fles('ALTA ANO')
+    fles('ALTA ANO'),
+    fvolt('Pré Treino')
   ]);
 
   // ── DISPONIBILIDADE E REHAB ──────────────────────
