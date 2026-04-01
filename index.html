@@ -4156,34 +4156,42 @@ async function carregarRelatorio() {
 
   // ── LESÕES ───────────────────────────────────────
   if(lesData && lesData.length > 0){
-    var lesoes = lesData.filter(function(r){ return r['Nome Completo']&&r['Nome Completo'].trim(); });
-    var total  = lesoes.length;
+    // Filtra só linhas com Nome Completo E Data de Entrada válidos (exclui linhas vazias/zeros)
+    var lesoes = lesData.filter(function(r){
+      var nome = r['Nome Completo']||'';
+      var data = r['Data de Entrada']||r['Data Entrada']||'';
+      // Exclui linhas sem nome ou com valores zerados (colunas extras da planilha)
+      return nome.trim() && nome !== '0' && data.trim() && data !== '0';
+    });
+    var total = lesoes.length;
+    if(total === 0) return;
 
     // KPIs
     el('rel-lesoes', total);
 
     var diasTotal = lesoes.reduce(function(s,r){
-      return s + (parseInt(r['Dias DM']||r['Total']||0)||0);
+      var v = parseFloat(r['Dias DM']||0)||0;
+      return s + (v > 0 && v < 500 ? v : 0); // ignora valores absurdos
     },0);
     el('rel-dias', diasTotal);
 
     var recidivas = lesoes.filter(function(r){
-      return (r['Reicidente']||'').toLowerCase().indexOf('sim')>=0 ||
-             (r['Reicidente']||'').toLowerCase().indexOf('x')>=0;
+      var v = (r['Reicidente']||r['Recidente']||'').toLowerCase();
+      return v === 'sim' || v === 's';
     }).length;
     el('rel-recidiva', total > 0 ? Math.round((recidivas/total)*100)+'%' : '0%');
 
     var rtpVals = lesoes.map(function(r){
       return parseInt(r['RTP']||0)||0;
-    }).filter(function(v){return v > 0;});
+    }).filter(function(v){return v > 0 && v < 500;});
     var rtpMedio = rtpVals.length > 0 ? Math.round(rtpVals.reduce(function(a,b){return a+b;},0)/rtpVals.length) : '—';
     el('rel-rts', rtpMedio);
 
     // ── TOP LESÕES POR REGIÃO ────────────────────────
     var regioes = {};
     lesoes.forEach(function(r){
-      var reg = r['Região']||r['Regiao']||'Outros';
-      if(!reg||reg==='-') reg = 'Outros';
+      var reg = (r['Região']||r['Regiao']||'').trim();
+      if(!reg || reg==='-' || reg==='x' || reg==='0') return;
       regioes[reg] = (regioes[reg]||0) + 1;
     });
     var topRegioes = Object.entries(regioes)
@@ -4208,33 +4216,35 @@ async function carregarRelatorio() {
     var lrank = document.querySelector('.lrank');
     if(lrank) lrank.innerHTML = lrankHtml;
 
-    // ── PRINCIPAIS OCORRÊNCIAS ───────────────────────
+    // ── PRINCIPAIS OCORRÊNCIAS — agrupa por Mês+Ano ───
     var porMes = {};
+    var mesesOrdem = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
     lesoes.forEach(function(r){
-      var mes = r['Mês']||r['Mes']||'';
-      var ano = r['Ano']||'2026';
-      if(!mes) return;
+      var mes = (r['Mês']||r['Mes']||'').trim().toUpperCase();
+      var ano = (r['Ano']||'').trim();
+      // Ignora entradas sem mês válido ou com ano fora do range esperado
+      if(!mes || mesesOrdem.indexOf(mes) < 0) return;
+      if(!ano || parseInt(ano) < 2020 || parseInt(ano) > 2030) return;
       var key = mes+' '+ano;
-      if(!porMes[key]) porMes[key] = {total:0, musculares:0, regiao:'', diagnosticos:[]};
+      if(!porMes[key]) porMes[key] = {total:0, diagnosticos:[], ano: parseInt(ano), mesIdx: mesesOrdem.indexOf(mes)};
       porMes[key].total++;
-      if((r['Tipo']||'').toLowerCase().indexOf('muscul')>=0) porMes[key].musculares++;
-      if(r['Diagnóstico / Queixas']||r['Diagnostico']) porMes[key].diagnosticos.push(r['Diagnóstico / Queixas']||r['Diagnostico']);
+      var diag = (r['Diagnóstico / Queixas']||r['Diagnostico / Queixas']||r['Diagnostico']||'').trim();
+      if(diag && diag !== '0' && diag !== '-') porMes[key].diagnosticos.push(diag);
     });
 
-    var mesesOrdem = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
     var ocorrencias = Object.entries(porMes)
       .sort(function(a,b){
-        var ma = mesesOrdem.indexOf(a[0].split(' ')[0].toUpperCase());
-        var mb = mesesOrdem.indexOf(b[0].split(' ')[0].toUpperCase());
-        return ma - mb;
+        if(a[1].ano !== b[1].ano) return a[1].ano - b[1].ano;
+        return a[1].mesIdx - b[1].mesIdx;
       })
-      .slice(0,4);
+      .slice(-4); // últimas 4 ocorrências
 
     var coresDots = ['var(--re)','var(--ye)','var(--az)','var(--gr)'];
     var ocHtml = ocorrencias.map(function(entry, i){
       var mes = entry[0], dados = entry[1];
-      var descDiag = dados.diagnosticos.length > 0 ?
-        dados.diagnosticos.slice(0,2).join(', ') : 'Registros do mês';
+      // Remove diagnósticos duplicados e pega os 2 primeiros únicos
+      var uniq = dados.diagnosticos.filter(function(v,idx,arr){ return arr.indexOf(v)===idx; });
+      var descDiag = uniq.length > 0 ? uniq.slice(0,2).join(', ') : 'Registros do mês';
       return '<div class="ti">'+
         '<div class="tdot" style="background:'+coresDots[i]+'"></div>'+
         '<div>'+
@@ -4245,7 +4255,7 @@ async function carregarRelatorio() {
       '</div>';
     }).join('');
     var tl = document.querySelector('.tl');
-    if(tl) tl.innerHTML = ocHtml;
+    if(tl) tl.innerHTML = ocHtml || '<div class="ti"><div class="tdot" style="background:var(--ts)"></div><div><div class="tdt">Sem ocorrências</div></div></div>';
   }
 }
 
