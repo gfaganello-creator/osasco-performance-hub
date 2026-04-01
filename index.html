@@ -4156,12 +4156,14 @@ async function carregarRelatorio() {
 
   // ── LESÕES ───────────────────────────────────────
   if(lesData && lesData.length > 0){
-    // Filtra só linhas com Nome Completo E Data de Entrada válidos (exclui linhas vazias/zeros)
+    // Filtra só linhas com data válida (dd/mm/aaaa) — exclui linhas vazias e zeros
     var lesoes = lesData.filter(function(r){
       var nome = r['Nome Completo']||'';
       var data = r['Data de Entrada']||r['Data Entrada']||'';
-      // Exclui linhas sem nome ou com valores zerados (colunas extras da planilha)
-      return nome.trim() && nome !== '0' && data.trim() && data !== '0';
+      // Data válida deve ter formato com barras e ano >= 2020
+      var dataOk = /\d{2}\/\d{2}\/\d{4}/.test(data);
+      var nomeOk = nome.trim().length > 3 && nome !== '0' && !/^\d+$/.test(nome.trim());
+      return dataOk && nomeOk;
     });
     var total = lesoes.length;
     if(total === 0) return;
