@@ -678,7 +678,21 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
 </section>
 
 <section id="relatorio">
-  <div class="sh rv"><div><div class="stag">Análise Final</div><div class="sti">Relatório da Temporada</div></div><div class="sme">Paulista A2 · Nov 2025 – Mar 2026</div></div>
+  <div class="sh rv">
+    <div>
+      <div class="stag">Análise Final</div>
+      <div class="sti">Relatório da Temporada</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Temporada</span>
+      <div id="temp-filters" style="display:flex;gap:6px">
+        <button onclick="filtrarTemporada('2025-2026')" id="tf-2025-2026" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;background:var(--az);color:var(--bk);border:none;transition:.2s">2025-26</button>
+        <button onclick="filtrarTemporada('2024-2025')" id="tf-2024-2025" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">2024-25</button>
+        <button onclick="filtrarTemporada('todas')" id="tf-todas" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;background:transparent;color:var(--ts);border:1px solid rgba(70,162,247,.2);transition:.2s">Todas</button>
+      </div>
+      <span id="rel-periodo-label" style="font-size:11px;color:var(--ts)">Paulista A2 · Nov 2025 – Mar 2026</span>
+    </div>
+  </div>
   <div class="ri rv">
     <div class="gi"><div class="giv" style="color:var(--gr)" id="rel-disp">—</div><div class="gil">Disponibilidade</div></div>
     <div class="gi"><div class="giv"id="rel-rts">—</div><div class="gil">Dias Médios RTS</div></div>
@@ -4156,26 +4170,21 @@ async function carregarRelatorio() {
 
   // ── LESÕES ───────────────────────────────────────
   if(lesData && lesData.length > 0){
-    // Filtra temporada atual: Nov 2025 – Mar 2026
-    // e só linhas reais (nome completo + diagnóstico válidos)
-    var TEMP_INICIO = new Date(2025, 10, 1); // 01/11/2025
-    var TEMP_FIM    = new Date(2026,  2, 31); // 31/03/2026
+    // Usa filtro de temporada global (definido por filtrarTemporada)
+    var TEMP_INICIO = window._tempInicio || new Date(2025, 10, 1);
+    var TEMP_FIM    = window._tempFim    || new Date(2026,  2, 31);
 
     var lesoes = lesData.filter(function(r){
       var nome = (r['Nome Completo']||'').trim();
       var diag = (r['Diagnóstico / Queixas']||'').trim();
       var data = (r['Data de Entrada']||'').trim();
-
-      // Nome real: tem espaço e não é só números
       var nomeOk = nome.length > 5 && nome.indexOf(' ') > 0 && !/^[\d\s]+$/.test(nome);
-      // Diagnóstico não vazio
       var diagOk = diag.length > 2 && diag !== '0';
-      // Data dentro da temporada (dd/mm/aaaa)
       var dataOk = false;
       if(/^\d{2}\/\d{2}\/\d{4}$/.test(data)){
         var p = data.split('/');
         var dt = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
-        dataOk = dt >= TEMP_INICIO && dt <= TEMP_FIM;
+        dataOk = window._tempTodas ? true : (dt >= TEMP_INICIO && dt <= TEMP_FIM);
       }
       return nomeOk && diagOk && dataOk;
     });
@@ -4294,5 +4303,57 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 </script>
+// ══════════════════════════════════════
+// FILTRO DE TEMPORADA
+// ══════════════════════════════════════
+var _temporadaAtual = '2025-2026';
+window._tempInicio = new Date(2025, 10, 1);
+window._tempFim    = new Date(2026,  2, 31);
+window._tempTodas  = false;
+
+function filtrarTemporada(t) {
+  _temporadaAtual = t;
+
+  // Configura período
+  if(t === '2025-2026'){
+    window._tempInicio = new Date(2025, 10, 1);
+    window._tempFim    = new Date(2026,  2, 31);
+    window._tempTodas  = false;
+    var label = 'Paulista A2 · Nov 2025 – Mar 2026';
+  } else if(t === '2024-2025'){
+    window._tempInicio = new Date(2024, 10, 1);
+    window._tempFim    = new Date(2025,  9, 31);
+    window._tempTodas  = false;
+    var label = 'Temporada 2024-25 · Nov 2024 – Out 2025';
+  } else {
+    window._tempTodas = true;
+    var label = 'Todas as temporadas';
+  }
+
+  // Atualiza label
+  var lbl = document.getElementById('rel-periodo-label');
+  if(lbl) lbl.textContent = label;
+
+  // Atualiza botões
+  ['2025-2026','2024-2025','todas'].forEach(function(id){
+    var btn = document.getElementById('tf-'+id);
+    if(!btn) return;
+    if(id === t){
+      btn.style.background = 'var(--az)';
+      btn.style.color = 'var(--bk)';
+      btn.style.border = 'none';
+    } else {
+      btn.style.background = 'transparent';
+      btn.style.color = 'var(--ts)';
+      btn.style.border = '1px solid rgba(70,162,247,.2)';
+    }
+  });
+
+  // Recarrega relatório com novo filtro
+  _relatorioCarregado = false;
+  carregarRelatorio();
+}
+
+
 </body>
 </html>
