@@ -2697,12 +2697,15 @@ function nspAtualizarStats() {
     return d.indexOf(hoje.split('/')[0] + '/' + hoje.split('/')[1]) >= 0 || d.indexOf(hoje) >= 0;
   }).length;
 
-  // Aptos hoje = atletas com Característica "Apronto" na recuperação mais recente
+  // Aptos hoje = cruzamento Cadastro x BD Recuperação (Cadastro = fonte de verdade)
   var aptosMap = {};
   nspRecuperacao.forEach(function(r){
     if(r['Nome']) aptosMap[r['Nome']] = r['Característica']||r['Caracteristica']||'';
   });
-  var aptos = Object.values(aptosMap).filter(function(v){ return v.toLowerCase().indexOf('apronto') >= 0; }).length;
+  var aptos = nspCadastro.filter(function(r){
+    var car = aptosMap[r['Nome']]||'';
+    return car.toLowerCase().indexOf('apronto') >= 0;
+  }).length;
 
   var el = function(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; };
   el('nsp-stat-atletas', total);
@@ -2962,8 +2965,14 @@ function nspAbrirFicha(idx) {
   document.getElementById('ppf-name').textContent = nome;
   document.getElementById('ppf-pos').textContent = pos + ' · ' + lat;
 
-  // Badges
-  var badges = '<span style="background:rgba(46,204,142,.15);color:var(--gr);border:1px solid rgba(46,204,142,.25);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:2px">Ativo</span>';
+  // Badge — status real da Volt (BD Recuperação e Prontidão)
+  var ultimaRec = nspRecuperacao.filter(function(p){ return p['Nome'] === nome; }).slice(-1)[0];
+  var statusReal = ultimaRec ? (ultimaRec['Característica']||ultimaRec['Caracteristica']||'Sem registro') : 'Sem registro';
+  var isApronto = statusReal.toLowerCase().indexOf('apronto') >= 0;
+  var badgeBg    = isApronto ? 'rgba(46,204,142,.15)' : 'rgba(239,68,68,.15)';
+  var badgeColor = isApronto ? 'var(--gr)' : 'var(--re)';
+  var badgeBorder= isApronto ? 'rgba(46,204,142,.25)' : 'rgba(239,68,68,.25)';
+  var badges = '<span style="background:'+badgeBg+';color:'+badgeColor+';border:1px solid '+badgeBorder+';font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:2px">'+statusReal+'</span>';
   document.getElementById('ppf-badges').innerHTML = badges;
 
   // Pré-treinos do atleta (últimos 5)
