@@ -4738,9 +4738,10 @@ document.addEventListener('DOMContentLoaded', function(){
   <div class="el-header">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
       <button onclick="hubVoltarDT()" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);background:none;border:1px solid rgba(70,162,247,.2);border-radius:3px;padding:7px 14px;cursor:pointer">&#8592; Hub</button>
-      <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <span id="dt-sync" style="font-size:10px;color:var(--ts)">Carregando...</span>
         <button onclick="dtCarregar()" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;background:rgba(70,162,247,.1);color:var(--az);border:1px solid rgba(70,162,247,.25)">&#8635; Atualizar</button>
+        <button onclick="dtMostrarDebug()" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;background:rgba(245,158,11,.08);color:var(--ye);border:1px solid rgba(245,158,11,.25)">&#128269; Debug API</button>
       </div>
     </div>
     <div class="el-title">DEP. <em>TÉCNICO</em></div>
@@ -4751,6 +4752,13 @@ document.addEventListener('DOMContentLoaded', function(){
       <div style="font-family:Bebas Neue,sans-serif;font-size:32px;color:var(--az);margin-bottom:8px">Conectando à API Futebol...</div>
       <div>Carregando classificação, rodadas e dados dos adversários</div>
     </div>
+  </div>
+  <div id="dt-debug" style="display:none;background:rgba(0,0,0,.5);border:1px solid rgba(245,158,11,.3);border-radius:6px;margin:0 32px 32px;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ye)">Debug API — Campeonatos disponíveis</div>
+      <button onclick="document.getElementById('dt-debug').style.display='none'" style="background:none;border:1px solid rgba(70,162,247,.2);border-radius:3px;color:var(--ts);cursor:pointer;padding:3px 8px;font-size:12px">fechar</button>
+    </div>
+    <div id="dt-debug-content" style="font-family:monospace;font-size:11px;color:var(--wh);white-space:pre-wrap;max-height:400px;overflow-y:auto;line-height:1.6"></div>
   </div>
 </div>
 
@@ -4784,6 +4792,39 @@ function hubVoltarDT() {
   document.getElementById('mod-dep-tecnico').style.display = 'none';
   document.getElementById('tela-hub').style.display = 'flex';
   window.scrollTo(0, 0);
+}
+
+async function dtMostrarDebug() {
+  var dbg = document.getElementById('dt-debug');
+  var dbgContent = document.getElementById('dt-debug-content');
+  dbg.style.display = 'block';
+  dbgContent.textContent = 'Buscando /campeonatos...';
+  try {
+    var res = await fetch('https://api.api-futebol.com.br/v1/campeonatos', {
+      headers: { 'Authorization': 'Bearer test_7ae1b35cc9b88a4acddb430c4ce3f7' }
+    });
+    var data = await res.json();
+    // Show summary of all campeonatos
+    var lines = ['Status HTTP: ' + res.status, 'Total campeonatos: ' + (Array.isArray(data) ? data.length : 'N/A (objeto)'), ''];
+    if(Array.isArray(data)) {
+      data.forEach(function(c) {
+        lines.push('ID: ' + (c.campeonato_id||c.id) + ' | ' + (c.nome||c.nome_popular||'?') + ' | status: ' + (c.status||'?'));
+      });
+    } else {
+      lines.push(JSON.stringify(data, null, 2));
+    }
+    dbgContent.textContent = lines.join('
+');
+    // Also log what we selected
+    lines.push('');
+    lines.push('=== SELECIONADO ===');
+    lines.push('campId: ' + dtState.campId);
+    lines.push('campNome: ' + dtState.campNome);
+    dbgContent.textContent = lines.join('
+');
+  } catch(e) {
+    dbgContent.textContent = 'Erro: ' + e.message;
+  }
 }
 
 async function dtFetch(endpoint) {
@@ -4866,21 +4907,43 @@ function dtPlantelHtml() {
 
   var aptMap = {};
   recuperacao.forEach(function(r){
-    if(r['Nome']) aptMap[r['Nome']] = r['Característica']||r['Caracteristica']||'';
+    if(r['Nome']) {
+      // Try multiple possible column names for aptidão
+      var apt = r['Característica']||r['Caracteristica']||r['Status']||r['Aptidão']||r['Aptidao']||r['Caracteristicas']||'';
+      aptMap[r['Nome'].trim()] = apt;
+    }
   });
+
+  // Debug: log first few entries to console
+  var aptKeys = Object.keys(aptMap);
+  if(aptKeys.length > 0) {
+    console.log('[DT Plantel] Recuperacao sheet - first 5 entries:', JSON.stringify(aptKeys.slice(0,5).map(function(k){ return k + ': ' + aptMap[k]; })));
+    // Log unique values found
+    var uniqueVals = {};
+    aptKeys.forEach(function(k){ uniqueVals[aptMap[k]] = true; });
+    console.log('[DT Plantel] Unique status values:', Object.keys(uniqueVals));
+  } else {
+    console.warn('[DT Plantel] aptMap is empty! Recuperacao rows:', recuperacao.length);
+    if(recuperacao.length > 0) console.log('[DT Plantel] First row keys:', Object.keys(recuperacao[0]));
+  }
 
   var aptos = [], rehab = [];
   var porPos = {};
   cadastro.forEach(function(r){
-    var apt = aptMap[r['Nome']]||'';
-    var pos = r['Posição']||r['Posicao']||'Outros';
-    var obj = { nome:r['Nome'], pos:pos, apt:apt, lat:r['Lateralidade']||'' };
-    if(apt.toLowerCase().indexOf('apronto')>=0) {
+    var nomeLimpo = (r['Nome']||'').trim();
+    var apt = aptMap[nomeLimpo]||'';
+    var aptLower = apt.toLowerCase();
+    var pos = r['Posição']||r['Posicao']||r['Posicão']||'Outros';
+    var obj = { nome:nomeLimpo, pos:pos, apt:apt, lat:r['Lateralidade']||'' };
+    // Check for apronto variations
+    if(aptLower.indexOf('apronto')>=0 || aptLower.indexOf('apto')>=0 || aptLower === 'disponivel' || aptLower === 'disponível') {
       aptos.push(obj);
       if(!porPos[pos]) porPos[pos] = [];
       porPos[pos].push(obj);
-    } else if(apt) {
+    } else if(apt && aptLower.indexOf('rehab')>=0 || aptLower.indexOf('reab')>=0 || aptLower.indexOf('lesão')>=0 || aptLower.indexOf('tratamento')>=0 || aptLower.indexOf('recup')>=0) {
       rehab.push(obj);
+    } else if(apt) {
+      rehab.push(obj); // qualquer status não-apto vai para rehab
     }
   });
 
@@ -4946,19 +5009,28 @@ async function dtCarregar() {
   dash.innerHTML = '<div style="color:var(--ts);font-size:13px;padding:60px 0;text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:var(--az);margin-bottom:8px">Conectando...</div><div>Buscando campeonato e dados dos adversários</div></div>';
 
   try {
-    // 1. Descobrir campeonato
+    // 1. Descobrir campeonato — tenta dinâmico, fallback para IDs conhecidos
     if(!dtState.campId) {
       var camps = await dtFetch('/campeonatos');
+      // Debug: mostrar todos os campeonatos disponíveis no console
       if(camps && Array.isArray(camps)) {
-        // Prefer active (andamento) A2, then most recent A2
+        console.log('[DT] Campeonatos disponíveis:', JSON.stringify(camps.map(function(c){
+          return { id: c.campeonato_id||c.id, nome: c.nome||c.nome_popular, status: c.status };
+        })));
+        // Preferência: ativo > A2 > Paulista
         var match = camps.find(function(c){
           var n = (c.nome||c.nome_popular||'').toLowerCase();
-          return n.indexOf('paulista') >= 0 && n.indexOf('a2') >= 0 && c.status === 'andamento';
+          return (n.indexOf('paulista') >= 0 || n.indexOf('paulistao') >= 0) &&
+                 (n.indexOf('a2') >= 0 || n.indexOf('segunda') >= 0 || n.indexOf('2.') >= 0) &&
+                 (c.status === 'andamento' || c.status === 'em_andamento');
         }) || camps.find(function(c){
           var n = (c.nome||c.nome_popular||'').toLowerCase();
-          return n.indexOf('paulista') >= 0 && (n.indexOf('a2') >= 0 || n.indexOf('segunda') >= 0);
+          return (n.indexOf('paulista') >= 0) &&
+                 (n.indexOf('a2') >= 0 || n.indexOf('segunda') >= 0) &&
+                 c.status !== 'encerrado';
         }) || camps.find(function(c){
-          return (c.nome||c.nome_popular||'').toLowerCase().indexOf('paulista') >= 0 && c.status === 'andamento';
+          var n = (c.nome||c.nome_popular||'').toLowerCase();
+          return n.indexOf('paulista') >= 0 && n.indexOf('a2') >= 0;
         });
         if(match) {
           dtState.campId = match.campeonato_id || match.id;
@@ -4967,7 +5039,29 @@ async function dtCarregar() {
           if(cn) cn.textContent = dtState.campNome;
         }
       }
-      if(!dtState.campId) dtState.campId = 40; // fallback: Paulista A2 2025
+      // Se não achou dinamicamente, tenta IDs conhecidos em ordem (mais novo primeiro)
+      if(!dtState.campId) {
+        var idsParaTentar = [68, 65, 62, 59, 56, 53, 50, 47, 44, 41, 40];
+        for(var ki=0; ki<idsParaTentar.length; ki++) {
+          var testId = idsParaTentar[ki];
+          var testCamp = await dtFetch('/campeonatos/' + testId);
+          if(testCamp) {
+            var testNome = (testCamp.nome||testCamp.nome_popular||'').toLowerCase();
+            if(testNome.indexOf('paulista') >= 0 && testNome.indexOf('a2') >= 0) {
+              dtState.campId = testId;
+              dtState.campNome = testCamp.nome || testCamp.nome_popular || 'Paulista A2';
+              console.log('[DT] Achei Paulista A2 no ID:', testId, dtState.campNome);
+              var cn = document.getElementById('dt-camp-nome');
+              if(cn) cn.textContent = dtState.campNome;
+              break;
+            }
+          }
+        }
+      }
+      if(!dtState.campId) {
+        dtState.campId = 40;
+        console.warn('[DT] Usando fallback ID 40 (Paulista A2 2025)');
+      }
     }
     var cid = dtState.campId;
 
