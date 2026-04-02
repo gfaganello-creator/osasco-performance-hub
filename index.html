@@ -5097,7 +5097,7 @@ function dtRenderStatsPartidas() {
         var nomeG = jogador.nome_popular||jogador.nome||'—';
         var minuto = g.minuto||g.tempo||'—';
         var isOsascoGol = (g.time||{}).nome_popular && ((g.time||{}).nome_popular||'').toLowerCase().indexOf('osasco')>=0;
-        html += '<span style="font-size:10px;padding:2px 8px;border-radius:2px;background:rgba(46,204,142,.1);border:1px solid rgba(46,204,142,.2);color:var(--gr)">⚽ '+minuto+'' '+nomeG+'</span>';
+        html += '<span style="font-size:10px;padding:2px 8px;border-radius:2px;background:rgba(46,204,142,.1);border:1px solid rgba(46,204,142,.2);color:var(--gr)">&#9917; '+minuto+'min '+nomeG+'</span>';
       });
       html += '</div>';
     }
