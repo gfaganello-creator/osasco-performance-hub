@@ -4842,74 +4842,43 @@ var DT_VOLT_BASE = 'https://docs.google.com/spreadsheets/d/'+DT_VOLT_SID+'/gviz/
 var DT_LES_BASE  = 'https://docs.google.com/spreadsheets/d/'+DT_LES_SID+'/gviz/tq?tqx=out:csv&sheet=';
 
 async function dtCarregarPlantel() {
-  // Reutiliza dados do NSP se já carregados
-  if(window.nspCadastro && nspCadastro.length > 0) {
-    dtState.dtCadastro    = nspCadastro;
-    dtState.dtRecuperacao = window.nspRecuperacao || [];
-  } else {
-    try {
-      var resArr = await Promise.all([
-        fetch(DT_VOLT_BASE + encodeURIComponent('Cadastro')),
-        fetch(DT_LES_BASE  + encodeURIComponent('BD Recuperação e Prontidão'))
-      ]);
-      var t1 = await resArr[0].text();
-      var t4 = await resArr[1].text();
-      dtState.dtCadastro    = dtCsvParse(t1).filter(function(r){ return r['Nome'] && r['Nome'].trim(); });
-      dtState.dtRecuperacao = dtCsvParse(t4).filter(function(r){ return r['Nome']; });
-    } catch(e) {
-      console.warn('[DT plantel]', e);
-      dtState.dtCadastro    = [];
-      dtState.dtRecuperacao = [];
-    }
-  }
-  // Log para debug
-  var rec = dtState.dtRecuperacao || [];
-  if(rec.length > 0) {
-    var cols = Object.keys(rec[0]);
-    console.log('[DT plantel] Recuperacao colunas:', cols);
-    console.log('[DT plantel] Primeiro registro:', JSON.stringify(rec[0]));
-    var vals = {};
-    rec.forEach(function(r){
-      var apt = r['Característica']||r['Caracteristica']||r['Aptidão']||r['Status']||'';
-      if(apt) vals[apt] = true;
-    });
-    console.log('[DT plantel] Valores de aptidão únicos:', Object.keys(vals));
-  }
-  // Atualiza bloco de plantel
+  // Atualiza o bloco usando dados do NSP (se disponível)
   var el = document.getElementById('dt-plantel-content');
   if(el) el.innerHTML = dtPlantelHtml();
 }
 
 function dtPlantelHtml() {
-  var cadastro    = dtState.dtCadastro    || (window.nspCadastro    ? nspCadastro    : []);
-  var recuperacao = dtState.dtRecuperacao || (window.nspRecuperacao ? nspRecuperacao : []);
-  if(cadastro.length === 0) {
-    return '<div style="color:var(--ts);font-size:12px">Carregando plantel...</div>';
+  // Espelha exatamente os dados do NSP — sem reprocessar
+  var temNSP = window.nspCadastro && nspCadastro.length > 0;
+  if(!temNSP) {
+    return '<div style="background:rgba(70,162,247,.05);border:1px solid rgba(70,162,247,.15);border-radius:6px;padding:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">' +
+      '<div>' +
+        '<div style="font-size:12px;font-weight:700;color:var(--wh);margin-bottom:4px">Dados do NSP nao carregados</div>' +
+        '<div style="font-size:11px;color:var(--ts)">Abra o modulo NSP primeiro para carregar os dados de aptidao do plantel.</div>' +
+      '</div>' +
+      '<button onclick="dtCarregarNSPeAtualizar()" style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px 18px;border-radius:3px;cursor:pointer;background:var(--az);color:var(--bk);border:none;flex-shrink:0">Carregar NSP</button>' +
+    '</div>';
   }
-  // Mapa de aptidão por nome
+  // Usa os mesmos dados processados pelo NSP
   var aptMap = {};
-  recuperacao.forEach(function(r){
-    var nome = (r['Nome']||'').trim();
-    if(!nome) return;
-    var apt = r['Característica']||r['Caracteristica']||r['Aptidão']||r['Aptidao']||r['Status']||'';
-    aptMap[nome] = apt;
+  if(window.nspRecuperacao) {
+    nspRecuperacao.forEach(function(r){
+      if(r['Nome']) aptMap[r['Nome']] = r['Característica']||r['Caracteristica']||'';
+    });
+  }
+  var total = nspCadastro.length;
+  var aptos = nspCadastro.filter(function(r){
+    return (aptMap[r['Nome']]||'').toLowerCase().indexOf('apronto') >= 0;
   });
-  var aptos=[], rehab=[];
+  var rehab = nspCadastro.filter(function(r){
+    var apt = (aptMap[r['Nome']]||'').toLowerCase();
+    return apt && apt.indexOf('apronto') < 0;
+  });
   var porPos = {};
-  cadastro.forEach(function(r){
-    var nome = (r['Nome']||'').trim();
-    if(!nome) return;
-    var apt = aptMap[nome] || '';
-    var aptLow = apt.toLowerCase();
-    var pos = r['Posição']||r['Posicao']||r['Posição ']||'Outros';
-    var obj = { nome:nome, pos:pos.trim(), apt:apt, lat:r['Lateralidade']||'' };
-    if(aptLow.indexOf('apronto')>=0 || aptLow === 'apto' || aptLow === 'disponivel' || aptLow === 'disponível') {
-      aptos.push(obj);
-      if(!porPos[obj.pos]) porPos[obj.pos]=[];
-      porPos[obj.pos].push(obj);
-    } else if(apt) {
-      rehab.push(obj);
-    }
+  aptos.forEach(function(r){
+    var pos = r['Posição']||r['Posicao']||'Outros';
+    if(!porPos[pos]) porPos[pos]=[];
+    porPos[pos].push(r);
   });
   var html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">' +
     '<div style="background:rgba(46,204,142,.08);border:1px solid rgba(46,204,142,.2);border-radius:6px;padding:16px;text-align:center">' +
@@ -4921,44 +4890,47 @@ function dtPlantelHtml() {
       '<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(245,158,11,.7);margin-top:4px">Em Reabilitacao</div>' +
     '</div>' +
     '<div style="background:rgba(70,162,247,.05);border:1px solid rgba(70,162,247,.15);border-radius:6px;padding:16px;text-align:center">' +
-      '<div style="font-family:Bebas Neue,sans-serif;font-size:48px;color:var(--wh);line-height:1">'+cadastro.length+'</div>' +
+      '<div style="font-family:Bebas Neue,sans-serif;font-size:48px;color:var(--wh);line-height:1">'+total+'</div>' +
       '<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);margin-top:4px">Total no Plantel</div>' +
     '</div>' +
   '</div>';
-  if(aptos.length > 0) {
-    html += '<div style="background:var(--c2);border:1px solid rgba(70,162,247,.12);border-radius:6px;padding:20px;margin-bottom:10px">' +
-      '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:14px">Disponiveis por Posicao</div>' +
-      '<div style="display:flex;flex-direction:column;gap:10px">';
-    var posOrder = ['Goleiro','Lateral Dir.','Lateral Esq.','Zagueiro','Volante','Meia','Atacante'];
-    var allPos = posOrder.concat(Object.keys(porPos).filter(function(p){ return posOrder.indexOf(p)<0; }));
-    allPos.forEach(function(pos){
-      if(!porPos[pos]||porPos[pos].length===0) return;
-      html += '<div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">' +
-        '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ts);min-width:80px;padding-top:5px">'+pos+'</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:6px">';
-      porPos[pos].forEach(function(a){
-        html += '<span style="font-size:12px;font-weight:600;color:var(--wh);background:rgba(46,204,142,.1);border:1px solid rgba(46,204,142,.2);padding:3px 10px;border-radius:3px">'+a.nome+'</span>';
-      });
-      html += '</div></div>';
+  // Aptos por posição
+  var posOrder = ['Goleiro','Lateral Dir.','Lateral Esq.','Zagueiro','Volante','Meia','Atacante'];
+  var allPos = posOrder.concat(Object.keys(porPos).filter(function(p){ return posOrder.indexOf(p)<0; }));
+  html += '<div style="background:var(--c2);border:1px solid rgba(70,162,247,.12);border-radius:6px;padding:20px;margin-bottom:10px">' +
+    '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:12px">Disponiveis por Posicao</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">';
+  allPos.forEach(function(pos){
+    if(!porPos[pos]||porPos[pos].length===0) return;
+    html += '<div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">' +
+      '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ts);min-width:82px;padding-top:5px">'+pos+'</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:5px">';
+    porPos[pos].forEach(function(r){
+      html += '<span style="font-size:12px;font-weight:600;color:var(--wh);background:rgba(46,204,142,.1);border:1px solid rgba(46,204,142,.2);padding:3px 10px;border-radius:3px">'+r['Nome']+'</span>';
     });
     html += '</div></div>';
-  } else {
-    // Se 0 aptos, mostra aviso com info de debug
-    html += '<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:16px;margin-bottom:10px">' +
-      '<div style="font-size:11px;font-weight:700;color:var(--ye);margin-bottom:6px">Sem aptos identificados</div>' +
-      '<div style="font-size:11px;color:var(--ts)">A planilha Recuperacao tem '+recuperacao.length+' registros. Verifique o console (F12) para ver os valores de aptidao disponiveis e ajuste a deteccao.</div>' +
-    '</div>';
-  }
+  });
+  html += '</div></div>';
+  // Em reabilitação
   if(rehab.length > 0) {
     html += '<div style="background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.15);border-radius:6px;padding:14px 18px">' +
-      '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--re);opacity:.8;margin-bottom:8px">Reabilitacao</div>' +
+      '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--re);opacity:.8;margin-bottom:8px">Em Reabilitacao</div>' +
       '<div style="display:flex;flex-wrap:wrap;gap:5px">';
-    rehab.forEach(function(a){
-      html += '<span title="'+a.apt+'" style="font-size:11px;color:rgba(240,244,248,.5);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);padding:2px 8px;border-radius:3px">'+a.nome+'</span>';
+    rehab.forEach(function(r){
+      var apt = aptMap[r['Nome']]||'';
+      html += '<span title="'+apt+'" style="font-size:11px;color:rgba(240,244,248,.5);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);padding:2px 8px;border-radius:3px">'+r['Nome']+'</span>';
     });
     html += '</div></div>';
   }
   return html;
+}
+
+async function dtCarregarNSPeAtualizar() {
+  // Carrega o NSP em background e atualiza o bloco
+  var el = document.getElementById('dt-plantel-content');
+  if(el) el.innerHTML = '<div style="color:var(--ts);font-size:12px">Carregando NSP...</div>';
+  await nspCarregar();
+  if(el) el.innerHTML = dtPlantelHtml();
 }
 
 // ── Carregamento principal ──
