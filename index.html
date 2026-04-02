@@ -4813,15 +4813,13 @@ async function dtMostrarDebug() {
     } else {
       lines.push(JSON.stringify(data, null, 2));
     }
-    dbgContent.textContent = lines.join('
-');
+    dbgContent.textContent = lines.join('\n');
     // Also log what we selected
     lines.push('');
     lines.push('=== SELECIONADO ===');
     lines.push('campId: ' + dtState.campId);
     lines.push('campNome: ' + dtState.campNome);
-    dbgContent.textContent = lines.join('
-');
+    dbgContent.textContent = lines.join('\n');
   } catch(e) {
     dbgContent.textContent = 'Erro: ' + e.message;
   }
