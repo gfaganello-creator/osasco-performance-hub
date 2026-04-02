@@ -840,69 +840,155 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
       </div>
     </div>
 
-    <!-- KPI Summary Bar -->
-    <div id="fin-kpi-bar" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px">
-      <div style="background:rgba(70,162,247,.05);border:1px solid rgba(70,162,247,.12);border-radius:6px;padding:16px 20px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">ORCAMENTO GERAL</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;line-height:1">Looker</div>
-        <div style="font-size:10px;color:var(--ts);font-family:'Barlow Condensed',sans-serif;margin-top:2px">Studio</div>
-      </div>
-      <div style="background:rgba(46,204,142,.05);border:1px solid rgba(46,204,142,.12);border-radius:6px;padding:16px 20px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">FOLHA SALARIAL</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;line-height:1">Looker</div>
-        <div style="font-size:10px;color:var(--ts);font-family:'Barlow Condensed',sans-serif;margin-top:2px">Studio</div>
-      </div>
-      <div style="background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.12);border-radius:6px;padding:16px 20px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">FLUXO DE CAIXA</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;line-height:1">Looker</div>
-        <div style="font-size:10px;color:var(--ts);font-family:'Barlow Condensed',sans-serif;margin-top:2px">Studio</div>
-      </div>
-      <div style="background:rgba(70,162,247,.05);border:1px solid rgba(70,162,247,.12);border-radius:6px;padding:16px 20px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">PATROCINADORES</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;line-height:1">Looker</div>
-        <div style="font-size:10px;color:var(--ts);font-family:'Barlow Condensed',sans-serif;margin-top:2px">Studio</div>
-      </div>
-      <div style="background:rgba(46,204,142,.05);border:1px solid rgba(46,204,142,.12);border-radius:6px;padding:16px 20px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">KPI EXECUTIVO</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;line-height:1">Looker</div>
-        <div style="font-size:10px;color:var(--ts);font-family:'Barlow Condensed',sans-serif;margin-top:2px">Studio</div>
+    <!-- Loading state -->
+    <div id="fin-loading" style="text-align:center;padding:80px 0">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:16px">Carregando dados financeiros...</div>
+      <div style="width:160px;height:2px;background:rgba(70,162,247,.1);border-radius:1px;overflow:hidden;margin:0 auto">
+        <div style="height:100%;background:var(--az);border-radius:1px;animation:progressBar 1.8s ease-in-out infinite"></div>
       </div>
     </div>
 
-    <!-- Looker Studio iframe -->
-    <div style="background:rgba(70,162,247,.04);border:1px solid rgba(70,162,247,.12);border-radius:8px;overflow:hidden;position:relative">
-      <!-- iframe header -->
-      <div style="padding:14px 20px;background:rgba(70,162,247,.06);border-bottom:1px solid rgba(70,162,247,.1);display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:12px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--az)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--az)">DASHBOARD FINANCEIRO &middot; LOOKER STUDIO</span>
+    <!-- Dashboard (hidden until loaded) -->
+    <div id="fin-dashboard" style="display:none">
+
+      <!-- KPI Row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+        <div style="background:rgba(70,162,247,.05);border:1px solid rgba(70,162,247,.14);border-radius:8px;padding:22px 24px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--ts);margin-bottom:10px">TOTAL TRANSFERIDO</div>
+          <div id="fin-kpi-total" style="font-family:'Bebas Neue',sans-serif;font-size:38px;color:#fff;line-height:1;letter-spacing:1px">-</div>
+          <div style="font-size:10px;color:var(--ts);font-family:'Barlow Condensed',sans-serif;margin-top:4px">Soma de todos os aportes</div>
         </div>
-        <a href="https://lookerstudio.google.com/u/0/reporting/45a79d54-2f63-4738-af85-7477f341a39b/page/p_0vsnwpho1d?s=hFVUo73L-zU" target="_blank" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts);text-decoration:none;padding:6px 12px;border:1px solid rgba(70,162,247,.2);border-radius:3px;transition:.2s" onmouseover="this.style.color='var(--az)';this.style.borderColor='rgba(70,162,247,.5)'" onmouseout="this.style.color='var(--ts)';this.style.borderColor='rgba(70,162,247,.2)'">Abrir em nova aba &#8599;</a>
-      </div>
-      <!-- iframe container -->
-      <div style="position:relative;width:100%;padding-bottom:62.5%;background:#0a1520">
-        <iframe
-          id="fin-looker-iframe"
-          src="https://lookerstudio.google.com/embed/reporting/45a79d54-2f63-4738-af85-7477f341a39b/page/p_0vsnwpho1d"
-          style="position:absolute;top:0;left:0;width:100%;height:100%;border:none"
-          allowfullscreen
-          sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-          loading="lazy">
-        </iframe>
-        <!-- loading overlay -->
-        <div id="fin-iframe-loading" style="position:absolute;inset:0;background:#0a1520;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;pointer-events:none">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(70,162,247,.4)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(122,155,181,.6)">Carregando dashboard...</div>
-          <div style="width:120px;height:2px;background:rgba(70,162,247,.1);border-radius:1px;overflow:hidden">
-            <div style="height:100%;background:var(--az);border-radius:1px;animation:progressBar 1.8s ease-in-out infinite"></div>
+        <div style="background:rgba(70,162,247,.05);border:1px solid rgba(70,162,247,.14);border-radius:8px;padding:22px 24px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--ts);margin-bottom:10px">TOTAL APORTADO EM EQUITY</div>
+          <div id="fin-kpi-equity" style="font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--az);line-height:1;letter-spacing:1px">-</div>
+          <div style="font-size:10px;color:var(--ts);font-family:'Barlow Condensed',sans-serif;margin-top:4px">Modalidade Equity</div>
+        </div>
+        <div style="background:rgba(70,162,247,.05);border:1px solid rgba(70,162,247,.14);border-radius:8px;padding:22px 24px;position:relative;overflow:hidden">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--ts);margin-bottom:10px">EQUITY ENDEREÇADO</div>
+          <div id="fin-kpi-pct" style="font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--gr);line-height:1;letter-spacing:1px">-</div>
+          <div style="font-size:10px;color:var(--ts);font-family:'Barlow Condensed',sans-serif;margin-top:4px">Do valuation total</div>
+          <!-- gauge bar -->
+          <div style="margin-top:12px;height:4px;background:rgba(70,162,247,.1);border-radius:2px;overflow:hidden">
+            <div id="fin-gauge-bar" style="height:100%;background:var(--gr);border-radius:2px;width:0%;transition:width 1s ease"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px">
+            <span style="font-size:9px;color:var(--ts);font-family:'Barlow Condensed',sans-serif">0%</span>
+            <span style="font-size:9px;color:var(--ts);font-family:'Barlow Condensed',sans-serif">70%</span>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Footer note -->
-    <div style="margin-top:16px;text-align:center">
-      <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(122,155,181,.4)">Dados fornecidos pelo Google Looker Studio &middot; Osasco Sporting FC</span>
+      <!-- KPI Row 2 -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+        <div style="background:rgba(46,204,142,.04);border:1px solid rgba(46,204,142,.12);border-radius:6px;padding:14px 18px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">TOTAL COMPROMETIDO</div>
+          <div id="fin-kpi-comp" style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--gr);line-height:1">-</div>
+        </div>
+        <div style="background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.12);border-radius:6px;padding:14px 18px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">CAPTABLE FINAL</div>
+          <div id="fin-kpi-captable" style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--ye);line-height:1">-</div>
+        </div>
+        <div style="background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.12);border-radius:6px;padding:14px 18px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">FALTANTE COMPROMETIDO</div>
+          <div id="fin-kpi-faltante" style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--re);line-height:1">-</div>
+        </div>
+        <div style="background:rgba(70,162,247,.04);border:1px solid rgba(70,162,247,.12);border-radius:6px;padding:14px 18px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:6px">INVESTIDORES ATIVOS</div>
+          <div id="fin-kpi-inv" style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--az);line-height:1">-</div>
+        </div>
+      </div>
+
+      <!-- Captable table -->
+      <div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;overflow:hidden;margin-bottom:20px">
+        <div style="padding:16px 20px;border-bottom:1px solid rgba(70,162,247,.08);display:flex;align-items:center;justify-content:space-between">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--az)">CAPTABLE</div>
+          <div style="font-size:10px;color:var(--ts);font-family:'Barlow Condensed',sans-serif">Consolidado Investidores</div>
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-family:'Barlow Condensed',sans-serif">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(70,162,247,.1)">
+                <th style="text-align:left;padding:10px 20px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">#</th>
+                <th style="text-align:left;padding:10px 12px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Investidor</th>
+                <th style="text-align:right;padding:10px 12px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Total Transferido</th>
+                <th style="text-align:right;padding:10px 12px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Montante Equity</th>
+                <th style="text-align:right;padding:10px 12px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Total Comprometido</th>
+                <th style="text-align:right;padding:10px 12px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Equity Endereçado</th>
+                <th style="text-align:right;padding:10px 20px 10px 12px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Captable Final</th>
+              </tr>
+            </thead>
+            <tbody id="fin-captable-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+
+        <!-- Bar chart: aportes por mes -->
+        <div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:20px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--az);margin-bottom:16px">Total Transferido por Mes e Modalidade</div>
+          <div id="fin-bar-chart" style="display:flex;align-items:flex-end;gap:8px;height:140px;overflow-x:auto;padding-bottom:4px"></div>
+          <div id="fin-bar-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px"></div>
+        </div>
+
+        <!-- Pie chart: por investidor -->
+        <div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:20px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--az);margin-bottom:16px">Total Transferido por Investidor</div>
+          <div style="display:flex;align-items:center;gap:20px">
+            <canvas id="fin-pie-inv" width="140" height="140" style="flex-shrink:0"></canvas>
+            <div id="fin-pie-inv-legend" style="font-family:'Barlow Condensed',sans-serif;font-size:11px"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Charts row 2 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+
+        <!-- Pie: por finalidade -->
+        <div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:20px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--az);margin-bottom:16px">Total Transferido por Finalidade</div>
+          <div style="display:flex;align-items:center;gap:20px">
+            <canvas id="fin-pie-mod" width="140" height="140" style="flex-shrink:0"></canvas>
+            <div id="fin-pie-mod-legend" style="font-family:'Barlow Condensed',sans-serif;font-size:11px"></div>
+          </div>
+        </div>
+
+        <!-- Balanco -->
+        <div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:20px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--az);margin-bottom:16px">Balanco de Transferencias</div>
+          <table style="width:100%;border-collapse:collapse;font-family:'Barlow Condensed',sans-serif">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(70,162,247,.1)">
+                <th style="text-align:left;padding:6px 0;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts)">Investidor</th>
+                <th style="text-align:right;padding:6px 0;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts)">Faltante</th>
+                <th style="text-align:right;padding:6px 0;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts)">Sem Atribuicao</th>
+              </tr>
+            </thead>
+            <tbody id="fin-balanco-tbody"></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- Visao Clube / Antecipacoes -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        <div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:20px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--az);margin-bottom:16px">Visao Clube — Ultimas Transferencias</div>
+          <div id="fin-clube-lista" style="font-family:'Barlow Condensed',sans-serif;font-size:12px"></div>
+        </div>
+        <div style="background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.12);border-radius:8px;padding:20px">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ye);margin-bottom:16px">Controle de Antecipacoes</div>
+          <div id="fin-antecip-lista" style="font-family:'Barlow Condensed',sans-serif;font-size:12px"></div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="text-align:center;margin-top:8px">
+        <span id="fin-update-ts" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(122,155,181,.35)"></span>
+      </div>
+
     </div>
 
   </div>
@@ -1689,6 +1775,19 @@ function hubVoltar() {
   window.scrollTo(0, 0);
 }
 var _finAutenticado = false;
+var FIN_SID = '1-O2rXcpEtJ1oMdiq4Fvi95mB09xq4u0iEDWSPkP1IvI';
+var FIN_BASE = 'https://docs.google.com/spreadsheets/d/' + FIN_SID + '/gviz/tq?tqx=out:csv&sheet=';
+
+var FIN_CORES_MOD = {
+  'Equity': '#46A2F7',
+  'Mutuo': '#2ECC8E',
+  'Patrocinio': '#EF4444',
+  'Antecipacao': '#9CA3AF',
+  'Conta e Ordem': '#1e3a5f',
+  'Outros': '#7A9BB5'
+};
+var FIN_CORES_INV = ['#46A2F7','#2ECC8E','#F59E0B','#EF4444','#A78BFA','#34D399','#FB923C'];
+
 function hubFinanceiro() {
   document.getElementById('tela-hub').style.display = 'none';
   document.getElementById('mod-elenco').style.display = 'none';
@@ -1696,7 +1795,7 @@ function hubFinanceiro() {
   window.scrollTo(0, 0);
   if (_finAutenticado) {
     document.getElementById('mod-financeiro').style.display = 'block';
-    finIniciar();
+    finCarregar();
   } else {
     finAbrirAuth();
   }
@@ -1721,13 +1820,12 @@ function finAuthConfirmar() {
     _finAutenticado = true;
     document.getElementById('fin-auth-bg').style.display = 'none';
     document.getElementById('mod-financeiro').style.display = 'block';
-    finIniciar();
+    finCarregar();
   } else {
     document.getElementById('fin-auth-erro').style.display = 'block';
     if (inp) { inp.value = ''; inp.focus(); }
     var box = document.querySelector('#fin-auth-bg > div');
     if (box) {
-      box.style.animation = 'none';
       box.style.transform = 'translateX(-8px)';
       setTimeout(function(){ box.style.transform = 'translateX(8px)'; }, 60);
       setTimeout(function(){ box.style.transform = 'translateX(-5px)'; }, 120);
@@ -1757,19 +1855,349 @@ function hubVoltarFin() {
   document.getElementById('tela-hub').style.display = 'flex';
   window.scrollTo(0, 0);
 }
-function finIniciar() {
-  var iframe = document.getElementById('fin-looker-iframe');
-  var loading = document.getElementById('fin-iframe-loading');
-  if (!iframe) return;
-  if (loading) loading.style.display = 'flex';
-  iframe.onload = function() {
-    if (loading) {
-      loading.style.transition = 'opacity .5s';
-      loading.style.opacity = '0';
-      setTimeout(function(){ loading.style.display = 'none'; }, 500);
-    }
-  };
+
+function finPcsv(line) {
+  var r = [], c = '', q = false;
+  for (var i = 0; i < line.length; i++) {
+    var ch = line[i];
+    if (ch === '"') { q = !q; }
+    else if (ch === ',' && !q) { r.push(c.trim()); c = ''; }
+    else { c += ch; }
+  }
+  r.push(c.trim());
+  return r;
 }
+function finParseSheet(txt) {
+  if (!txt || txt.length < 5) return [];
+  var lines = txt.split('\n');
+  var hdrs = finPcsv(lines[0]).map(function(h){ return h.replace(/^"|"$/g,'').trim(); });
+  return lines.slice(1).filter(function(l){ return l.trim(); }).map(function(l) {
+    var vs = finPcsv(l);
+    var o = {};
+    hdrs.forEach(function(h, i){ o[h] = (vs[i] || '').replace(/^"|"$/g,'').trim(); });
+    return o;
+  });
+}
+function finNum(s) {
+  if (!s) return 0;
+  var n = parseFloat(s.replace(/\./g,'').replace(',','.').replace(/[^\d.\-]/g,''));
+  return isNaN(n) ? 0 : n;
+}
+function finFmt(n) {
+  if (n >= 1000000) return 'R$ ' + (n/1000000).toFixed(2).replace('.',',') + ' mi';
+  if (n >= 1000) return 'R$ ' + (n/1000).toFixed(1).replace('.',',') + ' mil';
+  return 'R$ ' + n.toFixed(2).replace('.',',');
+}
+function finFmtFull(n) {
+  return 'R$ ' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,'.').replace(/\.(\d{2})$/,',$1');
+}
+function finPct(s) {
+  if (!s) return 0;
+  return parseFloat(s.replace('%','').replace(',','.'));
+}
+function finCorMod(m) {
+  var k = Object.keys(FIN_CORES_MOD);
+  for (var i = 0; i < k.length; i++) {
+    if (m && m.toLowerCase().indexOf(k[i].toLowerCase()) >= 0) return FIN_CORES_MOD[k[i]];
+  }
+  return FIN_CORES_MOD['Outros'];
+}
+
+async function finCarregar() {
+  document.getElementById('fin-loading').style.display = 'block';
+  document.getElementById('fin-dashboard').style.display = 'none';
+  try {
+    var txtVis = await fetch(FIN_BASE + encodeURIComponent('Visao Investidores')).then(function(r){ return r.text(); });
+    var txtCon = await fetch(FIN_BASE + encodeURIComponent('Consolidado Investidores')).then(function(r){ return r.text(); });
+    var txtClu = await fetch(FIN_BASE + encodeURIComponent('Visao Clube')).then(function(r){ return r.text(); });
+    var visao = finParseSheet(txtVis);
+    var consol = finParseSheet(txtCon);
+    var clube = finParseSheet(txtClu);
+    finRenderDashboard(visao, consol, clube);
+  } catch(e) {
+    document.getElementById('fin-loading').innerHTML =
+      '<div style="color:var(--re);font-family:\'Barlow Condensed\',sans-serif;font-size:13px;padding:60px 0;text-align:center">' +
+      'Erro ao carregar dados. Verifique o compartilhamento da planilha.</div>';
+  }
+}
+
+function finRenderDashboard(visao, consol, clube) {
+  // ── KPIs ──
+  var totalTransf = 0, totalEquity = 0, totalComp = 0, totalCaptFinal = 0, totalFaltante = 0;
+  consol.forEach(function(r) {
+    totalTransf += finNum(r['Total Transferido'] || r['Total Transferido ']);
+    totalEquity += finNum(r['Equity'] || r['Montante para Equity']);
+    totalComp   += finNum(r['Total Comprometido'] || r['Total Comprometido ']);
+    totalFaltante += finNum(r['Faltante para C'] || r['Faltante para Comprometido']);
+  });
+
+  // Captable final médio ponderado
+  var pctList = consol.map(function(r){ return finPct(r['Captable Final'] || r['Equity Endereçado'] || '0'); });
+  totalCaptFinal = pctList.reduce(function(a,b){ return a+b; }, 0);
+
+  // Equity endereçado total
+  var pctEnd = consol.map(function(r){ return finPct(r['Equity Endereçado'] || r['Equity Enderec'] || '0'); });
+  var pctEndTotal = pctEnd.reduce(function(a,b){ return a+b; }, 0);
+
+  document.getElementById('fin-kpi-total').textContent = finFmt(totalTransf);
+  document.getElementById('fin-kpi-equity').textContent = finFmt(totalEquity);
+  document.getElementById('fin-kpi-pct').textContent = pctEndTotal.toFixed(2).replace('.',',') + '%';
+  document.getElementById('fin-kpi-comp').textContent = finFmt(totalComp);
+  document.getElementById('fin-kpi-captable').textContent = totalCaptFinal.toFixed(2).replace('.',',') + '%';
+  document.getElementById('fin-kpi-faltante').textContent = totalFaltante > 0 ? finFmt(totalFaltante) : 'R$ 0';
+  document.getElementById('fin-kpi-inv').textContent = consol.length;
+  setTimeout(function(){
+    var pct = Math.min(pctEndTotal / 70 * 100, 100);
+    var bar = document.getElementById('fin-gauge-bar');
+    if (bar) bar.style.width = pct + '%';
+  }, 100);
+
+  // ── Captable table ──
+  var tbody = document.getElementById('fin-captable-tbody');
+  var captHtml = '';
+  var maxTransf = Math.max.apply(null, consol.map(function(r){ return finNum(r['Total Transferido'] || ''); }));
+  consol.forEach(function(r, i) {
+    var inv = r['Investidor'] || '-';
+    var tt  = finNum(r['Total Transferido'] || '');
+    var eq  = finNum(r['Equity'] || r['Montante para Equity'] || '');
+    var tc  = finNum(r['Total Comprometido'] || '');
+    var pe  = finPct(r['Equity Endereçado'] || r['Equity Enderec'] || '0');
+    var cf  = finPct(r['Captable Final'] || '0');
+    var barW = maxTransf > 0 ? (tt / maxTransf * 100) : 0;
+    var cor = FIN_CORES_INV[i % FIN_CORES_INV.length];
+    captHtml +=
+      '<tr style="border-bottom:1px solid rgba(70,162,247,.06);transition:.15s" onmouseover="this.style.background=\'rgba(70,162,247,.04)\'" onmouseout="this.style.background=\'none\'">' +
+      '<td style="padding:10px 20px;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;color:var(--ts)">' + (i+1) + '</td>' +
+      '<td style="padding:10px 12px;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:#fff">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<div style="width:8px;height:8px;border-radius:50%;background:' + cor + ';flex-shrink:0"></div>' + inv + '</div></td>' +
+      '<td style="padding:10px 12px;text-align:right">' +
+        '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:12px;color:#fff;margin-bottom:4px">' + finFmtFull(tt) + '</div>' +
+        '<div style="height:3px;background:rgba(70,162,247,.1);border-radius:2px;overflow:hidden">' +
+        '<div style="height:100%;background:' + cor + ';width:' + barW + '%"></div></div></td>' +
+      '<td style="padding:10px 12px;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;color:var(--az)">' + finFmtFull(eq) + '</td>' +
+      '<td style="padding:10px 12px;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;color:#fff">' + finFmtFull(tc) + '</td>' +
+      '<td style="padding:10px 12px;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:var(--gr)">' + pe.toFixed(2).replace('.',',') + '%</td>' +
+      '<td style="padding:10px 20px 10px 12px;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:var(--ye)">' + cf.toFixed(2).replace('.',',') + '%</td>' +
+      '</tr>';
+  });
+  // Total row
+  captHtml +=
+    '<tr style="border-top:1px solid rgba(70,162,247,.15);background:rgba(70,162,247,.04)">' +
+    '<td style="padding:10px 20px"></td>' +
+    '<td style="padding:10px 12px;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:700;color:var(--ts);letter-spacing:1px">TOTAL GERAL</td>' +
+    '<td style="padding:10px 12px;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:700;color:#fff">' + finFmtFull(totalTransf) + '</td>' +
+    '<td style="padding:10px 12px;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:700;color:var(--az)">' + finFmtFull(totalEquity) + '</td>' +
+    '<td style="padding:10px 12px;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:700;color:#fff">' + finFmtFull(totalComp) + '</td>' +
+    '<td style="padding:10px 12px;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:var(--gr)">' + pctEndTotal.toFixed(2).replace('.',',') + '%</td>' +
+    '<td style="padding:10px 20px 10px 12px;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:var(--ye)">' + totalCaptFinal.toFixed(2).replace('.',',') + '%</td>' +
+    '</tr>';
+  tbody.innerHTML = captHtml;
+
+  // ── Bar chart por mes/modalidade ──
+  var mesesMap = {};
+  visao.forEach(function(r) {
+    var data = r['Data'] || '';
+    var mes = '';
+    var m = data.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) mes = m[2] + '/' + m[3].slice(2);
+    else { m = data.match(/(\d{4})-(\d{2})/); if (m) mes = m[2] + '/' + m[1].slice(2); }
+    if (!mes) return;
+    var mod = r['Modalidade'] || 'Outros';
+    var val = finNum(r['Valor'] || r['Valor Convertido em Equity'] || '');
+    if (!mesesMap[mes]) mesesMap[mes] = {};
+    mesesMap[mes][mod] = (mesesMap[mes][mod] || 0) + val;
+  });
+  var meses = Object.keys(mesesMap).sort(function(a, b) {
+    var pa = a.split('/'); var pb = b.split('/');
+    var ya = parseInt(pa[1]); var yb = parseInt(pb[1]);
+    if (ya !== yb) return ya - yb;
+    return parseInt(pa[0]) - parseInt(pb[0]);
+  });
+  var allMods = [];
+  meses.forEach(function(mes) {
+    Object.keys(mesesMap[mes]).forEach(function(mod) {
+      if (allMods.indexOf(mod) < 0) allMods.push(mod);
+    });
+  });
+  var maxBar = 0;
+  meses.forEach(function(mes) {
+    var tot = 0;
+    allMods.forEach(function(mod){ tot += (mesesMap[mes][mod] || 0); });
+    if (tot > maxBar) maxBar = tot;
+  });
+  var barHtml = '';
+  meses.forEach(function(mes) {
+    var segs = '';
+    var tot = 0;
+    allMods.forEach(function(mod){ tot += (mesesMap[mes][mod] || 0); });
+    var barH = maxBar > 0 ? Math.round((tot / maxBar) * 120) : 4;
+    allMods.forEach(function(mod) {
+      var v = mesesMap[mes][mod] || 0;
+      if (v <= 0) return;
+      var h = maxBar > 0 ? Math.round((v / maxBar) * 120) : 0;
+      segs += '<div style="width:100%;height:' + h + 'px;background:' + finCorMod(mod) + ';transition:.3s"></div>';
+    });
+    barHtml +=
+      '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:52px">' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:9px;color:var(--ts)">' + finFmt(tot) + '</div>' +
+      '<div style="width:36px;display:flex;flex-direction:column-reverse;align-items:stretch;background:rgba(70,162,247,.05);border-radius:2px 2px 0 0;overflow:hidden">' + segs + '</div>' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:9px;color:var(--ts);text-align:center;white-space:nowrap">' + mes + '</div>' +
+      '</div>';
+  });
+  document.getElementById('fin-bar-chart').innerHTML = barHtml;
+  var legHtml = '';
+  allMods.forEach(function(mod) {
+    legHtml += '<div style="display:flex;align-items:center;gap:5px">' +
+      '<div style="width:10px;height:10px;border-radius:2px;background:' + finCorMod(mod) + ';flex-shrink:0"></div>' +
+      '<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;color:var(--ts)">' + mod + '</span></div>';
+  });
+  document.getElementById('fin-bar-legend').innerHTML = legHtml;
+
+  // ── Pie: por investidor ──
+  var invMap = {};
+  visao.forEach(function(r) {
+    var inv = r['Investidor'] || 'Outros';
+    invMap[inv] = (invMap[inv] || 0) + finNum(r['Valor'] || '');
+  });
+  var invKeys = Object.keys(invMap);
+  finDrawPie('fin-pie-inv', invKeys.map(function(k){ return invMap[k]; }), invKeys, FIN_CORES_INV);
+  var legInv = '';
+  invKeys.forEach(function(k, i) {
+    var cor = FIN_CORES_INV[i % FIN_CORES_INV.length];
+    var pct2 = totalTransf > 0 ? (invMap[k] / totalTransf * 100).toFixed(1) : '0';
+    legInv += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">' +
+      '<div style="width:10px;height:10px;border-radius:50%;background:' + cor + ';flex-shrink:0"></div>' +
+      '<span style="color:#fff">' + k + '</span>' +
+      '<span style="color:var(--ts);margin-left:auto">' + pct2 + '%</span></div>';
+  });
+  document.getElementById('fin-pie-inv-legend').innerHTML = legInv;
+
+  // ── Pie: por modalidade ──
+  var modMap = {};
+  visao.forEach(function(r) {
+    var mod = r['Modalidade'] || 'Outros';
+    modMap[mod] = (modMap[mod] || 0) + finNum(r['Valor'] || '');
+  });
+  var modKeys = Object.keys(modMap);
+  var modCores = modKeys.map(function(k){ return finCorMod(k); });
+  finDrawPie('fin-pie-mod', modKeys.map(function(k){ return modMap[k]; }), modKeys, modCores);
+  var legMod = '';
+  var modTot = modKeys.reduce(function(s,k){ return s + modMap[k]; }, 0);
+  modKeys.forEach(function(k, i) {
+    var pct2 = modTot > 0 ? (modMap[k] / modTot * 100).toFixed(1) : '0';
+    legMod += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">' +
+      '<div style="width:10px;height:10px;border-radius:50%;background:' + modCores[i] + ';flex-shrink:0"></div>' +
+      '<span style="color:#fff">' + k + '</span>' +
+      '<span style="color:var(--ts);margin-left:auto">' + pct2 + '%</span></div>';
+  });
+  document.getElementById('fin-pie-mod-legend').innerHTML = legMod;
+
+  // ── Balanco ──
+  var balHtml = '';
+  var balFaltTotal = 0, balSemTotal = 0;
+  consol.forEach(function(r) {
+    var inv = r['Investidor'] || '-';
+    var falt = finNum(r['Faltante para C'] || r['Faltante para Comprometido'] || '');
+    var sem  = finNum(r['Sem Atribuição'] || r['Sem Atribuicao'] || '');
+    balFaltTotal += falt;
+    balSemTotal  += sem;
+    balHtml +=
+      '<tr style="border-bottom:1px solid rgba(70,162,247,.06)">' +
+      '<td style="padding:7px 0;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;color:#fff">' + inv + '</td>' +
+      '<td style="padding:7px 0;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;color:' + (falt > 0 ? 'var(--re)' : 'var(--ts)') + '">' + (falt > 0 ? finFmtFull(falt) : '0') + '</td>' +
+      '<td style="padding:7px 0;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;color:' + (sem > 0 ? 'var(--ye)' : 'var(--ts)') + '">' + (sem > 0 ? finFmtFull(sem) : '0') + '</td>' +
+      '</tr>';
+  });
+  balHtml +=
+    '<tr style="border-top:1px solid rgba(70,162,247,.15)">' +
+    '<td style="padding:7px 0;font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;color:var(--ts);letter-spacing:1px">TOTAL</td>' +
+    '<td style="padding:7px 0;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:700;color:var(--re)">' + finFmtFull(balFaltTotal) + '</td>' +
+    '<td style="padding:7px 0;text-align:right;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:700;color:var(--ye)">' + finFmtFull(balSemTotal) + '</td>' +
+    '</tr>';
+  document.getElementById('fin-balanco-tbody').innerHTML = balHtml;
+
+  // ── Visao Clube ──
+  var cluSorted = clube.slice().sort(function(a, b) {
+    return finDateVal(b['Data']) - finDateVal(a['Data']);
+  }).slice(0, 8);
+  var cluHtml = '';
+  cluSorted.forEach(function(r) {
+    var mod = r['Modalidade'] || '';
+    cluHtml +=
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(70,162,247,.06)">' +
+      '<div>' +
+        '<span style="font-size:10px;color:var(--ts)">' + (r['Data'] || '') + '</span>' +
+        '<span style="font-size:12px;color:#fff;margin:0 8px">' + (r['De'] || '') + ' &rarr; ' + (r['Para'] || '') + '</span>' +
+        '<span style="font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 6px;border-radius:2px;background:' + finCorMod(mod) + '22;color:' + finCorMod(mod) + '">' + mod + '</span>' +
+      '</div>' +
+      '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:16px;color:#fff">' + finFmt(finNum(r['Valor'] || '')) + '</span>' +
+      '</div>';
+  });
+  document.getElementById('fin-clube-lista').innerHTML = cluHtml || '<div style="color:var(--ts);font-size:11px">Sem dados.</div>';
+
+  // ── Antecipacoes (A Receber != Custodia) ──
+  var antec = visao.filter(function(r) {
+    return r['A Receber'] && r['A Receber'].toLowerCase() !== 'custodia' && r['A Receber'].trim() !== '';
+  });
+  var antHtml = '';
+  if (antec.length === 0) {
+    antHtml = '<div style="color:var(--ts);font-size:11px">Nenhuma antecipacao pendente.</div>';
+  } else {
+    antec.slice(0, 6).forEach(function(r) {
+      antHtml +=
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(245,158,11,.1)">' +
+        '<div>' +
+          '<span style="font-size:12px;color:#fff">' + (r['Investidor'] || '') + '</span>' +
+          '<span style="font-size:10px;color:var(--ts);margin-left:8px">&rarr; ' + (r['A Receber'] || '') + '</span>' +
+        '</div>' +
+        '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:16px;color:var(--ye)">' + finFmt(finNum(r['Valor Convertido em Equity'] || r['Valor'] || '')) + '</span>' +
+        '</div>';
+    });
+  }
+  document.getElementById('fin-antecip-lista').innerHTML = antHtml;
+
+  // Timestamp
+  var ts = document.getElementById('fin-update-ts');
+  if (ts) ts.textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
+
+  document.getElementById('fin-loading').style.display = 'none';
+  document.getElementById('fin-dashboard').style.display = 'block';
+}
+
+function finDateVal(s) {
+  if (!s) return 0;
+  var m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) return parseInt(m[3]+m[2]+m[1]);
+  return 0;
+}
+
+function finDrawPie(canvasId, vals, labels, cores) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var total = vals.reduce(function(a,b){ return a+b; }, 0);
+  if (total <= 0) return;
+  var cx = 70, cy = 70, r = 60, hole = 30;
+  var start = -Math.PI / 2;
+  ctx.clearRect(0, 0, 140, 140);
+  vals.forEach(function(v, i) {
+    var slice = (v / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, start + slice);
+    ctx.closePath();
+    ctx.fillStyle = cores[i % cores.length];
+    ctx.fill();
+    start += slice;
+  });
+  ctx.beginPath();
+  ctx.arc(cx, cy, hole, 0, 2 * Math.PI);
+  ctx.fillStyle = '#0d1e2e';
+  ctx.fill();
+}
+
+function finIniciar() { finCarregar(); }
 var elDados2 = [];
 var elFiltro2 = 'ativo';
 function elTab(filtro, el) {
