@@ -5435,398 +5435,806 @@ function dtOsascoPosicao() {
 // RENDER
 // ══════════════════════════════════════
 function dtRenderDashboard() {
-  var dash=document.getElementById('dt-dashboard');
-  dash.innerHTML = dtBlocoSituacao()+dtBlocoAoVivo()+dtBlocoProxJogo()+dtBlocoPlantel()+dtBlocoDesempenho()+dtBlocoClassificacao();
-  // Enriquece forma dos times usando dados ja carregados (sem chamadas extras)
-  setTimeout(function(){ dtEnriquecerAsync(); }, 100);
+  var dash = document.getElementById('dt-dashboard');
+  // Build tab-based layout
+  var html = dtShellLayout();
+  dash.innerHTML = html;
+  // Activate default tab
+  dtSwitchTab('overview');
+  setTimeout(function(){ dtEnriquecerAsync(); }, 150);
 }
 
-// ── Bloco 0: Situacao Atual no Campeonato ──
-function dtBlocoSituacao() {
-  var cd = dtState.campData;
-  var faseAtual = cd&&cd.fase_atual ? cd.fase_atual : null;
-  var faseNome = faseAtual ? faseAtual.nome : 'Segunda Fase';
+// ── Shell: fixed header + tab bar + content area ──────────────
+function dtShellLayout() {
   var posObj = dtOsascoPosicao();
-  var stats = dtOsascoStats();
-  var classif = dtState.classif||dtState.classifFase||[];
-  // Verifica faixa do Osasco
+  var stats  = dtOsascoStats();
+  var cd     = dtState.campData;
+  var faseNome = (cd && cd.fase_atual) ? cd.fase_atual.nome : 'Segunda Fase';
+  var escudo = 'https://cdn.api-futebol.com.br/times/escudos/677fb9fe5de09.png';
+
+  // Situação
+  var classif = dtState.classif || dtState.classifFase || [];
   var faixaOs = null;
   classif.forEach(function(t){
-    var n=(t.time&&t.time.nome_popular||'').toLowerCase();
-    if(n.indexOf('osasco')>=0) faixaOs=t.faixa_classificacao;
+    var n = (t.time && t.time.nome_popular || '').toLowerCase();
+    if(n.indexOf('osasco') >= 0 || n.indexOf('oeste') >= 0) faixaOs = t.faixa_classificacao;
   });
-  var situacaoTxt, situacaoCor;
-  if(faixaOs==='classificados') { situacaoTxt='CLASSIFICADO'; situacaoCor='var(--gr)'; }
-  else if(faixaOs==='rebaixados') { situacaoTxt='REBAIXADO'; situacaoCor='var(--re)'; }
-  else if(posObj&&posObj.pos<=8) { situacaoTxt='NA ZONA DE CLASSIFICACAO'; situacaoCor='var(--ye)'; }
-  else { situacaoTxt='FORA DA CLASSIFICACAO'; situacaoCor='var(--re)'; }
-  var ultimos = [];
-  if(posObj&&posObj.dados&&posObj.dados.ultimos_jogos) ultimos=posObj.dados.ultimos_jogos;
-  var escudoOs = 'https://cdn.api-futebol.com.br/times/escudos/677fb9fe5de09.png';
-  var s='<div style="background:linear-gradient(135deg,rgba(70,162,247,.07),rgba(7,14,20,.0));border-bottom:1px solid rgba(70,162,247,.1);padding:24px;margin-bottom:0">';
-  s+='<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">';
-  s+='<img src="'+escudoOs+'" style="width:60px;height:60px;object-fit:contain;flex-shrink:0">';
-  s+='<div style="flex:1;min-width:200px">';
-  s+='<div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ts);margin-bottom:2px">PAULISTAO A2 2026 &mdash; '+faseNome.toUpperCase()+'</div>';
-  s+='<div style="font-family:Bebas Neue,sans-serif;font-size:clamp(22px,3.5vw,36px);color:var(--wh);letter-spacing:1px;line-height:1">Osasco Sporting</div>';
-  s+='<div style="display:flex;align-items:center;gap:8px;margin-top:6px">';
-  s+='<span style="font-size:11px;font-weight:700;color:'+situacaoCor+';letter-spacing:1px">'+situacaoTxt+'</span>';
-  if(posObj) s+='<span style="font-size:11px;color:var(--ts)">&middot; '+posObj.pos+'o lugar</span>';
-  s+='</div>';
-  s+='</div>';
-  // KPIs rápidos
-  if(stats) {
-    s+='<div style="display:flex;gap:16px;flex-wrap:wrap">';
-    [
-      ['Pts', posObj&&posObj.dados?(posObj.dados.pontos||0):0, 'var(--az)'],
-      ['Aprov.', stats.ap+'%', stats.ap>=50?'var(--gr)':'var(--ye)'],
-      ['V-E-D', stats.v+'-'+stats.e+'-'+stats.d, 'var(--wh)'],
-      ['Gols', stats.gm+':'+stats.gs, 'var(--ts)']
-    ].forEach(function(k){
-      s+='<div style="text-align:center;min-width:56px">';
-      s+='<div style="font-family:Bebas Neue,sans-serif;font-size:clamp(22px,3vw,30px);color:'+k[2]+';line-height:1">'+k[1]+'</div>';
-      s+='<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ts);margin-top:2px">'+k[0]+'</div>';
-      s+='</div>';
-    });
-    s+='</div>';
+  var sitTxt, sitCor;
+  if(faixaOs === 'classificados')      { sitTxt = 'CLASSIFICADO'; sitCor = '#2ECC8E'; }
+  else if(faixaOs === 'rebaixados')    { sitTxt = 'REBAIXADO';    sitCor = '#EF4444'; }
+  else if(posObj && posObj.pos <= 8)   { sitTxt = 'ZONA DE CLASS.'; sitCor = '#F59E0B'; }
+  else                                  { sitTxt = 'FORA DA CLASS.'; sitCor = '#EF4444'; }
+
+  var pts  = posObj && posObj.dados ? (posObj.dados.pontos || 0) : 0;
+  var ap   = stats ? stats.ap : 0;
+  var ved  = stats ? (stats.v + '-' + stats.e + '-' + stats.d) : '--';
+  var gols = stats ? (stats.gm + ':' + stats.gs) : '--';
+  var sg   = stats ? (stats.sg >= 0 ? '+' + stats.sg : stats.sg) : '--';
+
+  // Últimos 5
+  var ultimos = (posObj && posObj.dados && posObj.dados.ultimos_jogos) ? posObj.dados.ultimos_jogos : [];
+  var ultimosHtml = '';
+  ultimos.forEach(function(r){
+    var cor = r === 'v' ? '#2ECC8E' : r === 'e' ? '#F59E0B' : '#EF4444';
+    var l   = r === 'v' ? 'V' : r === 'e' ? 'E' : 'D';
+    ultimosHtml += '<div style="width:26px;height:26px;border-radius:50%;background:' + cor + '18;border:1.5px solid ' + cor + '60;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:' + cor + ';letter-spacing:0">' + l + '</div>';
+  });
+
+  var s = '';
+
+  // ── HERO STRIP ──────────────────────────────────────────────
+  s += '<div style="background:linear-gradient(135deg,rgba(70,162,247,.09) 0%,rgba(7,14,20,0) 60%);border-bottom:1px solid rgba(70,162,247,.12);padding:20px 24px 16px">';
+
+  // Top row: escudo + nome + badge situação + KPIs
+  s += '<div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">';
+
+  // Escudo
+  s += '<div style="position:relative;flex-shrink:0">';
+  s += '<img src="' + escudo + '" style="width:52px;height:52px;object-fit:contain">';
+  s += '<div style="position:absolute;bottom:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:#2ECC8E;border:2px solid #070E14"></div>';
+  s += '</div>';
+
+  // Nome + fase + situação
+  s += '<div style="flex:1;min-width:160px">';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(122,155,181,.7);margin-bottom:3px">' + faseNome.toUpperCase() + ' &mdash; PAULISTAO A2 2026</div>';
+  s += '<div style="font-family:Bebas Neue,sans-serif;font-size:clamp(24px,3.5vw,38px);color:#fff;letter-spacing:1px;line-height:1">OSASCO SPORTING</div>';
+  s += '<div style="display:flex;align-items:center;gap:10px;margin-top:6px">';
+  s += '<span style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:' + sitCor + '">' + sitTxt + '</span>';
+  if(posObj) s += '<span style="font-size:10px;color:rgba(122,155,181,.6)">&middot; ' + posObj.pos + '&ordm; lugar</span>';
+  if(ultimosHtml) {
+    s += '<div style="display:flex;gap:4px;margin-left:4px">' + ultimosHtml + '</div>';
   }
-  s+='</div>';
-  // Ultimos 5
-  if(ultimos.length>0) {
-    s+='<div style="display:flex;align-items:center;gap:8px;margin-top:14px">';
-    s+='<span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">ULTIMOS 5</span>';
-    ultimos.forEach(function(r){
-      var cor=r==='v'?'var(--gr)':r==='e'?'var(--ye)':'var(--re)';
-      var l=r==='v'?'V':r==='e'?'E':'D';
-      s+='<span style="width:24px;height:24px;border-radius:50%;background:'+cor+'20;border:1px solid '+cor+'60;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:'+cor+'">'+l+'</span>';
-    });
-    s+='</div>';
-  }
-  s+='</div>';
+  s += '</div>';
+  s += '</div>';
+
+  // KPIs faixa direita
+  s += '<div style="display:flex;gap:2px;margin-left:auto">';
+  var kpis = [
+    { v: pts,  l: 'PTS',   c: '#46A2F7' },
+    { v: ap+'%', l: 'APROV', c: ap >= 50 ? '#2ECC8E' : '#F59E0B' },
+    { v: ved,  l: 'V-E-D', c: '#F0F4F8' },
+    { v: gols, l: 'GOLS',  c: 'rgba(122,155,181,.7)' },
+    { v: sg,   l: 'SG',    c: parseInt(sg) >= 0 ? '#2ECC8E' : '#EF4444' }
+  ];
+  kpis.forEach(function(k){
+    s += '<div style="text-align:center;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(70,162,247,.08);border-radius:4px;min-width:54px">';
+    s += '<div style="font-family:Bebas Neue,sans-serif;font-size:clamp(20px,2.5vw,26px);color:' + k.c + ';line-height:1">' + k.v + '</div>';
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(122,155,181,.55);margin-top:3px">' + k.l + '</div>';
+    s += '</div>';
+  });
+  s += '</div>';
+  s += '</div>'; // end top row
+  s += '</div>'; // end hero strip
+
+  // ── TAB BAR ────────────────────────────────────────────────
+  s += '<div style="display:flex;border-bottom:1px solid rgba(70,162,247,.1);padding:0 24px;gap:0;overflow-x:auto" id="dt-tab-bar">';
+  var tabs = [
+    { id: 'overview',  label: 'Visão Geral' },
+    { id: 'match',     label: 'Próximo Jogo' },
+    { id: 'squad',     label: 'Plantel' },
+    { id: 'season',    label: 'Temporada' },
+    { id: 'table',     label: 'Classificação' },
+    { id: 'load',      label: 'Carga NSP' },
+  ];
+  tabs.forEach(function(t){
+    s += '<button id="dt-tab-' + t.id + '" onclick="dtSwitchTab(\'' + t.id + '\')" style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 18px;border:none;background:none;cursor:pointer;color:rgba(122,155,181,.55);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.2s">' + t.label + '</button>';
+  });
+  s += '</div>';
+
+  // ── CONTENT AREA ───────────────────────────────────────────
+  s += '<div id="dt-tab-content" style="padding:24px">';
+  s += '</div>';
+
   return s;
 }
 
-function dtBlocoAoVivo() {
+// ── Tab switching ──────────────────────────────────────────────
+function dtSwitchTab(tabId) {
+  // Reset all tab buttons
+  var bar = document.getElementById('dt-tab-bar');
+  if(bar) {
+    var btns = bar.querySelectorAll('button');
+    btns.forEach(function(b){
+      b.style.color = 'rgba(122,155,181,.55)';
+      b.style.borderBottomColor = 'transparent';
+    });
+    var active = document.getElementById('dt-tab-' + tabId);
+    if(active) {
+      active.style.color = '#46A2F7';
+      active.style.borderBottomColor = '#46A2F7';
+    }
+  }
+  var content = document.getElementById('dt-tab-content');
+  if(!content) return;
+  if(tabId === 'overview')  content.innerHTML = dtTabOverview();
+  else if(tabId === 'match') content.innerHTML = dtTabMatch();
+  else if(tabId === 'squad') content.innerHTML = dtTabSquad();
+  else if(tabId === 'season') content.innerHTML = dtTabSeason();
+  else if(tabId === 'table') content.innerHTML = dtTabTable();
+  else if(tabId === 'load')  content.innerHTML = dtTabLoad();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 1 — VISÃO GERAL
+// Cards: situação, próx jogo resumo, alert carga NSP, artilharia
+// ═══════════════════════════════════════════════════════════════
+function dtTabOverview() {
+  var s = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">';
+
+  // Card ao vivo
+  s += '<div id="dt-ovr-aovivo" style="grid-column:1/-1">' + dtAoVivoHtml() + '</div>';
+
+  // Próximo jogo — card resumo
+  s += '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.12);border-radius:8px;padding:18px">';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">PRÓXIMO JOGO</div>';
+  s += dtProxJogoCompact();
+  s += '</div>';
+
+  // Alerta NSP — carga
+  s += '<div style="background:rgba(46,204,142,.03);border:1px solid rgba(46,204,142,.12);border-radius:8px;padding:18px">';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(46,204,142,.7);margin-bottom:12px">PRONTIDÃO DO PLANTEL</div>';
+  s += dtNSPSummaryHtml();
+  s += '</div>';
+
+  // Campanha compacta
+  s += '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.12);border-radius:8px;padding:18px">';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">CAMPANHA</div>';
+  s += dtCampanhaCompactHtml();
+  s += '</div>';
+
+  // Artilharia compacta
+  s += '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.12);border-radius:8px;padding:18px">';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">ARTILHARIA</div>';
+  s += dtArtilhariaCompactHtml();
+  s += '</div>';
+
+  s += '</div>';
+  return s;
+}
+
+function dtAoVivoHtml() {
   return '<div id="dt-ao-vivo"></div>';
 }
 
-function dtBlocoProxJogo() {
-  var s='<div style="margin-bottom:36px">' +
-    '<div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--az);margin-bottom:6px">ANALISE TATICA</div>' +
-    '<div style="font-family:Bebas Neue,sans-serif;font-size:clamp(28px,4vw,40px);color:var(--wh);letter-spacing:1px;margin-bottom:20px">Radar do Proximo Adversario</div>';
+function dtProxJogoCompact() {
   if(!dtState.proxJogo) {
-    // Mostra o ultimo jogo jogado como referencia
     var ultimo = dtState.jogosOsasco.filter(function(j){ return j.jogado; }).slice(-1)[0];
-    s+='<div style="background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:6px;padding:24px;margin-bottom:12px">';
-    s+='<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ye);margin-bottom:8px">AGUARDANDO PROXIMA PARTIDA</div>';
-    s+='<div style="font-size:13px;color:var(--wh);margin-bottom:6px">Nenhuma partida agendada encontrada nos dados da API.</div>';
-    s+='<div style="font-size:11px;color:var(--ts)">Isso pode indicar que as partidas da fase atual ainda nao foram cadastradas na base de dados, ou que o clube esta em intervalo entre fases. Verifique a tabela da competicao para acompanhar a situacao.</div>';
+    var s = '<div style="font-size:12px;color:rgba(122,155,181,.7)">Nenhuma partida agendada encontrada nos dados da API.</div>';
     if(ultimo) {
-      var adv=ultimo.adversario||{};
-      var advE=adv.escudo||'';
-      var advN=adv.nome_popular||adv.nome||'--';
-      var cor=ultimo.gOs>ultimo.gAdv?'var(--gr)':ultimo.gOs===ultimo.gAdv?'var(--ye)':'var(--re)';
-      var letra=ultimo.gOs>ultimo.gAdv?'V':ultimo.gOs===ultimo.gAdv?'E':'D';
-      s+='<div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(70,162,247,.08)">';
-      s+='<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:10px">ULTIMO JOGO</div>';
-      s+='<div style="display:flex;align-items:center;gap:12px">';
-      if(advE) s+='<img src="'+advE+'" style="width:36px;height:36px;object-fit:contain">';
-      s+='<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--wh)">'+advN+'</div>';
-      s+='<div style="font-size:10px;color:var(--ts)">'+(ultimo.emCasa?'Casa':'Fora')+' &middot; '+ultimo.fase+'</div></div>';
-      s+='<div style="text-align:right">';
-      s+='<div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:var(--wh);line-height:1">'+ultimo.gOs+' x '+ultimo.gAdv+'</div>';
-      s+='<span style="background:'+cor+'20;color:'+cor+';border:1px solid '+cor+'40;font-size:9px;font-weight:700;padding:2px 8px;border-radius:2px">'+letra+'</span>';
-      s+='</div></div></div>';
+      var adv = ultimo.adversario || {};
+      var advN = adv.nome_popular || adv.nome || '--';
+      var advE = adv.escudo || '';
+      var cor  = ultimo.gOs > ultimo.gAdv ? '#2ECC8E' : ultimo.gOs === ultimo.gAdv ? '#F59E0B' : '#EF4444';
+      var res  = ultimo.gOs + ' x ' + ultimo.gAdv;
+      s += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(70,162,247,.08)">';
+      s += '<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(122,155,181,.5);margin-bottom:8px">ÚLTIMO JOGO</div>';
+      s += '<div style="display:flex;align-items:center;gap:10px">';
+      if(advE) s += '<img src="' + advE + '" style="width:28px;height:28px;object-fit:contain">';
+      s += '<span style="font-size:13px;font-weight:700;color:#fff">' + advN + '</span>';
+      s += '<span style="font-family:Bebas Neue,sans-serif;font-size:22px;color:' + cor + ';margin-left:auto">' + res + '</span>';
+      s += '</div></div>';
     }
-    s+='</div>';
-    return s+'</div>';
+    return s;
   }
-  var p=dtState.proxJogo.partida;
-  var adv=dtState.adversario||{};
-  var advNome=adv.nome_popular||adv.nome||'Adversario';
-  var advEscudo=adv.escudo||adv.logo||'';
-  var advTid=adv.time_id||adv.id;
-  var dtO=dtState.proxJogo.dt;
-  var dtFmt=dtO?dtO.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}):'--';
-  var hrFmt=dtO?dtO.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'--';
-  var diasN=dtO?Math.max(0,Math.ceil((dtO-new Date())/(1000*60*60*24))):0;
-  var dias=diasN===0?'HOJE':diasN===1?'AMANHA':diasN+'d';
-  var mand=p.time_mandante||p.mandante||{};
-  var mNome=(mand.nome_popular||mand.nome||'').toLowerCase();
-  var emCasa=mNome.indexOf('osasco')>=0;
-  var estadioObj=p.estadio||{};
-  var estadioNome=typeof estadioObj==='string'?estadioObj:(estadioObj.nome_popular||estadioObj.nome||'--');
-  var estadioCidade=estadioObj.cidade||estadioObj.municipio||'';
-  var posAdv=null;
-  var tabelaRef = dtState.classif||[];
-  if(tabelaRef && advNome!=='Adversario'){
-    tabelaRef.forEach(function(t,i){
-      var o=t.time||t;
-      var n=(o.nome_popular||o.nome||'').toLowerCase();
-      if(n.indexOf(advNome.toLowerCase().split(' ')[0])>=0&&!posAdv) posAdv={pos:i+1,d:t};
+  var p   = dtState.proxJogo.partida;
+  var adv = dtState.adversario || {};
+  var advN = adv.nome_popular || adv.nome || '--';
+  var advE = adv.escudo || '';
+  var mand = dtState.proxJogo.mandante;
+  var rodada = dtState.proxJogo.rodada || dtState.proxJogo.fase || '';
+  var dtStr = dtState.proxJogo.dtStr || '';
+  // Forma adversário
+  var advTid = adv.time_id || adv.id || 0;
+  var formaAdv = dtState.formaCache[advTid];
+
+  var s = '';
+  s += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">';
+  // Osasco
+  s += '<div style="flex:1;text-align:' + (mand ? 'left' : 'right') + '">';
+  s += '<div style="font-size:10px;font-weight:700;color:#fff">Osasco</div>';
+  s += '<div style="font-size:9px;color:rgba(122,155,181,.6)">' + (mand ? 'MANDANTE' : 'VISITANTE') + '</div>';
+  s += '</div>';
+  s += '<div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:rgba(122,155,181,.5);padding:0 8px">VS</div>';
+  // Adversário
+  s += '<div style="flex:1;text-align:' + (mand ? 'right' : 'left') + ';display:flex;align-items:center;gap:8px;' + (mand ? 'flex-direction:row-reverse' : '') + '">';
+  if(advE) s += '<img src="' + advE + '" style="width:32px;height:32px;object-fit:contain;flex-shrink:0">';
+  s += '<div><div style="font-size:11px;font-weight:700;color:#fff">' + advN + '</div>';
+  if(formaAdv && formaAdv.length > 0) {
+    s += '<div style="display:flex;gap:2px;margin-top:3px;justify-content:' + (mand ? 'flex-end' : 'flex-start') + '">';
+    formaAdv.forEach(function(r){
+      var c = r === 'v' ? '#2ECC8E' : r === 'e' ? '#F59E0B' : '#EF4444';
+      s += '<div style="width:14px;height:14px;border-radius:2px;background:' + c + '25;border:1px solid ' + c + '60;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:' + c + '">' + r.toUpperCase() + '</div>';
     });
+    s += '</div>';
   }
-  s+='<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px;margin-bottom:12px">' +
-    '<div style="background:linear-gradient(135deg,rgba(70,162,247,.1),var(--c2));border:1px solid rgba(70,162,247,.25);border-radius:8px;padding:24px">' +
-      '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--az);margin-bottom:14px">'+(dtState.proxJogo.fase||dtState.proxJogo.rodada||'PROXIMO JOGO')+'</div>' +
-      '<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">' +
-        (advEscudo?'<img src="'+advEscudo+'" style="width:72px;height:72px;object-fit:contain;flex-shrink:0">':'<div style="width:72px;height:72px;border-radius:50%;background:rgba(70,162,247,.1);border:2px solid rgba(70,162,247,.2);flex-shrink:0"></div>') +
-        '<div>' +
-          '<div style="font-family:Bebas Neue,sans-serif;font-size:clamp(22px,3vw,34px);color:var(--wh);letter-spacing:1px;line-height:1">'+advNome+'</div>' +
-          (posAdv?'<div style="font-size:11px;color:var(--ts);margin-top:4px">'+posAdv.pos+'o lugar &middot; '+(posAdv.d.pontos||0)+' pts</div>':'') +
-        '</div>' +
-      '</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
-        '<div style="background:rgba(0,0,0,.2);border-radius:4px;padding:10px"><div style="font-size:9px;text-transform:uppercase;color:var(--ts)">Data</div><div style="font-size:11px;font-weight:700;color:var(--wh);margin-top:3px">'+dtFmt+'</div></div>' +
-        '<div style="background:rgba(0,0,0,.2);border-radius:4px;padding:10px"><div style="font-size:9px;text-transform:uppercase;color:var(--ts)">Hora</div><div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:var(--az);line-height:1;margin-top:2px">'+hrFmt+'</div></div>' +
-        '<div style="background:rgba(0,0,0,.2);border-radius:4px;padding:10px"><div style="font-size:9px;text-transform:uppercase;color:var(--ts)">Contagem</div><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:'+(diasN<=3?'var(--re)':diasN<=7?'var(--ye)':'var(--wh)')+';line-height:1;margin-top:2px">'+dias+'</div></div>' +
-        '<div style="background:rgba(0,0,0,.2);border-radius:4px;padding:10px;grid-column:span 2"><div style="font-size:9px;text-transform:uppercase;color:var(--ts)">Mando</div><div style="font-size:13px;font-weight:700;color:'+(emCasa?'var(--gr)':'var(--ye)')+';margin-top:3px">'+(emCasa?'Casa':'Fora')+'</div></div>' +
-        '<div style="background:rgba(0,0,0,.2);border-radius:4px;padding:10px"><div style="font-size:9px;text-transform:uppercase;color:var(--ts)">Estadio</div><div style="font-size:10px;font-weight:600;color:var(--wh);margin-top:2px">'+estadioNome+(estadioCidade?' &middot; '+estadioCidade:'')+'</div></div>' +
-      '</div>' +
-    '</div>' +
-    '<div style="background:var(--c2);border:1px solid rgba(70,162,247,.12);border-radius:8px;padding:20px">' +
-      '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:12px">Forma Recente &mdash; '+advNome+'</div>' +
-      '<div id="dt-adv-forma">'+dtAdvForma()+'</div>' +
-    '</div>' +
-  '</div>';
-  if(posAdv) {
-    var d=posAdv.d; var sg=d.saldo_gols||0;
-    s+='<div style="background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:6px;padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px;margin-bottom:12px">';
-    [['Posicao',posAdv.pos+'o','var(--ye)'],['Pts',d.pontos||0,'var(--wh)'],['Jogos',d.jogos||0,'var(--ts)'],['V',d.vitorias||0,'var(--gr)'],['E',d.empates||0,'var(--ye)'],['D',d.derrotas||0,'var(--re)'],['GM',d.gols_marcados||d.gols_pro||0,'var(--wh)'],['GS',d.gols_sofridos||d.gols_contra||0,'var(--ts)'],['SG',(sg>0?'+':'')+sg,sg>0?'var(--gr)':sg<0?'var(--re)':'var(--ts)']].forEach(function(st){
-      s+='<div style="text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:'+st[2]+';line-height:1">'+st[1]+'</div><div style="font-size:9px;text-transform:uppercase;color:var(--ts);margin-top:2px">'+st[0]+'</div></div>';
-    });
-    s+='</div>';
-  }
-  return s+'</div>';
+  s += '</div></div>';
+  s += '</div>';
+  if(rodada) s += '<div style="font-size:9px;color:rgba(122,155,181,.5);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase">' + rodada + '</div>';
+  if(dtStr)  s += '<div style="font-size:11px;color:rgba(122,155,181,.7)">' + dtStr + '</div>';
+  return s;
 }
 
-function dtBlocoPlantel() {
-  return '<div style="margin-bottom:36px">' +
-    '<div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--az);margin-bottom:6px">ELENCO</div>' +
-    '<div style="font-family:Bebas Neue,sans-serif;font-size:clamp(28px,4vw,40px);color:var(--wh);letter-spacing:1px;margin-bottom:20px">Plantel Disponivel para o Jogo</div>' +
-    '<div id="dt-plantel-content">'+dtPlantelHtml()+'</div>' +
-  '</div>';
-}
+function dtNSPSummaryHtml() {
+  // Cross NSP data with match schedule
+  var rec = window.nspRecuperacao || [];
+  var cad = window.nspCadastro || [];
+  if(rec.length === 0 && cad.length === 0) {
+    return '<div style="font-size:12px;color:rgba(122,155,181,.6)">NSP não carregado. Acesse o módulo NSP primeiro.</div>';
+  }
+  var aptos = 0, reab = 0, alerta = 0;
+  var alertaPlayers = [];
+  rec.forEach(function(r){
+    var caract = (r['Característica'] || r['Caracteristica'] || '').toLowerCase().trim();
+    if(caract === 'apronto') aptos++;
+    else if(caract.indexOf('reabil') >= 0 || caract.indexOf('lesão') >= 0 || caract.indexOf('lesao') >= 0) reab++;
+    else if(caract.indexOf('alerta') >= 0 || caract.indexOf('sobrecarga') >= 0) {
+      alerta++;
+      alertaPlayers.push(r['Nome'] || r['Atleta'] || '');
+    }
+  });
+  var total = rec.length || cad.length;
+  var pctAptos = total > 0 ? Math.round((aptos / total) * 100) : 0;
+  var corAptos = pctAptos >= 80 ? '#2ECC8E' : pctAptos >= 60 ? '#F59E0B' : '#EF4444';
 
-function dtCampanhaGridHtml(stats, posObj) {
-  if(!stats) return '';
-  var s='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-bottom:16px" id="dt-campanha-grid">';
+  var s = '';
+  // KPIs rápidos
+  s += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
   [
-    ['Posicao',posObj?posObj.pos+'o':'--','var(--az)'],
-    ['Aproveita.',stats.ap+'%',stats.ap>=60?'var(--gr)':stats.ap>=40?'var(--ye)':'var(--re)'],
-    ['Jogos',stats.j,'var(--wh)'],['V',stats.v,'var(--gr)'],['E',stats.e,'var(--ye)'],['D',stats.d,'var(--re)'],
-    ['Gols Marcados',stats.gm,'var(--wh)'],['Gols Sofridos',stats.gs,'var(--ts)'],
-    ['Saldo',(stats.gm-stats.gs>0?'+':'')+(stats.gm-stats.gs),stats.gm>stats.gs?'var(--gr)':stats.gm<stats.gs?'var(--re)':'var(--ts)'],
-    ['Casa',stats.cv+'j','var(--az)'],['Fora',stats.cf+'j','var(--az)']
+    { v: aptos,  l: 'Aptos',   c: '#2ECC8E' },
+    { v: reab,   l: 'Reab.',   c: '#F59E0B' },
+    { v: alerta, l: 'Alerta',  c: '#EF4444' }
   ].forEach(function(k){
-    s+='<div style="background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:5px;padding:12px;text-align:center">' +
-      '<div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:'+k[2]+';line-height:1">'+k[1]+'</div>' +
-      '<div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--ts);margin-top:3px">'+k[0]+'</div></div>';
+    s += '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,.2);border-radius:4px;border:1px solid rgba(70,162,247,.07)">';
+    s += '<div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:' + k.c + ';line-height:1">' + k.v + '</div>';
+    s += '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(122,155,181,.5);margin-top:2px">' + k.l + '</div>';
+    s += '</div>';
   });
-  return s+'</div>';
+  s += '</div>';
+  // Barra de prontidão
+  s += '<div style="margin-bottom:8px">';
+  s += '<div style="display:flex;justify-content:space-between;margin-bottom:4px">';
+  s += '<span style="font-size:10px;color:rgba(122,155,181,.6)">Prontidão geral</span>';
+  s += '<span style="font-size:11px;font-weight:700;color:' + corAptos + '">' + pctAptos + '%</span>';
+  s += '</div>';
+  s += '<div style="height:4px;background:rgba(70,162,247,.1);border-radius:2px;overflow:hidden">';
+  s += '<div style="height:100%;background:' + corAptos + ';width:' + pctAptos + '%;border-radius:2px;transition:width .6s ease"></div>';
+  s += '</div>';
+  s += '</div>';
+  // Alertas
+  if(alertaPlayers.length > 0) {
+    s += '<div style="padding:8px 10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:4px">';
+    s += '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#EF4444;margin-bottom:4px">EM ALERTA</div>';
+    s += '<div style="font-size:11px;color:rgba(240,244,248,.7)">' + alertaPlayers.filter(Boolean).slice(0,4).join(', ') + '</div>';
+    s += '</div>';
+  }
+  return s;
 }
 
-function dtCalendarioListHtml() {
-  var s='<div style="display:flex;flex-direction:column;gap:5px" id="dt-calendario-list">';
-  var fasesVistas={};
-  (dtState.jogosOsasco||[]).forEach(function(jg){
-    var p=jg.partida;
-    var adv=jg.adversario||{};
-    var advN=adv.nome_popular||adv.nome||'--';
-    var advE=adv.escudo||adv.logo||'';
-    var isP=dtState.proxJogo&&dtState.proxJogo.partida===p;
-    var dStr=jg.dt?jg.dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'--';
-    var hStr=jg.dt?jg.dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
-    var faseKey=jg.fase||'';
-    if(faseKey&&!fasesVistas[faseKey]) {
-      fasesVistas[faseKey]=true;
-      s+='<div style="padding:6px 0 3px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--az);margin-top:4px">'+faseKey+'</div>';
-    }
-    var resH='';
-    if(jg.jogado && jg.gOs!==null && jg.gOs!==undefined){
-      var gO=jg.gOs, gA=jg.gAdv;
-      var cor2=gO>gA?'var(--gr)':gO===gA?'var(--ye)':'var(--re)';
-      var letra=gO>gA?'V':gO===gA?'E':'D';
-      resH='<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">' +
-        '<span style="font-family:Bebas Neue,sans-serif;font-size:20px;color:var(--wh)">'+gO+' x '+gA+'</span>' +
-        '<span style="background:'+cor2+'20;color:'+cor2+';border:1px solid '+cor2+'40;font-size:9px;font-weight:700;padding:2px 6px;border-radius:2px">'+letra+'</span></div>';
-    } else if(jg.jogado) {
-      resH='<div style="font-size:11px;color:var(--ts);text-align:right"><span class="spin">&#8635;</span></div>';
-    } else {
-      resH='<div style="font-size:11px;color:var(--ts);text-align:right">'+hStr+'</div>';
-    }
-    s+='<div style="display:grid;grid-template-columns:44px auto 1fr auto;align-items:center;gap:8px;padding:8px 12px;' +
-      'background:'+(isP?'rgba(70,162,247,.08)':jg.jogado?'rgba(0,0,0,.12)':'var(--c1)')+';' +
-      'border:1px solid '+(isP?'rgba(70,162,247,.35)':'rgba(70,162,247,.07)')+';border-radius:4px;' +
-      (isP?'border-left:3px solid var(--az);':'border-left:3px solid transparent;')+'">' +
-      '<div><div style="font-size:10px;font-weight:700;color:'+(isP?'var(--az)':'var(--ts)')+'">'+dStr+'</div>' +
-        '<div style="font-size:8px;color:rgba(122,155,181,.5)">'+(jg.rodada||'').replace('Rodada','Rd').substring(0,8)+'</div></div>' +
-      (advE?'<img src="'+advE+'" style="width:22px;height:22px;object-fit:contain">':'<div style="width:22px;height:22px;border-radius:50%;background:rgba(70,162,247,.06);border:1px solid rgba(70,162,247,.1)"></div>') +
-      '<div><div style="font-size:12px;font-weight:'+(isP?'700':'500')+';color:'+(isP?'var(--wh)':jg.jogado?'rgba(240,244,248,.55)':'var(--wh)')+'">'+advN+'</div>' +
-        '<div style="font-size:10px;color:var(--ts)">'+(jg.emCasa?'Casa':'Fora')+'</div></div>' +
-      '<div>'+resH+'</div>' +
-    '</div>';
+function dtCampanhaCompactHtml() {
+  var jgs = dtState.jogosOsasco.filter(function(j){ return j.jogado; });
+  if(jgs.length === 0) return '<div style="font-size:12px;color:rgba(122,155,181,.6)">Nenhuma partida registrada.</div>';
+  var s = '';
+  // Últimos 6 resultados como timeline visual
+  s += '<div style="display:flex;flex-direction:column;gap:5px">';
+  jgs.slice(-6).reverse().forEach(function(jg){
+    var p   = jg.partida;
+    var adv = jg.adversario || {};
+    var advN = adv.nome_popular || adv.nome || '--';
+    var advE = adv.escudo || '';
+    var res  = jg.gOs + ' x ' + jg.gAdv;
+    var cor  = jg.gOs > jg.gAdv ? '#2ECC8E' : jg.gOs === jg.gAdv ? '#F59E0B' : '#EF4444';
+    var letra = jg.gOs > jg.gAdv ? 'V' : jg.gOs === jg.gAdv ? 'E' : 'D';
+    s += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(0,0,0,.15);border-radius:4px;border-left:2px solid ' + cor + '">';
+    s += '<div style="width:20px;height:20px;border-radius:50%;background:' + cor + '20;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:' + cor + ';flex-shrink:0">' + letra + '</div>';
+    if(advE) s += '<img src="' + advE + '" style="width:18px;height:18px;object-fit:contain;flex-shrink:0">';
+    s += '<span style="font-size:11px;color:#fff;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + advN + '</span>';
+    s += '<span style="font-family:Bebas Neue,sans-serif;font-size:16px;color:' + cor + ';flex-shrink:0">' + res + '</span>';
+    s += '</div>';
   });
-  return s+'</div>';
+  s += '</div>';
+  return s;
 }
 
-function dtBlocoDesempenho() {
-  var stats=dtOsascoStats();
-  var posObj=dtOsascoPosicao();
-  var s='<div style="margin-bottom:36px">' +
-    '<div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--az);margin-bottom:6px">TEMPORADA</div>' +
-    '<div style="font-family:Bebas Neue,sans-serif;font-size:clamp(28px,4vw,40px);color:var(--wh);letter-spacing:1px;margin-bottom:20px">Osasco Sporting &mdash; Campanha</div>';
-  s+=dtCampanhaGridHtml(stats,posObj);
-  s+='<div style="background:var(--c2);border:1px solid rgba(70,162,247,.12);border-radius:6px;padding:20px">' +
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">' +
-    '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Calendario Completo &mdash; '+dtState.jogosOsasco.length+' Partidas</div>' +
-    '<div style="font-size:9px;color:var(--ts)">Placares carregando...</div>' +
-    '</div>' +
-    dtCalendarioListHtml() +
-  '</div>';
-  return s+'</div>';
+function dtArtilhariaCompactHtml() {
+  var art = dtState.artilharia;
+  if(!art || !Array.isArray(art) || art.length === 0) {
+    return '<div style="font-size:12px;color:rgba(122,155,181,.6)">Dados não disponíveis na API para este campeonato.</div>';
+  }
+  var maxG = art.reduce(function(m, a){ return Math.max(m, a.gols || a.quantidade || 0); }, 1);
+  var s = '<div style="display:flex;flex-direction:column;gap:5px">';
+  art.slice(0, 8).forEach(function(a, i){
+    var jg = a.atleta || a.jogador || a;
+    var nome = jg.nome_popular || jg.nome || '--';
+    var time = (a.time || a.equipe || {});
+    var timeN = time.nome_popular || time.nome || '';
+    var gols = a.gols || a.quantidade || 0;
+    var barW = Math.round((gols / maxG) * 100);
+    var isOs = (time.time_id || time.id || 0) === dtState.osascoTid ||
+               timeN.toLowerCase().indexOf('osasco') >= 0;
+    var cor = isOs ? '#46A2F7' : 'rgba(122,155,181,.4)';
+    s += '<div style="position:relative;display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:3px;background:rgba(0,0,0,.1);overflow:hidden">';
+    s += '<div style="position:absolute;left:0;top:0;height:100%;width:' + barW + '%;background:' + cor + '10;pointer-events:none"></div>';
+    s += '<span style="font-size:9px;color:rgba(122,155,181,.4);width:14px;flex-shrink:0;position:relative">' + (i+1) + '</span>';
+    s += '<span style="font-size:12px;font-weight:700;color:' + (isOs ? '#46A2F7' : '#fff') + ';flex:1;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nome + (isOs ? ' <span style="font-size:8px;color:#46A2F7">OZ</span>' : '') + '</span>';
+    s += '<span style="font-family:Bebas Neue,sans-serif;font-size:20px;color:' + cor + ';position:relative;flex-shrink:0">' + gols + '</span>';
+    s += '</div>';
+  });
+  s += '</div>';
+  return s;
 }
 
-function dtBlocoClassificacao() {
-  var faseAtual = dtState.campData&&dtState.campData.fase_atual;
-  var faseNome = faseAtual ? faseAtual.nome : 'Classificacao';
-  var tabela = dtState.classif||[];
-  var s='<div style="margin-bottom:36px">' +
-    '<div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--az);margin-bottom:6px">COMPETICAO</div>' +
-    '<div style="font-family:Bebas Neue,sans-serif;font-size:clamp(28px,4vw,40px);color:var(--wh);letter-spacing:1px;margin-bottom:20px">'+(dtState.campNome||'Paulistao A2 2026')+'</div>' +
-    '<div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px">';
-  if(tabela.length>0) {
-    var advN2=dtState.adversario?(dtState.adversario.nome_popular||dtState.adversario.nome||''):'';
-    // Legenda faixas
-    var faixas = {};
-    tabela.forEach(function(t){ if(t.faixa_classificacao) faixas[t.faixa_classificacao]=true; });
-    s+='<div>';
-    s+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
-    s+='<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Tabela &mdash; '+faseNome+'</div>';
-    s+='<div style="display:flex;gap:8px">';
-    if(faixas['classificados']) s+='<span style="font-size:8px;font-weight:700;color:var(--gr);letter-spacing:1px">&#9632; CLASSIF.</span>';
-    if(faixas['rebaixados']) s+='<span style="font-size:8px;font-weight:700;color:var(--re);letter-spacing:1px">&#9632; REBAIXADO</span>';
-    s+='</div></div>';
-    s+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:400px">' +
-      '<thead><tr style="border-bottom:2px solid rgba(70,162,247,.15)">' +
-      ['#','Time','Ult.5','Pts','J','V','E','D','SG','Ap.%'].map(function(h){
-        return '<th style="padding:7px 6px;text-align:'+(h==='Time'||h==='Ult.5'?'left':'center')+';font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ts)">'+h+'</th>';
-      }).join('')+'</tr></thead><tbody>';
-    tabela.forEach(function(t,i){
-      var o=t.time||t;
-      var nome=o.nome_popular||o.nome||'--';
-      var esc=o.escudo||o.logo||'';
-      var tid=o.time_id||o.id;
-      var isOs=nome.toLowerCase().indexOf('osasco')>=0;
-      var isAdv=advN2&&nome.toLowerCase().indexOf(advN2.toLowerCase().split(' ')[0])>=0;
-      var sg=t.saldo_gols||0;
-      var faixa=t.faixa_classificacao;
-      var faixaCor = faixa==='classificados'?'var(--gr)':faixa==='rebaixados'?'var(--re)':'transparent';
-      // Ultimos jogos
-      var ultH='<div style="display:flex;gap:2px">';
-      (t.ultimos_jogos||[]).forEach(function(r){
-        var cor=r==='v'?'var(--gr)':r==='e'?'var(--ye)':'var(--re)';
-        var l=r==='v'?'V':r==='e'?'E':'D';
-        ultH+='<span style="width:16px;height:16px;border-radius:50%;background:'+cor+'20;border:1px solid '+cor+'50;display:inline-flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:'+cor+'">'+l+'</span>';
+// ═══════════════════════════════════════════════════════════════
+// TAB 2 — PRÓXIMO JOGO (análise completa do adversário)
+// ═══════════════════════════════════════════════════════════════
+function dtTabMatch() {
+  if(!dtState.proxJogo && dtState.jogosOsasco.filter(function(j){ return j.jogado; }).length === 0) {
+    return '<div style="padding:40px;text-align:center;color:rgba(122,155,181,.6)"><div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:#46A2F7;margin-bottom:8px">SEM PARTIDA AGENDADA</div><div style="font-size:13px">Aguardando cadastro das partidas da próxima fase na API.</div></div>';
+  }
+
+  var adv   = dtState.adversario || {};
+  var advN  = adv.nome_popular || adv.nome || (dtState.proxJogo ? '--' : 'Último adversário');
+  var advE  = adv.escudo || '';
+  var mand  = dtState.proxJogo ? dtState.proxJogo.mandante : false;
+  var rodada = dtState.proxJogo ? (dtState.proxJogo.rodada || dtState.proxJogo.fase || '') : '';
+  var dtStr  = dtState.proxJogo ? (dtState.proxJogo.dtStr || '') : '';
+
+  // Posição adversário na tabela
+  var tabela = dtState.classif || dtState.classifFase || [];
+  var advPos = null, advStats = null;
+  tabela.forEach(function(t, i){
+    var n = (t.time && t.time.nome_popular || '').toLowerCase();
+    var advNl = advN.toLowerCase();
+    if(n.indexOf(advNl.substring(0,6)) >= 0 || advNl.indexOf(n.substring(0,6)) >= 0) {
+      advPos = i + 1;
+      advStats = t;
+    }
+  });
+
+  var advTid = adv.time_id || adv.id || 0;
+  var formaAdv = dtState.formaCache[advTid] || [];
+
+  var s = '';
+
+  // ── Header adversário ────────────────────────────────────────
+  s += '<div style="background:linear-gradient(135deg,rgba(239,68,68,.06),rgba(7,14,20,0));border:1px solid rgba(239,68,68,.12);border-radius:8px;padding:20px;margin-bottom:16px">';
+  s += '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">';
+  if(advE) s += '<img src="' + advE + '" style="width:56px;height:56px;object-fit:contain;flex-shrink:0">';
+  s += '<div style="flex:1">';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(239,68,68,.7);margin-bottom:4px">ADVERSÁRIO &mdash; ' + (rodada || 'PRÓXIMA PARTIDA') + '</div>';
+  s += '<div style="font-family:Bebas Neue,sans-serif;font-size:clamp(24px,4vw,38px);color:#fff;letter-spacing:1px">' + advN.toUpperCase() + '</div>';
+  if(dtStr) s += '<div style="font-size:11px;color:rgba(122,155,181,.6);margin-top:3px">' + dtStr + (mand ? ' &middot; Osasco MANDANTE' : ' &middot; Osasco VISITANTE') + '</div>';
+  s += '</div>';
+  if(advPos) {
+    s += '<div style="text-align:center;padding:12px 16px;background:rgba(0,0,0,.3);border-radius:6px">';
+    s += '<div style="font-family:Bebas Neue,sans-serif;font-size:40px;color:#fff;line-height:1">' + advPos + '</div>';
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(122,155,181,.5)">POSIÇÃO</div>';
+    s += '</div>';
+  }
+  s += '</div>';
+  // Forma adversário
+  if(formaAdv.length > 0) {
+    s += '<div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.05)">';
+    s += '<span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(122,155,181,.5)">ÚLTIMOS 5</span>';
+    formaAdv.forEach(function(r){
+      var c = r === 'v' ? '#2ECC8E' : r === 'e' ? '#F59E0B' : '#EF4444';
+      s += '<div style="width:28px;height:28px;border-radius:4px;background:' + c + '18;border:1px solid ' + c + '50;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:' + c + '">' + r.toUpperCase() + '</div>';
+    });
+    s += '</div>';
+  }
+  s += '</div>';
+
+  // ── Stats adversário (da tabela) ─────────────────────────────
+  if(advStats) {
+    var aP  = advStats.pontos || 0;
+    var aJ  = advStats.jogos || 0;
+    var aV  = advStats.vitorias || 0;
+    var aE  = advStats.empates || 0;
+    var aD  = advStats.derrotas || 0;
+    var aGP = advStats.gols_pro || advStats.gols_marcados || 0;
+    var aGC = advStats.gols_contra || advStats.gols_sofridos || 0;
+    var aSG = advStats.saldo_gols || (aGP - aGC) || 0;
+    var aAp = aJ > 0 ? Math.round(((aV * 3 + aE) / (aJ * 3)) * 100) : 0;
+
+    s += '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px">';
+    [
+      { v: aP,   l: 'PTS' },
+      { v: aJ,   l: 'JG' },
+      { v: aV,   l: 'V' },
+      { v: aE,   l: 'E' },
+      { v: aD,   l: 'D' },
+      { v: aAp+'%', l: 'APROV' }
+    ].forEach(function(k){
+      s += '<div style="text-align:center;padding:10px 4px;background:rgba(0,0,0,.2);border:1px solid rgba(70,162,247,.07);border-radius:4px">';
+      s += '<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:#fff;line-height:1">' + k.v + '</div>';
+      s += '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(122,155,181,.5);margin-top:2px">' + k.l + '</div>';
+      s += '</div>';
+    });
+    s += '</div>';
+  }
+
+  // ── Cruzamento NSP: alertas para este jogo ───────────────────
+  s += dtCruzamentoNSPJogo();
+
+  // ── Histórico de confrontos ──────────────────────────────────
+  s += dtHistoricoConfrontos(advN);
+
+  return s;
+}
+
+// Cruzamento NSP x Jogo: atletas em alerta / com alta carga na semana do jogo
+function dtCruzamentoNSPJogo() {
+  var rec = window.nspRecuperacao || [];
+  var carga = window.nspCarga || [];
+  if(rec.length === 0) return '';
+
+  var emAlerta = [], emReab = [], altaCarga = [];
+
+  rec.forEach(function(r){
+    var caract = (r['Característica'] || r['Caracteristica'] || '').toLowerCase();
+    var nome   = (r['Nome'] || r['Atleta'] || '').trim();
+    if(!nome) return;
+    if(caract.indexOf('alerta') >= 0 || caract.indexOf('sobrecarga') >= 0) emAlerta.push(nome);
+    if(caract.indexOf('reabil') >= 0 || caract.indexOf('lesão') >= 0 || caract.indexOf('lesao') >= 0) emReab.push(nome);
+  });
+
+  var s = '<div style="background:rgba(245,158,11,.03);border:1px solid rgba(245,158,11,.15);border-radius:8px;padding:16px;margin-bottom:16px">';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(245,158,11,.8);margin-bottom:12px">ALERTA NSP &mdash; SEMANA DO JOGO</div>';
+
+  if(emAlerta.length === 0 && emReab.length === 0) {
+    s += '<div style="font-size:12px;color:rgba(46,204,142,.8)">Plantel sem alertas ativos. Todos aptos para o jogo.</div>';
+  } else {
+    s += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+    if(emAlerta.length > 0) {
+      s += '<div>';
+      s += '<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#F59E0B;margin-bottom:6px">SOBRECARGA / ALERTA</div>';
+      emAlerta.forEach(function(n){
+        s += '<div style="font-size:11px;color:rgba(240,244,248,.8);padding:3px 0;border-bottom:1px solid rgba(245,158,11,.08)">' + n + '</div>';
       });
-      ultH+='</div>';
-      s+='<tr style="border-bottom:1px solid rgba(70,162,247,.04);background:'+(isOs?'rgba(70,162,247,.08)':isAdv?'rgba(245,158,11,.05)':'')+';border-left:3px solid '+(isOs?'var(--az)':isAdv?'var(--ye)':faixaCor)+'">' +
-        '<td style="padding:6px 6px;text-align:center;font-family:Bebas Neue,sans-serif;font-size:14px;color:'+(isOs?'var(--az)':'var(--ts)')+'">'+(t.posicao||i+1)+'</td>' +
-        '<td style="padding:6px 8px"><div style="display:flex;align-items:center;gap:6px">'+(esc?'<img src="'+esc+'" style="width:16px;height:16px;object-fit:contain;flex-shrink:0">':'')+
-          '<span style="font-weight:'+(isOs||isAdv?'700':'400')+';color:'+(isOs?'var(--az)':isAdv?'var(--ye)':'var(--wh)')+'">'+nome+'</span>'+
-          (isOs?'<span style="font-size:7px;background:rgba(70,162,247,.2);color:var(--az);padding:1px 4px;border-radius:2px">NOS</span>':'')+
-          (isAdv?'<span style="font-size:7px;background:rgba(245,158,11,.2);color:var(--ye);padding:1px 4px;border-radius:2px">ADV</span>':'')+
-        '</div></td>' +
-        '<td style="padding:6px 6px">'+ultH+'</td>'+
-        '<td style="padding:6px 6px;text-align:center;font-family:Bebas Neue,sans-serif;font-size:16px;color:var(--wh)">'+(t.pontos||0)+'</td>' +
-        '<td style="padding:6px 6px;text-align:center;color:var(--ts)">'+(t.jogos||0)+'</td>' +
-        '<td style="padding:6px 6px;text-align:center;color:var(--gr)">'+(t.vitorias||0)+'</td>' +
-        '<td style="padding:6px 6px;text-align:center;color:var(--ye)">'+(t.empates||0)+'</td>' +
-        '<td style="padding:6px 6px;text-align:center;color:var(--re)">'+(t.derrotas||0)+'</td>' +
-        '<td style="padding:6px 6px;text-align:center;color:'+(sg>0?'var(--gr)':sg<0?'var(--re)':'var(--ts)')+'">'+( sg>0?'+':'')+sg+'</td>' +
-        '<td style="padding:6px 6px;text-align:center;color:var(--ts)">'+(t.aproveitamento||0)+'%</td>' +
-      '</tr>';
-    });
-    s+='</tbody></table></div></div>';
-  } else {
-    s+='<div style="color:var(--ts);font-size:13px">Tabela nao disponivel.</div>';
+      s += '</div>';
+    }
+    if(emReab.length > 0) {
+      s += '<div>';
+      s += '<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#EF4444;margin-bottom:6px">EM REABILITAÇÃO</div>';
+      emReab.forEach(function(n){
+        s += '<div style="font-size:11px;color:rgba(240,244,248,.8);padding:3px 0;border-bottom:1px solid rgba(239,68,68,.08)">' + n + '</div>';
+      });
+      s += '</div>';
+    }
+    s += '</div>';
   }
-  // Artilharia / Outras partidas da fase
-  s+='<div>';
-  // ── ARTILHARIA ──────────────────────────────────
-  s+='<div style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">';
-  s+='<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Artilharia &mdash; '+( dtState.campNome||'Campeonato')+'</div>';
-  if(dtState.artilharia&&Array.isArray(dtState.artilharia)&&dtState.artilharia.length>0) {
-    s+='<div style="font-size:9px;color:var(--ts)">'+dtState.artilharia.length+' artilheiros</div>';
-  }
-  s+='</div>';
-  if(dtState.artilharia && Array.isArray(dtState.artilharia) && dtState.artilharia.length>0) {
-    var maxGols = dtState.artilharia.reduce(function(mx,a){ return Math.max(mx, a.gols||a.quantidade||0); }, 1);
-    var medalhas = ['#F59E0B','#9CA3AF','#CD7F32'];
-    s+='<div style="display:flex;flex-direction:column;gap:4px">';
-    dtState.artilharia.slice(0,15).forEach(function(a,i){
-      var jg = a.atleta||a.jogador||a;
-      var nomeJ = jg.nome_popular||jg.nome||'--';
-      var foto  = jg.foto||jg.imagem||'';
-      var time  = a.time||a.equipe||{};
-      var timeN = time.nome_popular||time.nome||'';
-      var timeE = time.escudo||time.logo||'';
-      var timeId= time.time_id||time.id||0;
-      var gols  = a.gols||a.quantidade||0;
-      var barW  = Math.round((gols/maxGols)*100);
-      var isOsasco = timeId===dtState.osascoTid ||
-                     timeN.toLowerCase().indexOf('osasco')>=0 ||
-                     timeN.toLowerCase().indexOf('oeste')>=0;
-      var rankColor = i<3 ? medalhas[i] : 'rgba(70,162,247,.25)';
-      var rowBg = isOsasco
-        ? 'background:rgba(70,162,247,.08);border:1px solid rgba(70,162,247,.25)'
-        : 'background:rgba(255,255,255,.02);border:1px solid rgba(70,162,247,.06)';
-      s+='<div style="'+rowBg+';border-radius:5px;padding:7px 10px;position:relative;overflow:hidden">';
-      // barra de fundo proporcional
-      s+='<div style="position:absolute;left:0;top:0;height:100%;width:'+barW+'%;background:'+(isOsasco?'rgba(70,162,247,.06)':'rgba(255,255,255,.02)')+';pointer-events:none;transition:width .6s ease"></div>';
-      s+='<div style="position:relative;display:flex;align-items:center;gap:8px">';
-      // ranking
-      s+='<div style="width:20px;flex-shrink:0;text-align:center">';
-      if(i<3) {
-        s+='<div style="width:18px;height:18px;border-radius:50%;background:'+rankColor+';display:flex;align-items:center;justify-content:center">';
-        s+='<span style="font-family:Bebas Neue,sans-serif;font-size:10px;color:#000;line-height:1">'+(i+1)+'</span></div>';
-      } else {
-        s+='<span style="font-family:Bebas Neue,sans-serif;font-size:14px;color:rgba(70,162,247,.35)">'+(i+1)+'</span>';
-      }
-      s+='</div>';
-      // foto
-      if(foto) {
-        s+='<img src="'+foto+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(70,162,247,.15)">';
-      } else {
-        s+='<div style="width:30px;height:30px;border-radius:50%;background:rgba(70,162,247,.1);flex-shrink:0;display:flex;align-items:center;justify-content:center">';
-        s+='<span style="font-size:11px;font-weight:700;color:var(--ts)">'+nomeJ.charAt(0)+'</span></div>';
-      }
-      // nome + time
-      s+='<div style="flex:1;min-width:0">';
-      s+='<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:'+(isOsasco?'var(--az)':'var(--wh)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nomeJ;
-      if(isOsasco) s+=' <span style="font-size:8px;font-weight:700;letter-spacing:1px;padding:1px 5px;background:rgba(70,162,247,.15);border-radius:2px;color:var(--az)">OSASCO</span>';
-      s+='</div>';
-      s+='<div style="display:flex;align-items:center;gap:4px;margin-top:2px">';
-      if(timeE) s+='<img src="'+timeE+'" style="width:13px;height:13px;object-fit:contain;flex-shrink:0">';
-      s+='<span style="font-size:9px;color:var(--ts)">'+timeN+'</span>';
-      s+='</div></div>';
-      // gols
-      s+='<div style="flex-shrink:0;text-align:right">';
-      s+='<div style="font-family:Bebas Neue,sans-serif;font-size:26px;line-height:1;color:'+(isOsasco?'var(--az)':'var(--re)')+'">'+gols+'</div>';
-      s+='<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ts)">gol'+(gols!==1?'s':'')+'</div>';
-      s+='</div>';
-      s+='</div></div>';
-    });
-    s+='</div>';
-  } else {
-    s+='<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:6px;padding:20px;text-align:center">';
-    s+='<div style="font-size:11px;color:var(--ts)">Artilharia ainda sem dados na API.</div>';
-    s+='<div style="font-size:10px;color:rgba(122,155,181,.5);margin-top:4px">Os dados aparecem automaticamente quando a API liberar para o campeonato em andamento.</div>';
-    s+='</div>';
-  }
-  s+='</div></div>';
-  return s+'</div>';
+  s += '</div>';
+  return s;
 }
+
+function dtHistoricoConfrontos(advN) {
+  var jgs = dtState.jogosOsasco.filter(function(j){
+    var n = (j.adversario && j.adversario.nome_popular || j.adversario && j.adversario.nome || '').toLowerCase();
+    var advNl = advN.toLowerCase();
+    return n.indexOf(advNl.substring(0,6)) >= 0 || advNl.indexOf(n.substring(0,6)) >= 0;
+  });
+  if(jgs.length === 0) return '';
+
+  var s = '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:16px">';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">HISTÓRICO DE CONFRONTOS</div>';
+  var vit = 0, emp = 0, der = 0;
+  jgs.forEach(function(j){ if(j.gOs > j.gAdv) vit++; else if(j.gOs === j.gAdv) emp++; else der++; });
+  s += '<div style="display:flex;gap:16px;margin-bottom:12px">';
+  [{ v: vit, l: 'V', c: '#2ECC8E' }, { v: emp, l: 'E', c: '#F59E0B' }, { v: der, l: 'D', c: '#EF4444' }].forEach(function(k){
+    s += '<div style="text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:' + k.c + '">' + k.v + '</div><div style="font-size:9px;color:rgba(122,155,181,.5);font-weight:700;letter-spacing:1px">' + k.l + '</div></div>';
+  });
+  s += '</div>';
+  s += '<div style="display:flex;flex-direction:column;gap:5px">';
+  jgs.slice(-4).reverse().forEach(function(j){
+    var cor = j.gOs > j.gAdv ? '#2ECC8E' : j.gOs === j.gAdv ? '#F59E0B' : '#EF4444';
+    s += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(70,162,247,.06)">';
+    s += '<div style="width:20px;height:20px;border-radius:3px;background:' + cor + '20;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:' + cor + '">' + (j.gOs > j.gAdv ? 'V' : j.gOs === j.gAdv ? 'E' : 'D') + '</div>';
+    s += '<span style="font-size:11px;color:rgba(122,155,181,.6)">' + (j.partida && j.partida.data_realizacao || '') + '</span>';
+    s += '<span style="font-family:Bebas Neue,sans-serif;font-size:18px;color:#fff;margin-left:auto">' + j.gOs + ' x ' + j.gAdv + '</span>';
+    s += '</div>';
+  });
+  s += '</div></div>';
+  return s;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 3 — PLANTEL
+// ═══════════════════════════════════════════════════════════════
+function dtTabSquad() {
+  var html = '<div id="dt-plantel-content">' + dtPlantelHtml() + '</div>';
+  return html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 4 — TEMPORADA (calendário + estatísticas)
+// ═══════════════════════════════════════════════════════════════
+function dtTabSeason() {
+  var stats = dtOsascoStats();
+  var posObj = dtOsascoPosicao();
+  var jgs = dtState.jogosOsasco;
+  var jogados = jgs.filter(function(j){ return j.jogado; });
+
+  var s = '';
+
+  // Stats gerais
+  if(stats) {
+    s += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px">';
+    var pts = posObj && posObj.dados ? (posObj.dados.pontos || 0) : 0;
+    [
+      { v: pts,        l: 'Pontos',   c: '#46A2F7' },
+      { v: stats.ap+'%', l: 'Aproveit', c: stats.ap >= 50 ? '#2ECC8E' : '#F59E0B' },
+      { v: stats.gm,   l: 'Gols Pró', c: '#2ECC8E' },
+      { v: stats.gs,   l: 'Gols Sofr', c: '#EF4444' },
+      { v: (stats.sg >= 0 ? '+' : '') + stats.sg, l: 'Saldo', c: stats.sg >= 0 ? '#2ECC8E' : '#EF4444' }
+    ].forEach(function(k){
+      s += '<div style="text-align:center;padding:14px 8px;background:rgba(70,162,247,.04);border:1px solid rgba(70,162,247,.1);border-radius:6px">';
+      s += '<div style="font-family:Bebas Neue,sans-serif;font-size:30px;color:' + k.c + ';line-height:1">' + k.v + '</div>';
+      s += '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(122,155,181,.5);margin-top:4px">' + k.l + '</div>';
+      s += '</div>';
+    });
+    s += '</div>';
+  }
+
+  // Calendário completo
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:10px">CALENDÁRIO &mdash; ' + jgs.length + ' PARTIDAS</div>';
+  s += '<div style="display:flex;flex-direction:column;gap:5px">';
+  jgs.forEach(function(jg){
+    var p   = jg.partida;
+    var adv = jg.adversario || {};
+    var advN = adv.nome_popular || adv.nome || '--';
+    var advE = adv.escudo || '';
+    var isProx = dtState.proxJogo && dtState.proxJogo.partida === p;
+
+    var cor, res, letra;
+    if(!jg.jogado) {
+      cor = '#46A2F7'; res = '--'; letra = isProx ? '>' : '-';
+    } else {
+      cor = jg.gOs > jg.gAdv ? '#2ECC8E' : jg.gOs === jg.gAdv ? '#F59E0B' : '#EF4444';
+      res = jg.gOs + '-' + jg.gAdv;
+      letra = jg.gOs > jg.gAdv ? 'V' : jg.gOs === jg.gAdv ? 'E' : 'D';
+    }
+
+    var border = isProx ? '1px solid rgba(70,162,247,.4)' : '1px solid rgba(70,162,247,.06)';
+    var bg = isProx ? 'rgba(70,162,247,.08)' : 'rgba(0,0,0,.12)';
+
+    s += '<div style="display:grid;grid-template-columns:22px 22px 1fr auto auto;align-items:center;gap:8px;padding:7px 10px;background:' + bg + ';border:' + border + ';border-radius:4px">';
+    s += '<div style="width:20px;height:20px;border-radius:3px;background:' + cor + '20;border:1px solid ' + cor + '50;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:' + cor + '">' + letra + '</div>';
+    if(advE) s += '<img src="' + advE + '" style="width:20px;height:20px;object-fit:contain">';
+    else s += '<div style="width:20px"></div>';
+    s += '<span style="font-size:12px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + advN + '</span>';
+    s += '<span style="font-size:9px;color:rgba(122,155,181,.5)">' + (p && p.data_realizacao || jg.dt || '') + '</span>';
+    s += '<span style="font-family:Bebas Neue,sans-serif;font-size:18px;color:' + cor + ';min-width:36px;text-align:right">' + res + '</span>';
+    s += '</div>';
+  });
+  s += '</div>';
+  return s;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 5 — CLASSIFICAÇÃO
+// ═══════════════════════════════════════════════════════════════
+function dtTabTable() {
+  var tabela = dtState.classif || dtState.classifFase || [];
+  var faseNome = (dtState.campData && dtState.campData.fase_atual) ? dtState.campData.fase_atual.nome : 'Classificação';
+  var advN = dtState.adversario ? (dtState.adversario.nome_popular || dtState.adversario.nome || '') : '';
+
+  if(tabela.length === 0) {
+    return '<div style="padding:40px;text-align:center;color:rgba(122,155,181,.6)"><div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:#46A2F7;margin-bottom:8px">TABELA NÃO DISPONÍVEL</div><div>A API não retornou dados de classificação para este campeonato.</div></div>';
+  }
+
+  var s = '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">' + faseNome.toUpperCase() + '</div>';
+
+  // Header
+  s += '<div style="display:grid;grid-template-columns:28px 28px 1fr 36px 36px 36px 36px 36px 36px 44px;gap:4px;padding:6px 10px;border-bottom:1px solid rgba(70,162,247,.15);margin-bottom:4px">';
+  ['#','','CLUBE','PTS','J','V','E','D','SG','APROV'].forEach(function(h){
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(122,155,181,.5);text-align:center">' + h + '</div>';
+  });
+  s += '</div>';
+
+  tabela.forEach(function(t, i){
+    var nome = (t.time && t.time.nome_popular) || (t.time && t.time.nome) || '--';
+    var esc  = (t.time && t.time.escudo) || '';
+    var isOs = nome.toLowerCase().indexOf('osasco') >= 0 || nome.toLowerCase().indexOf('oeste') >= 0;
+    var isAdv = advN && (nome.toLowerCase().indexOf(advN.toLowerCase().substring(0,6)) >= 0);
+    var faixa = t.faixa_classificacao || '';
+    var faixaCor = faixa === 'classificados' ? '#2ECC8E' : faixa === 'rebaixados' ? '#EF4444' : faixa === 'playoffs' ? '#F59E0B' : 'transparent';
+
+    var pts = t.pontos || 0;
+    var jg  = t.jogos || 0;
+    var vit = t.vitorias || 0;
+    var emp = t.empates || 0;
+    var der = t.derrotas || 0;
+    var sg  = t.saldo_gols || 0;
+    var ap  = jg > 0 ? Math.round(((vit * 3 + emp) / (jg * 3)) * 100) : 0;
+
+    var rowBg = isOs ? 'rgba(70,162,247,.08)' : isAdv ? 'rgba(239,68,68,.05)' : (i % 2 === 0 ? 'rgba(0,0,0,.1)' : 'transparent');
+    var rowBorder = isOs ? '1px solid rgba(70,162,247,.25)' : isAdv ? '1px solid rgba(239,68,68,.2)' : '1px solid transparent';
+
+    s += '<div style="display:grid;grid-template-columns:28px 28px 1fr 36px 36px 36px 36px 36px 36px 44px;gap:4px;padding:6px 10px;background:' + rowBg + ';border:' + rowBorder + ';border-radius:4px;margin-bottom:2px;align-items:center">';
+
+    // Posição com indicador faixa
+    s += '<div style="display:flex;align-items:center;gap:3px">';
+    s += '<div style="width:3px;height:16px;border-radius:1px;background:' + faixaCor + ';flex-shrink:0"></div>';
+    s += '<span style="font-size:11px;font-weight:700;color:' + (isOs ? '#46A2F7' : 'rgba(122,155,181,.7)') + '">' + (i+1) + '</span>';
+    s += '</div>';
+
+    // Escudo
+    if(esc) s += '<img src="' + esc + '" style="width:20px;height:20px;object-fit:contain">';
+    else s += '<div style="width:20px;height:20px"></div>';
+
+    // Nome
+    s += '<span style="font-size:12px;font-weight:' + (isOs ? '700' : '400') + ';color:' + (isOs ? '#46A2F7' : isAdv ? '#EF4444' : '#fff') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nome + '</span>';
+
+    // Stats
+    [
+      { v: pts, c: isOs ? '#46A2F7' : '#fff', bold: true },
+      { v: jg,  c: 'rgba(122,155,181,.7)' },
+      { v: vit, c: '#2ECC8E' },
+      { v: emp, c: '#F59E0B' },
+      { v: der, c: '#EF4444' },
+      { v: (sg >= 0 ? '+' : '') + sg, c: sg >= 0 ? '#2ECC8E' : '#EF4444' },
+      { v: ap + '%', c: ap >= 50 ? 'rgba(46,204,142,.8)' : 'rgba(122,155,181,.6)' }
+    ].forEach(function(k){
+      s += '<div style="text-align:center;font-family:Barlow Condensed,sans-serif;font-size:' + (k.bold ? '13' : '12') + 'px;font-weight:' + (k.bold ? '700' : '400') + ';color:' + k.c + '">' + k.v + '</div>';
+    });
+
+    s += '</div>';
+  });
+
+  // Legenda
+  s += '<div style="display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(70,162,247,.08);flex-wrap:wrap">';
+  [
+    { c: '#2ECC8E', l: 'Classificado' },
+    { c: '#F59E0B', l: 'Playoff' },
+    { c: '#EF4444', l: 'Rebaixado' }
+  ].forEach(function(leg){
+    s += '<div style="display:flex;align-items:center;gap:5px">';
+    s += '<div style="width:10px;height:10px;border-radius:2px;background:' + leg.c + '40;border:1px solid ' + leg.c + '60"></div>';
+    s += '<span style="font-size:10px;color:rgba(122,155,181,.6)">' + leg.l + '</span>';
+    s += '</div>';
+  });
+  s += '</div>';
+
+  return s;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 6 — CARGA NSP (cruzamento de dados)
+// ═══════════════════════════════════════════════════════════════
+function dtTabLoad() {
+  var rec   = window.nspRecuperacao || [];
+  var carga = window.nspCarga || [];
+  var cad   = window.nspCadastro || [];
+
+  if(rec.length === 0) {
+    return '<div style="padding:40px;text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:#F59E0B;margin-bottom:12px">NSP NÃO CARREGADO</div><div style="font-size:13px;color:rgba(122,155,181,.7);margin-bottom:20px">Para ver o cruzamento de dados NSP + resultados, carregue o módulo NSP primeiro.</div><button onclick="dtCarregarNSPeAtualizar()" style="font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 24px;border-radius:4px;cursor:pointer;background:var(--az);color:#000;border:none">Carregar NSP</button></div>';
+  }
+
+  var s = '';
+
+  // ── Distribuição de prontidão ────────────────────────────────
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">DISTRIBUIÇÃO DE PRONTIDÃO</div>';
+
+  // Agrupa por característica
+  var grupos = {};
+  rec.forEach(function(r){
+    var caract = (r['Característica'] || r['Caracteristica'] || 'Indefinido').trim();
+    if(!caract || caract === '0' || caract === '-') caract = 'Indefinido';
+    grupos[caract] = (grupos[caract] || []);
+    grupos[caract].push(r['Nome'] || r['Atleta'] || '');
+  });
+
+  var total = rec.length;
+  var ordem = ['apronto', 'treinando', 'alerta', 'sobrecarga', 'lesão', 'lesao', 'reabilitação', 'reabilitacao'];
+  var cores = {
+    'apronto': '#2ECC8E',
+    'treinando': '#46A2F7',
+    'alerta': '#F59E0B',
+    'sobrecarga': '#F59E0B',
+    'lesão': '#EF4444',
+    'lesao': '#EF4444',
+    'reabilitação': '#EF4444',
+    'reabilitacao': '#EF4444'
+  };
+
+  var keys = Object.keys(grupos).sort(function(a, b){
+    var ia = ordem.indexOf(a.toLowerCase()), ib = ordem.indexOf(b.toLowerCase());
+    if(ia < 0) ia = 99; if(ib < 0) ib = 99;
+    return ia - ib;
+  });
+
+  s += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">';
+  keys.forEach(function(k){
+    var atletas = grupos[k];
+    var cnt = atletas.length;
+    var pct = Math.round((cnt / total) * 100);
+    var cor = cores[k.toLowerCase()] || 'rgba(122,155,181,.5)';
+    s += '<div style="background:rgba(0,0,0,.15);border:1px solid rgba(70,162,247,.07);border-radius:6px;padding:10px 14px">';
+    s += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">';
+    s += '<span style="font-size:11px;font-weight:700;color:' + cor + ';text-transform:capitalize">' + k + '</span>';
+    s += '<span style="font-family:Bebas Neue,sans-serif;font-size:20px;color:' + cor + '">' + cnt + ' <span style="font-size:11px;color:rgba(122,155,181,.5);font-family:\'Barlow Condensed\',sans-serif">(' + pct + '%)</span></span>';
+    s += '</div>';
+    s += '<div style="height:3px;background:rgba(70,162,247,.08);border-radius:2px;overflow:hidden;margin-bottom:8px">';
+    s += '<div style="height:100%;background:' + cor + ';width:' + pct + '%;border-radius:2px"></div>';
+    s += '</div>';
+    s += '<div style="font-size:10px;color:rgba(122,155,181,.6)">' + atletas.filter(Boolean).slice(0, 8).join(', ') + (atletas.length > 8 ? '...' : '') + '</div>';
+    s += '</div>';
+  });
+  s += '</div>';
+
+  // ── Cruzamento: resultados x prontidão ───────────────────────
+  var jogados = dtState.jogosOsasco.filter(function(j){ return j.jogado; });
+  if(jogados.length > 0) {
+    s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">ÚLTIMOS RESULTADOS &mdash; CORRELAÇÃO</div>';
+    s += '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:16px">';
+    s += '<div style="font-size:11px;color:rgba(122,155,181,.7);margin-bottom:12px">Com <strong style="color:#46A2F7">' + total + ' atletas</strong> monitorados pelo NSP, os últimos resultados foram:</div>';
+
+    var vit = jogados.filter(function(j){ return j.gOs > j.gAdv; }).length;
+    var emp = jogados.filter(function(j){ return j.gOs === j.gAdv; }).length;
+    var der = jogados.filter(function(j){ return j.gOs < j.gAdv; }).length;
+    var ap  = jogados.length > 0 ? Math.round(((vit * 3 + emp) / (jogados.length * 3)) * 100) : 0;
+
+    s += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">';
+    [
+      { v: vit, l: 'Vitórias',  c: '#2ECC8E' },
+      { v: emp, l: 'Empates',   c: '#F59E0B' },
+      { v: der, l: 'Derrotas',  c: '#EF4444' },
+      { v: ap + '%', l: 'Aproveit', c: ap >= 50 ? '#2ECC8E' : '#F59E0B' }
+    ].forEach(function(k){
+      s += '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,.2);border-radius:4px">';
+      s += '<div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:' + k.c + ';line-height:1">' + k.v + '</div>';
+      s += '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(122,155,181,.5);margin-top:2px">' + k.l + '</div>';
+      s += '</div>';
+    });
+    s += '</div>';
+
+    // Insight automático
+    var aptos = grupos['apronto'] ? grupos['apronto'].length : 0;
+    var pctAptos = total > 0 ? Math.round((aptos / total) * 100) : 0;
+    var insight = '';
+    if(pctAptos >= 80 && ap >= 60) insight = 'Plantel com alta prontidão (' + pctAptos + '%) correlaciona com aproveitamento positivo (' + ap + '%).';
+    else if(pctAptos < 70) insight = 'Atenção: apenas ' + pctAptos + '% do plantel está em plena prontidão. Gestão de carga recomendada antes do próximo jogo.';
+    else insight = pctAptos + '% do plantel apto. Aproveitamento atual: ' + ap + '%.';
+
+    s += '<div style="padding:10px 12px;background:rgba(70,162,247,.06);border:1px solid rgba(70,162,247,.15);border-radius:4px">';
+    s += '<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#46A2F7;margin-bottom:4px">INSIGHT AUTOMATICO</div>';
+    s += '<div style="font-size:11px;color:rgba(240,244,248,.8);line-height:1.5">' + insight + '</div>';
+    s += '</div>';
+    s += '</div>';
+  }
+
+  return s;
+}
+
+// Legacy functions kept for compatibility
+function dtBlocoSituacao() { return ''; }
+function dtBlocoAoVivo() { return '<div id="dt-ao-vivo"></div>'; }
+function dtBlocoProxJogo() { return ''; }
+function dtBlocoPlantel() { return ''; }
+function dtCampanhaGridHtml(stats, posObj) { return ''; }
+function dtCalendarioListHtml() { return ''; }
+function dtBlocoDesempenho() { return ''; }
+function dtBlocoClassificacao() { return ''; }
+
 var FIN_SID = '1-O2rXcpEtJ1oMdiq4Fvi95mB09xq4u0iEDWSPkP1IvI';
 var FIN_BASE = 'https://docs.google.com/spreadsheets/d/' + FIN_SID + '/gviz/tq?tqx=out:csv&sheet=';
 var FIN_CORES_MOD = {
