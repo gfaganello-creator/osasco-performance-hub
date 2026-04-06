@@ -5007,6 +5007,12 @@ document.addEventListener('DOMContentLoaded', function(){
 var DT_API_KEY  = 'live_14e70fe96049615c1c7760495ede62';
 var DT_API_BASE = 'https://api.api-futebol.com.br/v1';
 
+// Scout SID — substituir pelo SID real apos criar a planilha SCOUT_SID no Google Sheets
+var SCOUT_SID  = '';
+var scoutAdversarios  = [];
+var scoutContratacoes = [];
+var scoutCarregado = false;
+
 // Paulista A2: ID 40 autorizado no plano atual (2025, encerrado)
 // ID 10 = Paulista A2 2026 em andamento, requer upgrade no painel api-futebol.com.br
 var DT_CAMP_ID  = 40;
@@ -5541,6 +5547,7 @@ function dtShellLayout() {
     { id: 'season',    label: 'Temporada' },
     { id: 'table',     label: 'Classificação' },
     { id: 'load',      label: 'Carga NSP' },
+    { id: 'scout',     label: 'Scout' },
   ];
   tabs.forEach(function(t){
     s += '<button id="dt-tab-' + t.id + '" onclick="dtSwitchTab(\'' + t.id + '\')" style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 18px;border:none;background:none;cursor:pointer;color:rgba(122,155,181,.55);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.2s">' + t.label + '</button>';
@@ -5578,6 +5585,7 @@ function dtSwitchTab(tabId) {
   else if(tabId === 'season') content.innerHTML = dtTabSeason();
   else if(tabId === 'table') content.innerHTML = dtTabTable();
   else if(tabId === 'load')  content.innerHTML = dtTabLoad();
+  else if(tabId === 'scout') content.innerHTML = dtTabScout();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -6426,6 +6434,335 @@ function dtImpactoCard(a, accentCor) {
   s += '</div>';
   s += '</div>';
   return s;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 7 — SCOUT (adversários + contratações)
+// ═══════════════════════════════════════════════════════════════
+
+async function dtCarregarScout() {
+  if(!SCOUT_SID || SCOUT_SID === '') return;
+  try {
+    var base = 'https://docs.google.com/spreadsheets/d/' + SCOUT_SID + '/gviz/tq?tqx=out:csv&sheet=';
+    var r1 = await fetch(base + encodeURIComponent('Scout Adversários'));
+    var t1 = await r1.text();
+    scoutAdversarios = nspParseSheet(t1);
+    await dtDelay(300);
+    var r2 = await fetch(base + encodeURIComponent('Scout Contratações'));
+    var t2 = await r2.text();
+    scoutContratacoes = nspParseSheet(t2);
+    scoutCarregado = true;
+  } catch(e) {
+    console.warn('[Scout] Erro ao carregar:', e.message);
+  }
+}
+
+function dtTabScout() {
+  if(!scoutCarregado && SCOUT_SID) {
+    dtCarregarScout().then(function(){
+      var content = document.getElementById('dt-tab-content');
+      if(content) content.innerHTML = dtTabScout();
+    });
+    return '<div style="padding:40px;text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:#46A2F7;margin-bottom:8px">CARREGANDO SCOUT...</div></div>';
+  }
+
+  var s = '';
+
+  // Sub-abas
+  s += '<div style="display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid rgba(70,162,247,.1)">';
+  s += '<button onclick="dtScoutSubTab(\'adv\')" id="scout-sub-adv" style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;border:none;background:none;cursor:pointer;color:#46A2F7;border-bottom:2px solid #46A2F7;margin-bottom:-1px">Adversários</button>';
+  s += '<button onclick="dtScoutSubTab(\'cont\')" id="scout-sub-cont" style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;border:none;background:none;cursor:pointer;color:rgba(122,155,181,.5);border-bottom:2px solid transparent;margin-bottom:-1px">Contratações</button>';
+  s += '</div>';
+
+  s += '<div id="scout-sub-content">';
+  s += dtScoutAdversarios();
+  s += '</div>';
+
+  return s;
+}
+
+function dtScoutSubTab(sub) {
+  var btns = ['adv','cont'];
+  btns.forEach(function(b){
+    var btn = document.getElementById('scout-sub-' + b);
+    if(!btn) return;
+    btn.style.color = b === sub ? '#46A2F7' : 'rgba(122,155,181,.5)';
+    btn.style.borderBottomColor = b === sub ? '#46A2F7' : 'transparent';
+  });
+  var content = document.getElementById('scout-sub-content');
+  if(content) content.innerHTML = sub === 'adv' ? dtScoutAdversarios() : dtScoutContratacoes();
+}
+
+// ── Scout Adversários ─────────────────────────────────────────
+function dtScoutAdversarios() {
+  var dados = scoutAdversarios;
+
+  // Filtros de posição
+  var posicoes = ['Todas'];
+  dados.forEach(function(r){
+    var pos = r['Posição'] || r['Posicao'] || '';
+    if(pos && posicoes.indexOf(pos) < 0) posicoes.push(pos);
+  });
+
+  var s = '';
+
+  // Se não tem planilha configurada, mostra dados do PDF embarcados
+  if(!SCOUT_SID || dados.length === 0) {
+    dados = dtScoutDadosAguaSanta();
+  }
+
+  // Header com filtros
+  s += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6)">';
+  s += dados.length + ' JOGADORES AVALIADOS';
+  s += (!SCOUT_SID ? ' &mdash; <span style="color:#F59E0B">DADOS DE EXEMPLO · Adicione SCOUT_SID para dados reais</span>' : '');
+  s += '</div>';
+  s += '<div style="display:flex;gap:6px;flex-wrap:wrap" id="scout-filtros">';
+  var filtroPos = ['Todas','Goleiro','Zagueiro','Lateral Direito','Lateral Esquerdo','Volante','Meia','Extremo','Atacante'];
+  filtroPos.forEach(function(p, i){
+    s += '<button onclick="dtScoutFiltrar(\'' + p + '\')" id="sf-' + i + '" style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:3px;cursor:pointer;background:' + (i===0?'rgba(70,162,247,.15)':'none') + ';color:' + (i===0?'#46A2F7':'rgba(122,155,181,.5)') + ';border:1px solid ' + (i===0?'rgba(70,162,247,.4)':'rgba(70,162,247,.15)') + ';transition:.2s">' + p + '</button>';
+  });
+  s += '</div></div>';
+
+  // Grid de fichas
+  s += '<div id="scout-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">';
+  dados.forEach(function(r){ s += dtScoutFichaCard(r); });
+  s += '</div>';
+
+  return s;
+}
+
+function dtScoutFiltrar(posicao) {
+  // Atualiza botões
+  var btns = document.querySelectorAll('#scout-filtros button');
+  btns.forEach(function(b){
+    var isActive = b.textContent.trim() === posicao;
+    b.style.background = isActive ? 'rgba(70,162,247,.15)' : 'none';
+    b.style.color = isActive ? '#46A2F7' : 'rgba(122,155,181,.5)';
+    b.style.borderColor = isActive ? 'rgba(70,162,247,.4)' : 'rgba(70,162,247,.15)';
+  });
+  // Filtra cards
+  var dados = scoutAdversarios.length > 0 ? scoutAdversarios : dtScoutDadosAguaSanta();
+  var filtrados = posicao === 'Todas' ? dados : dados.filter(function(r){
+    var pos = (r['Posição'] || r['Posicao'] || '').toLowerCase();
+    return pos.indexOf(posicao.toLowerCase()) >= 0;
+  });
+  var grid = document.getElementById('scout-grid');
+  if(grid) grid.innerHTML = filtrados.map(dtScoutFichaCard).join('');
+}
+
+function dtScoutFichaCard(r) {
+  var nome    = r['Nome'] || '';
+  var num     = r['Nº'] || r['Numero'] || '';
+  var pos     = r['Posição'] || r['Posicao'] || '';
+  var pe      = r['Pé'] || r['Pe'] || '';
+  var altura  = r['Altura'] || '';
+  var idade   = r['Idade'] || '';
+  var adv     = r['Adversário'] || r['Adversario'] || '';
+  var link    = r['Link Vídeo'] || r['Link Video'] || '';
+  var fraco   = r['Ponto Fraco'] || '';
+  var alerta  = r['Alerta Para'] || '';
+  var data    = r['Data Avaliação'] || r['Data Avaliacao'] || '';
+
+  var comBola = [r['Char. Com Bola 1'], r['Char. Com Bola 2'], r['Char. Com Bola 3']].filter(Boolean);
+  var semBola = [r['Char. Sem Bola 1'], r['Char. Sem Bola 2'], r['Char. Sem Bola 3']].filter(Boolean);
+
+  // Cor por posição
+  var posCorMap = {
+    'goleiro': '#F59E0B', 'zagueiro': '#EF4444',
+    'lateral': '#46A2F7', 'volante': '#2ECC8E',
+    'meia': '#A78BFA', 'extremo': '#F97316',
+    'atacante': '#EF4444', 'avante': '#EF4444'
+  };
+  var posCor = '#7A9BB5';
+  var posL = pos.toLowerCase();
+  Object.keys(posCorMap).forEach(function(k){ if(posL.indexOf(k) >= 0) posCor = posCorMap[k]; });
+
+  var s = '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-top:3px solid ' + posCor + ';border-radius:0 0 8px 8px;padding:14px;display:flex;flex-direction:column;gap:8px">';
+
+  // Header do card
+  s += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
+  s += '<div>';
+  s += '<div style="display:flex;align-items:center;gap:8px">';
+  if(num) s += '<span style="font-family:Bebas Neue,sans-serif;font-size:20px;color:rgba(70,162,247,.4)">' + num + '</span>';
+  s += '<span style="font-family:Bebas Neue,sans-serif;font-size:18px;color:#fff;letter-spacing:.5px">' + nome + '</span>';
+  s += '</div>';
+  s += '<div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">';
+  s += '<span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:2px;background:' + posCor + '20;color:' + posCor + ';border:1px solid ' + posCor + '40">' + pos + '</span>';
+  if(adv) s += '<span style="font-size:9px;color:rgba(122,155,181,.6)">' + adv + '</span>';
+  s += '</div>';
+  s += '</div>';
+  // Atributos físicos + link
+  s += '<div style="text-align:right;flex-shrink:0">';
+  if(link && link !== 'https://wyscout.com') {
+    s += '<a href="' + link + '" target="_blank" style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:3px;background:rgba(70,162,247,.1);color:#46A2F7;border:1px solid rgba(70,162,247,.25);text-decoration:none">Video</a>';
+  }
+  s += '<div style="font-size:9px;color:rgba(122,155,181,.5);margin-top:6px">' + [pe, altura, idade ? idade + ' anos' : ''].filter(Boolean).join(' · ') + '</div>';
+  s += '</div>';
+  s += '</div>';
+
+  // Características
+  if(comBola.length > 0 || semBola.length > 0) {
+    s += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+    // Com bola
+    s += '<div style="background:rgba(70,162,247,.05);border-radius:4px;padding:8px">';
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(70,162,247,.6);margin-bottom:5px">Com bola</div>';
+    comBola.forEach(function(c){
+      s += '<div style="font-size:10px;color:rgba(168,216,240,.9);padding:2px 0;border-bottom:1px solid rgba(70,162,247,.06)">' + c + '</div>';
+    });
+    s += '</div>';
+    // Sem bola
+    s += '<div style="background:rgba(239,68,68,.04);border-radius:4px;padding:8px">';
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(239,68,68,.6);margin-bottom:5px">Sem bola</div>';
+    semBola.forEach(function(c){
+      s += '<div style="font-size:10px;color:rgba(240,200,200,.8);padding:2px 0;border-bottom:1px solid rgba(239,68,68,.06)">' + c + '</div>';
+    });
+    s += '</div>';
+    s += '</div>';
+  }
+
+  // Ponto fraco + alerta
+  if(fraco) {
+    s += '<div style="padding:6px 10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:4px">';
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#EF4444;margin-bottom:2px">Ponto Fraco</div>';
+    s += '<div style="font-size:10px;color:rgba(240,180,180,.9)">' + fraco + '</div>';
+    s += '</div>';
+  }
+  if(alerta) {
+    s += '<div style="padding:6px 10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:4px">';
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#F59E0B;margin-bottom:2px">Alerta Para Nossos Atletas</div>';
+    s += '<div style="font-size:10px;color:rgba(245,220,130,.9)">' + alerta + '</div>';
+    s += '</div>';
+  }
+
+  if(data) s += '<div style="font-size:9px;color:rgba(122,155,181,.4);text-align:right">' + data + '</div>';
+
+  s += '</div>';
+  return s;
+}
+
+// ── Scout Contratações ────────────────────────────────────────
+function dtScoutContratacoes() {
+  var dados = scoutContratacoes.filter(function(r){ return r['Nome'] && r['Nome'].trim(); });
+
+  var s = '';
+  s += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6)">' + dados.length + ' ATLETAS NO BANCO</div>';
+  s += '</div>';
+
+  if(dados.length === 0) {
+    s += '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:32px;text-align:center">';
+    s += '<div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:#46A2F7;margin-bottom:8px">BANCO VAZIO</div>';
+    s += '<div style="font-size:12px;color:rgba(122,155,181,.6)">Preencha a aba "Scout Contratações" da planilha SCOUT_SID para ver os atletas avaliados aqui.</div>';
+    s += '</div>';
+    return s;
+  }
+
+  var statusCores = {
+    'em observacao': '#46A2F7', 'em observação': '#46A2F7',
+    'aprovado': '#2ECC8E', 'descartado': '#EF4444', 'contratado': '#F59E0B'
+  };
+
+  s += '<div style="display:flex;flex-direction:column;gap:8px">';
+  dados.forEach(function(r){
+    var nome   = r['Nome'] || '';
+    var clube  = r['Clube Atual'] || '';
+    var pos    = r['Posição'] || r['Posicao'] || '';
+    var nota   = r['Nota (1-5)'] || '';
+    var status = (r['Status'] || '').toLowerCase();
+    var obs    = r['Observação'] || r['Observacao'] || '';
+    var aval   = r['Avaliador'] || '';
+    var data   = r['Data Avaliação'] || r['Data Avaliacao'] || '';
+    var link   = r['Link Vídeo'] || r['Link Video'] || '';
+    var stCor  = statusCores[status] || '#7A9BB5';
+    var comBola = [r['Char. Com Bola 1'], r['Char. Com Bola 2'], r['Char. Com Bola 3']].filter(Boolean);
+    var semBola = [r['Char. Sem Bola 1'], r['Char. Sem Bola 2'], r['Char. Sem Bola 3']].filter(Boolean);
+
+    // Estrelas de nota
+    var estrelas = '';
+    var notaN = parseInt(nota);
+    for(var i = 1; i <= 5; i++){
+      estrelas += '<span style="color:' + (i <= notaN ? '#F59E0B' : 'rgba(122,155,181,.2)') + ';font-size:12px">&#9733;</span>';
+    }
+
+    s += '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-left:3px solid ' + stCor + ';border-radius:0 8px 8px 0;padding:14px">';
+    s += '<div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">';
+    // Info principal
+    s += '<div style="flex:1;min-width:200px">';
+    s += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">';
+    s += '<span style="font-family:Bebas Neue,sans-serif;font-size:18px;color:#fff">' + nome + '</span>';
+    s += '<span style="font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:2px;background:' + stCor + '20;color:' + stCor + ';text-transform:uppercase">' + (r['Status'] || '') + '</span>';
+    s += '</div>';
+    s += '<div style="font-size:10px;color:rgba(122,155,181,.7)">' + [pos, clube].filter(Boolean).join(' · ') + '</div>';
+    if(nota) s += '<div style="margin-top:4px">' + estrelas + '</div>';
+    s += '</div>';
+    // Características compactas
+    if(comBola.length > 0 || semBola.length > 0) {
+      s += '<div style="flex:2;min-width:280px;display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+      s += '<div><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:rgba(70,162,247,.6);margin-bottom:3px">COM BOLA</div>' + comBola.map(function(c){ return '<div style="font-size:9px;color:rgba(168,216,240,.8)">' + c + '</div>'; }).join('') + '</div>';
+      s += '<div><div style="font-size:8px;font-weight:700;letter-spacing:1px;color:rgba(239,68,68,.6);margin-bottom:3px">SEM BOLA</div>' + semBola.map(function(c){ return '<div style="font-size:9px;color:rgba(240,200,200,.8)">' + c + '</div>'; }).join('') + '</div>';
+      s += '</div>';
+    }
+    // Metadados
+    s += '<div style="text-align:right;flex-shrink:0">';
+    if(link && link !== 'https://wyscout.com') s += '<a href="' + link + '" target="_blank" style="font-size:9px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:3px;background:rgba(70,162,247,.1);color:#46A2F7;border:1px solid rgba(70,162,247,.25);text-decoration:none;display:block;margin-bottom:6px">Video</a>';
+    if(aval) s += '<div style="font-size:9px;color:rgba(122,155,181,.5)">' + aval + '</div>';
+    if(data) s += '<div style="font-size:9px;color:rgba(122,155,181,.4)">' + data + '</div>';
+    s += '</div>';
+    s += '</div>';
+    if(obs) {
+      s += '<div style="margin-top:8px;padding:6px 10px;background:rgba(0,0,0,.2);border-radius:4px;font-size:10px;color:rgba(122,155,181,.7)">' + obs + '</div>';
+    }
+    s += '</div>';
+  });
+  s += '</div>';
+  return s;
+}
+
+// Dados embarcados da Água Santa (fallback quando SCOUT_SID não configurado)
+function dtScoutDadosAguaSanta() {
+  return [
+    { 'Adversário': 'Água Santa', 'Nome': 'ALISSON', 'Nº': '3', 'Posição': 'Zagueiro', 'Pé': 'Destro', 'Altura': '1,88m', 'Idade': '30',
+      'Char. Com Bola 1': 'Cabeceio ofensivo', 'Char. Com Bola 2': 'Busca passes longos com frequência', 'Char. Com Bola 3': 'Joga com o pé trocado',
+      'Char. Sem Bola 1': 'Duelo aéreo', 'Char. Sem Bola 2': 'Busca antecipação com frequência', 'Char. Sem Bola 3': 'Agressivo em duelos',
+      'Ponto Fraco': '', 'Alerta Para': '', 'Data Avaliação': '26/02/2026' },
+    { 'Adversário': 'Água Santa', 'Nome': 'HIAGO', 'Nº': '4', 'Posição': 'Zagueiro', 'Pé': 'Destro', 'Altura': '1,90m', 'Idade': '26',
+      'Char. Com Bola 1': 'Sob pressão busca passe longo', 'Char. Com Bola 2': 'Em alguns momentos conduz', 'Char. Com Bola 3': '',
+      'Char. Sem Bola 1': 'Duelo aéreo', 'Char. Sem Bola 2': 'Agressivo em duelos', 'Char. Sem Bola 3': 'Dificuldade em defender profundidade',
+      'Ponto Fraco': 'Dificuldade em defender profundidade', 'Alerta Para': 'Atacante com velocidade nas costas', 'Data Avaliação': '26/02/2026' },
+    { 'Adversário': 'Água Santa', 'Nome': 'RIKELMY', 'Nº': '2', 'Posição': 'Lateral Direito', 'Pé': 'Destro', 'Altura': '1,80m', 'Idade': '24',
+      'Char. Com Bola 1': 'Busca tabelas com extremos', 'Char. Com Bola 2': 'Velocidade em profundidade', 'Char. Com Bola 3': 'Cruzamentos média/curta distância',
+      'Char. Sem Bola 1': 'Agressividade para saltar no extremo', 'Char. Sem Bola 2': 'Em momentos sofre em profundidade', 'Char. Sem Bola 3': 'Velocidade na recuperação',
+      'Ponto Fraco': 'Sofre em profundidade', 'Alerta Para': 'Extremo esquerdo atacar nas costas', 'Data Avaliação': '26/02/2026' },
+    { 'Adversário': 'Água Santa', 'Nome': 'MICHEL BENNECH', 'Nº': '2', 'Posição': 'Lateral Direito', 'Pé': 'Destro', 'Altura': '1,87m', 'Idade': '27',
+      'Char. Com Bola 1': 'Constrói baixo', 'Char. Com Bola 2': 'Sob pressão busca simplificar', 'Char. Com Bola 3': '',
+      'Char. Sem Bola 1': 'Duelo aéreo', 'Char. Sem Bola 2': 'Agressividade em saltos', 'Char. Sem Bola 3': '',
+      'Ponto Fraco': '', 'Alerta Para': '', 'Data Avaliação': '26/02/2026' },
+    { 'Adversário': 'Água Santa', 'Nome': 'RAFAEL VERRONE', 'Nº': '6', 'Posição': 'Lateral Esquerdo', 'Pé': 'Canhoto', 'Altura': '1,82m', 'Idade': '27',
+      'Char. Com Bola 1': 'Cruzamentos de longa distância', 'Char. Com Bola 2': 'Bola parada', 'Char. Com Bola 3': 'Constrói baixo',
+      'Char. Sem Bola 1': 'Agressividade', 'Char. Sem Bola 2': 'Fragilidade em bola aérea', 'Char. Sem Bola 3': '',
+      'Ponto Fraco': 'Fragilidade em bola aérea', 'Alerta Para': 'Explorar bola aérea pelo lado esquerdo', 'Data Avaliação': '26/02/2026' },
+    { 'Adversário': 'Água Santa', 'Nome': 'WILLIAM BAHIA', 'Nº': '6', 'Posição': 'Lateral Esquerdo', 'Pé': 'Canhoto', 'Altura': '---', 'Idade': '24',
+      'Char. Com Bola 1': 'Velocidade em profundidade', 'Char. Com Bola 2': 'Sob pressão busca simplificar', 'Char. Com Bola 3': 'Cruzamentos curta/média distância',
+      'Char. Sem Bola 1': 'Agressividade', 'Char. Sem Bola 2': 'Dificuldades no 1x1', 'Char. Sem Bola 3': '',
+      'Ponto Fraco': 'Dificuldades no 1x1', 'Alerta Para': 'Extremo direito pressionar 1x1', 'Data Avaliação': '26/02/2026' },
+    { 'Adversário': 'Água Santa', 'Nome': 'VITINHO', 'Nº': '11', 'Posição': 'Extremo Esquerdo', 'Pé': 'Destro', 'Altura': '1,68m', 'Idade': '25',
+      'Char. Com Bola 1': 'Condução em velocidade', 'Char. Com Bola 2': 'Drible pra dentro com finalização', 'Char. Com Bola 3': '',
+      'Char. Sem Bola 1': 'Auxiliar lateral na marcação', 'Char. Sem Bola 2': '', 'Char. Sem Bola 3': '',
+      'Ponto Fraco': '', 'Alerta Para': 'Lateral direito: atenção ao drible pra dentro', 'Data Avaliação': '26/02/2026' },
+    { 'Adversário': 'Água Santa', 'Nome': 'NICOLAS VIANA', 'Nº': '7', 'Posição': 'Extremo Direito', 'Pé': 'Canhoto', 'Altura': '---', 'Idade': '19',
+      'Char. Com Bola 1': 'Cruzamentos de média distância', 'Char. Com Bola 2': 'Por vezes dribla pra dentro e cruza', 'Char. Com Bola 3': 'Velocidade em profundidade',
+      'Char. Sem Bola 1': 'Auxiliar lateral na marcação', 'Char. Sem Bola 2': '', 'Char. Sem Bola 3': '',
+      'Ponto Fraco': '', 'Alerta Para': 'Lateral esquerdo: atenção à inversão', 'Data Avaliação': '26/02/2026' },
+    { 'Adversário': 'Água Santa', 'Nome': 'ANTÔNIO GABRIEL', 'Nº': '7', 'Posição': 'Extremo Direito', 'Pé': 'Destro', 'Altura': '1,75m', 'Idade': '23',
+      'Char. Com Bola 1': 'Cruzamentos de média distância', 'Char. Com Bola 2': 'Velocidade na fase de transição', 'Char. Com Bola 3': 'Preenche área em cruzamentos',
+      'Char. Sem Bola 1': 'Auxiliar lateral na marcação', 'Char. Sem Bola 2': 'Segue pressão até o goleiro', 'Char. Sem Bola 3': '',
+      'Ponto Fraco': '', 'Alerta Para': 'GK: pressão alta. Lat. Esq.: atenção à velocidade', 'Data Avaliação': '26/02/2026' },
+    { 'Adversário': 'Água Santa', 'Nome': 'VITÃO', 'Nº': '9', 'Posição': 'Atacante', 'Pé': 'Destro', 'Altura': '1,80m', 'Idade': '26',
+      'Char. Com Bola 1': 'Velocidade em profundidade', 'Char. Com Bola 2': 'Alvo em bolas longas / duelo aéreo', 'Char. Com Bola 3': 'Finaliza de média distância',
+      'Char. Sem Bola 1': 'Agressivo em pressões nos zagueiros', 'Char. Sem Bola 2': 'Segue pressão até o goleiro', 'Char. Sem Bola 3': '',
+      'Ponto Fraco': '', 'Alerta Para': 'Zagueiros: atenção bola longa + duelo aéreo. GK: preparar saída.', 'Data Avaliação': '26/02/2026' },
+  ];
 }
 
 // Legacy functions kept for compatibility
