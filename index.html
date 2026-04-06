@@ -5007,8 +5007,8 @@ document.addEventListener('DOMContentLoaded', function(){
 var DT_API_KEY  = 'live_14e70fe96049615c1c7760495ede62';
 var DT_API_BASE = 'https://api.api-futebol.com.br/v1';
 
-// Paulista A2 2026 = ID 40 (confirmado), time_id Osasco = 52
-var DT_CAMP_ID  = 40;
+// Paulista A2 2026 = ID 10 (confirmado via /campeonatos, status andamento), time_id Osasco = 52
+var DT_CAMP_ID  = 10;
 var DT_OSASCO_TID = 52;
 
 var dtState = {
@@ -5752,65 +5752,75 @@ function dtBlocoClassificacao() {
   }
   // Artilharia / Outras partidas da fase
   s+='<div>';
+  // ── ARTILHARIA ──────────────────────────────────
+  s+='<div style="margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">';
+  s+='<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts)">Artilharia &mdash; '+( dtState.campNome||'Campeonato')+'</div>';
+  if(dtState.artilharia&&Array.isArray(dtState.artilharia)&&dtState.artilharia.length>0) {
+    s+='<div style="font-size:9px;color:var(--ts)">'+dtState.artilharia.length+' artilheiros</div>';
+  }
+  s+='</div>';
   if(dtState.artilharia && Array.isArray(dtState.artilharia) && dtState.artilharia.length>0) {
-    s+='<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Artilharia do Campeonato</div><div style="display:flex;flex-direction:column;gap:5px">';
-    dtState.artilharia.slice(0,12).forEach(function(a,i){
-      var jg=a.atleta||a.jogador||a;
-      var nomeJ=jg.nome_popular||jg.nome||'--';
-      var foto=jg.foto||jg.imagem||'';
-      var time=a.time||a.equipe||{};
-      var timeN=time.nome_popular||time.nome||'';
-      var timeE=time.escudo||time.logo||'';
-      var gols=a.gols||a.quantidade||0;
-      s+='<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--c2);border:1px solid rgba(70,162,247,.07);border-radius:4px">' +
-        '<span style="font-family:Bebas Neue,sans-serif;font-size:16px;color:rgba(70,162,247,.4);width:18px;flex-shrink:0">'+(i+1)+'</span>' +
-        (foto?'<img src="'+foto+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0">':'') +
-        '<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:700;color:var(--wh);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nomeJ+'</div>' +
-          '<div style="display:flex;align-items:center;gap:4px;margin-top:2px">'+(timeE?'<img src="'+timeE+'" style="width:12px;height:12px;object-fit:contain">':'')+
-          '<span style="font-size:9px;color:var(--ts)">'+timeN+'</span></div></div>' +
-        '<div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:var(--re);line-height:1;flex-shrink:0">'+gols+'</div>' +
-      '</div>';
+    var maxGols = dtState.artilharia.reduce(function(mx,a){ return Math.max(mx, a.gols||a.quantidade||0); }, 1);
+    var medalhas = ['#F59E0B','#9CA3AF','#CD7F32'];
+    s+='<div style="display:flex;flex-direction:column;gap:4px">';
+    dtState.artilharia.slice(0,15).forEach(function(a,i){
+      var jg = a.atleta||a.jogador||a;
+      var nomeJ = jg.nome_popular||jg.nome||'--';
+      var foto  = jg.foto||jg.imagem||'';
+      var time  = a.time||a.equipe||{};
+      var timeN = time.nome_popular||time.nome||'';
+      var timeE = time.escudo||time.logo||'';
+      var timeId= time.time_id||time.id||0;
+      var gols  = a.gols||a.quantidade||0;
+      var barW  = Math.round((gols/maxGols)*100);
+      var isOsasco = timeId===dtState.osascoTid ||
+                     timeN.toLowerCase().indexOf('osasco')>=0 ||
+                     timeN.toLowerCase().indexOf('oeste')>=0;
+      var rankColor = i<3 ? medalhas[i] : 'rgba(70,162,247,.25)';
+      var rowBg = isOsasco
+        ? 'background:rgba(70,162,247,.08);border:1px solid rgba(70,162,247,.25)'
+        : 'background:rgba(255,255,255,.02);border:1px solid rgba(70,162,247,.06)';
+      s+='<div style="'+rowBg+';border-radius:5px;padding:7px 10px;position:relative;overflow:hidden">';
+      // barra de fundo proporcional
+      s+='<div style="position:absolute;left:0;top:0;height:100%;width:'+barW+'%;background:'+(isOsasco?'rgba(70,162,247,.06)':'rgba(255,255,255,.02)')+';pointer-events:none;transition:width .6s ease"></div>';
+      s+='<div style="position:relative;display:flex;align-items:center;gap:8px">';
+      // ranking
+      s+='<div style="width:20px;flex-shrink:0;text-align:center">';
+      if(i<3) {
+        s+='<div style="width:18px;height:18px;border-radius:50%;background:'+rankColor+';display:flex;align-items:center;justify-content:center">';
+        s+='<span style="font-family:Bebas Neue,sans-serif;font-size:10px;color:#000;line-height:1">'+(i+1)+'</span></div>';
+      } else {
+        s+='<span style="font-family:Bebas Neue,sans-serif;font-size:14px;color:rgba(70,162,247,.35)">'+(i+1)+'</span>';
+      }
+      s+='</div>';
+      // foto
+      if(foto) {
+        s+='<img src="'+foto+'" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(70,162,247,.15)">';
+      } else {
+        s+='<div style="width:30px;height:30px;border-radius:50%;background:rgba(70,162,247,.1);flex-shrink:0;display:flex;align-items:center;justify-content:center">';
+        s+='<span style="font-size:11px;font-weight:700;color:var(--ts)">'+nomeJ.charAt(0)+'</span></div>';
+      }
+      // nome + time
+      s+='<div style="flex:1;min-width:0">';
+      s+='<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:'+(isOsasco?'var(--az)':'var(--wh)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nomeJ;
+      if(isOsasco) s+=' <span style="font-size:8px;font-weight:700;letter-spacing:1px;padding:1px 5px;background:rgba(70,162,247,.15);border-radius:2px;color:var(--az)">OSASCO</span>';
+      s+='</div>';
+      s+='<div style="display:flex;align-items:center;gap:4px;margin-top:2px">';
+      if(timeE) s+='<img src="'+timeE+'" style="width:13px;height:13px;object-fit:contain;flex-shrink:0">';
+      s+='<span style="font-size:9px;color:var(--ts)">'+timeN+'</span>';
+      s+='</div></div>';
+      // gols
+      s+='<div style="flex-shrink:0;text-align:right">';
+      s+='<div style="font-family:Bebas Neue,sans-serif;font-size:26px;line-height:1;color:'+(isOsasco?'var(--az)':'var(--re)')+'">'+gols+'</div>';
+      s+='<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ts)">gol'+(gols!==1?'s':'')+'</div>';
+      s+='</div>';
+      s+='</div></div>';
     });
     s+='</div>';
   } else {
-    // Artilharia vazia - mostra ultimas partidas gerais do campeonato
-    s+='<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Artilharia</div>';
-    s+='<div style="background:var(--c2);border:1px solid rgba(70,162,247,.1);border-radius:6px;padding:14px;color:var(--ts);font-size:12px;margin-bottom:16px">';
-    s+='Artilharia nao disponivel na API para o Paulistao A2.';
-    s+='</div>';
-    // Ultimas partidas do campeonato (geral)
-    s+='<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);margin-bottom:8px">Ultimos Resultados &mdash; Campeonato</div>';
-    s+='<div style="display:flex;flex-direction:column;gap:5px">';
-    function flatP2(obj) {
-      var all=[];
-      if(Array.isArray(obj)) return obj;
-      if(obj&&typeof obj==='object') { Object.keys(obj).forEach(function(k){ all=all.concat(flatP2(obj[k])); }); }
-      return all;
-    }
-    var todas2 = dtState.todasPartidas&&dtState.todasPartidas.partidas ? flatP2(dtState.todasPartidas.partidas) : [];
-    var recentes = todas2.filter(function(p){ return p.status==='finalizado'; }).slice(-8);
-    recentes.reverse().forEach(function(p){
-      var mNome=p.time_mandante&&p.time_mandante.nome_popular||'--';
-      var vNome=p.time_visitante&&p.time_visitante.nome_popular||'--';
-      var mE=p.time_mandante&&p.time_mandante.escudo||'';
-      var vE=p.time_visitante&&p.time_visitante.escudo||'';
-      var pm=(p.placar||'').match(/(\d+)\s*x\s*(\d+)/i);
-      var gm=pm?pm[1]:'--', gv=pm?pm[2]:'--';
-      s+='<div style="background:rgba(0,0,0,.15);border:1px solid rgba(70,162,247,.06);border-radius:4px;padding:8px 10px">';
-      s+='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px">';
-      s+='<div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">';
-      s+='<span style="font-size:11px;text-align:right;color:var(--wh)">'+mNome+'</span>';
-      s+=(mE?'<img src="'+mE+'" style="width:18px;height:18px;object-fit:contain;flex-shrink:0">':'');
-      s+='</div>';
-      s+='<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--wh);text-align:center;white-space:nowrap">'+gm+' x '+gv+'</div>';
-      s+='<div style="display:flex;align-items:center;gap:5px">';
-      s+=(vE?'<img src="'+vE+'" style="width:18px;height:18px;object-fit:contain;flex-shrink:0">':'');
-      s+='<span style="font-size:11px;color:var(--wh)">'+vNome+'</span>';
-      s+='</div>';
-      s+='</div>';
-      if(p.data_realizacao) s+='<div style="font-size:9px;color:var(--ts);text-align:center;margin-top:3px">'+p.data_realizacao+'</div>';
-      s+='</div>';
-    });
+    s+='<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:6px;padding:20px;text-align:center">';
+    s+='<div style="font-size:11px;color:var(--ts)">Artilharia ainda sem dados na API.</div>';
+    s+='<div style="font-size:10px;color:rgba(122,155,181,.5);margin-top:4px">Os dados aparecem automaticamente quando a API liberar para o campeonato em andamento.</div>';
     s+='</div>';
   }
   s+='</div></div>';
