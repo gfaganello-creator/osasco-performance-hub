@@ -757,6 +757,11 @@ footer{background:var(--bk);border-top:1px solid rgba(70,162,247,.08);padding:36
       <div class="hcard__body"><div class="hcard__label">Dep. Tecnico</div><div class="hcard__sub">Taticas &middot; Analise</div></div>
       <div class="hcard__badge badge-live">ATIVO</div>
     </div>
+    <div class="hcard active" onclick="abrirMercado(event)">
+      <div class="hcard__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></div>
+      <div class="hcard__body"><div class="hcard__label">Mercado</div><div class="hcard__sub">Talentos &middot; Contratações</div></div>
+      <div class="hcard__badge badge-live">ATIVO</div>
+    </div>
     <div class="hcard soon">
       <div class="hcard__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>
       <div class="hcard__body"><div class="hcard__label">Marketing</div><div class="hcard__sub">Redes &middot; Patrocinadores</div></div>
@@ -4980,6 +4985,27 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 
+<!-- MÓDULO MERCADO -->
+<div id="mod-mercado" style="display:none;background:var(--bk);min-height:100vh">
+  <div class="el-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <button onclick="hubVoltarMercado()" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ts);background:none;border:1px solid rgba(70,162,247,.2);border-radius:3px;padding:7px 14px;cursor:pointer">&#8592; Hub</button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span id="mkt-sync" style="font-size:10px;color:var(--ts)">Carregando...</span>
+        <button onclick="mktCarregar()" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;background:rgba(70,162,247,.1);color:var(--az);border:1px solid rgba(70,162,247,.25)">&#8635; Atualizar</button>
+      </div>
+    </div>
+    <div class="el-title">MERCADO <em style="color:var(--gr)">DE TALENTOS</em></div>
+    <div class="el-sub" style="margin-top:4px">Osasco Sporting &middot; Banco de Talentos &middot; Oportunidades de Contratação</div>
+  </div>
+  <div class="el-body" id="mkt-dashboard">
+    <div style="color:var(--ts);font-size:13px;padding:60px 0;text-align:center">
+      <div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:var(--az);margin-bottom:8px">Conectando...</div>
+      <div>Carregando banco de talentos</div>
+    </div>
+  </div>
+</div>
+
 <div id="mod-dep-tecnico" style="display:none;background:var(--bk);min-height:100vh">
   <div class="el-header">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
@@ -5547,7 +5573,7 @@ function dtShellLayout() {
     { id: 'season',    label: 'Temporada' },
     { id: 'table',     label: 'Classificação' },
     { id: 'load',      label: 'Carga NSP' },
-    { id: 'scout',     label: 'Scout' },
+    { id: 'scout',     label: 'Scout Adversários' },
   ];
   tabs.forEach(function(t){
     s += '<button id="dt-tab-' + t.id + '" onclick="dtSwitchTab(\'' + t.id + '\')" style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 18px;border:none;background:none;cursor:pointer;color:rgba(122,155,181,.55);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:.2s">' + t.label + '</button>';
@@ -6444,11 +6470,11 @@ async function dtCarregarScout() {
   if(!SCOUT_SID || SCOUT_SID === '') return;
   try {
     var base = 'https://docs.google.com/spreadsheets/d/' + SCOUT_SID + '/gviz/tq?tqx=out:csv&sheet=';
-    var r1 = await fetch(base + encodeURIComponent('Scout Adversários'));
+    var r1 = await fetch(base + encodeURIComponent('Scout Oposição'));
     var t1 = await r1.text();
     scoutAdversarios = nspParseSheet(t1);
     await dtDelay(300);
-    var r2 = await fetch(base + encodeURIComponent('Scout Contratações'));
+    var r2 = await fetch(base + encodeURIComponent('Scout Mercado'));
     var t2 = await r2.text();
     scoutContratacoes = nspParseSheet(t2);
     scoutCarregado = true;
@@ -6470,12 +6496,12 @@ function dtTabScout() {
 
   // Sub-abas
   s += '<div style="display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid rgba(70,162,247,.1)">';
-  s += '<button onclick="dtScoutSubTab(\'adv\')" id="scout-sub-adv" style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;border:none;background:none;cursor:pointer;color:#46A2F7;border-bottom:2px solid #46A2F7;margin-bottom:-1px">Adversários</button>';
-  s += '<button onclick="dtScoutSubTab(\'cont\')" id="scout-sub-cont" style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;border:none;background:none;cursor:pointer;color:rgba(122,155,181,.5);border-bottom:2px solid transparent;margin-bottom:-1px">Contratações</button>';
+  s += '<button onclick="dtScoutSubTab(\'adv\')" id="scout-sub-adv" style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;border:none;background:none;cursor:pointer;color:rgba(122,155,181,.5);border-bottom:2px solid transparent;margin-bottom:-1px">Oposição</button>';
+  s += '<button onclick="dtScoutSubTab(\'cont\')" id="scout-sub-cont" style="font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;border:none;background:none;cursor:pointer;color:#46A2F7;border-bottom:2px solid #46A2F7;margin-bottom:-1px">Mercado</button>';
   s += '</div>';
 
   s += '<div id="scout-sub-content">';
-  s += dtScoutAdversarios();
+  s += dtScoutMercado();
   s += '</div>';
 
   return s;
@@ -6490,11 +6516,11 @@ function dtScoutSubTab(sub) {
     btn.style.borderBottomColor = b === sub ? '#46A2F7' : 'transparent';
   });
   var content = document.getElementById('scout-sub-content');
-  if(content) content.innerHTML = sub === 'adv' ? dtScoutAdversarios() : dtScoutContratacoes();
+  if(content) content.innerHTML = sub === 'adv' ? dtScoutOposicao() : dtScoutMercado();
 }
 
-// ── Scout Adversários ─────────────────────────────────────────
-function dtScoutAdversarios() {
+// ── Scout Oposição (fichas táticas pré-jogo) ────────────────────
+function dtScoutOposicao() {
   var dados = scoutAdversarios;
 
   // Filtros de posição
@@ -6506,16 +6532,24 @@ function dtScoutAdversarios() {
 
   var s = '';
 
-  // Se não tem planilha configurada, mostra dados do PDF embarcados
-  if(!SCOUT_SID || dados.length === 0) {
-    dados = dtScoutDadosAguaSanta();
+  // Oposição vazia sem planilha configurada
+  if(!SCOUT_SID && dados.length === 0) {
+    return '<div style="padding:40px;text-align:center;background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px">' +
+      '<div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:#46A2F7;margin-bottom:12px">FICHAS DE OPOSIÇÃO</div>' +
+      '<div style="font-size:12px;color:rgba(122,155,181,.6);max-width:400px;margin:0 auto;line-height:1.7">' +
+      'Preencha a aba <strong style="color:#fff">Scout Oposição</strong> da planilha SCOUT_SID com as fichas dos jogadores adversários antes de cada jogo.<br><br>' +
+      'Use filtros por posição para a comissão técnica acessar rapidamente o scout do jogador específico que vai marcar.' +
+      '</div></div>';
+  }
+
+  if(dados.length === 0) {
+    return '<div style="padding:32px;text-align:center;color:rgba(122,155,181,.6);font-size:12px">Nenhuma ficha de oposição cadastrada. Preencha a aba Scout Oposição na planilha SCOUT_SID.</div>';
   }
 
   // Header com filtros
   s += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">';
   s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6)">';
-  s += dados.length + ' JOGADORES AVALIADOS';
-  s += (!SCOUT_SID ? ' &mdash; <span style="color:#F59E0B">DADOS DE EXEMPLO · Adicione SCOUT_SID para dados reais</span>' : '');
+  s += dados.length + ' JOGADORES MAPEADOS';
   s += '</div>';
   s += '<div style="display:flex;gap:6px;flex-wrap:wrap" id="scout-filtros">';
   var filtroPos = ['Todas','Goleiro','Zagueiro','Lateral Direito','Lateral Esquerdo','Volante','Meia','Extremo','Atacante'];
@@ -6542,7 +6576,7 @@ function dtScoutFiltrar(posicao) {
     b.style.borderColor = isActive ? 'rgba(70,162,247,.4)' : 'rgba(70,162,247,.15)';
   });
   // Filtra cards
-  var dados = scoutAdversarios.length > 0 ? scoutAdversarios : dtScoutDadosAguaSanta();
+  var dados = scoutAdversarios.length > 0 ? scoutAdversarios : [];
   var filtrados = posicao === 'Todas' ? dados : dados.filter(function(r){
     var pos = (r['Posição'] || r['Posicao'] || '').toLowerCase();
     return pos.indexOf(posicao.toLowerCase()) >= 0;
@@ -6641,8 +6675,8 @@ function dtScoutFichaCard(r) {
   return s;
 }
 
-// ── Scout Contratações ────────────────────────────────────────
-function dtScoutContratacoes() {
+// ── Scout Mercado (alvos de contratação) ───────────────────────
+function dtScoutMercado() {
   var dados = scoutContratacoes.filter(function(r){ return r['Nome'] && r['Nome'].trim(); });
 
   var s = '';
@@ -6650,10 +6684,17 @@ function dtScoutContratacoes() {
   s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6)">' + dados.length + ' ATLETAS NO BANCO</div>';
   s += '</div>';
 
+  // Fallback: dados da Água Santa como exemplo
+  if(!SCOUT_SID || dados.length === 0) {
+    dados = dtScoutDadosAguaSanta();
+    s += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#F59E0B;margin-bottom:14px;padding:8px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:4px">';
+    s += dados.length + ' ATLETAS &mdash; DADOS DE EXEMPLO (Água Santa) · Configure SCOUT_SID para dados reais';
+    s += '</div>';
+  }
   if(dados.length === 0) {
     s += '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:32px;text-align:center">';
-    s += '<div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:#46A2F7;margin-bottom:8px">BANCO VAZIO</div>';
-    s += '<div style="font-size:12px;color:rgba(122,155,181,.6)">Preencha a aba "Scout Contratações" da planilha SCOUT_SID para ver os atletas avaliados aqui.</div>';
+    s += '<div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:#46A2F7;margin-bottom:8px">MERCADO VAZIO</div>';
+    s += '<div style="font-size:12px;color:rgba(122,155,181,.6)">Preencha a aba "Scout Mercado" da planilha SCOUT_SID para adicionar atletas mapeados para contratação.</div>';
     s += '</div>';
     return s;
   }
@@ -6774,6 +6815,232 @@ function dtCampanhaGridHtml(stats, posObj) { return ''; }
 function dtCalendarioListHtml() { return ''; }
 function dtBlocoDesempenho() { return ''; }
 function dtBlocoClassificacao() { return ''; }
+
+// ══════════════════════════════════════════════════════════
+// MERCADO DE TALENTOS
+// ══════════════════════════════════════════════════════════
+var MKT_BASE = SCOUT_SID ? 'https://docs.google.com/spreadsheets/d/' + SCOUT_SID + '/gviz/tq?tqx=out:csv&sheet=' : '';
+var mktTalentos = [];
+var mktCarregado = false;
+
+function abrirMercado(e) {
+  if(e) e.preventDefault();
+  document.getElementById('tela-hub').style.display = 'none';
+  document.getElementById('mod-mercado').style.display = 'block';
+  window.scrollTo(0, 0);
+  mktCarregar();
+}
+
+function hubVoltarMercado() {
+  document.getElementById('mod-mercado').style.display = 'none';
+  document.getElementById('tela-hub').style.display = 'flex';
+  window.scrollTo(0, 0);
+}
+
+async function mktCarregar() {
+  var sync = document.getElementById('mkt-sync');
+  var dash = document.getElementById('mkt-dashboard');
+  if(sync) sync.textContent = 'Atualizando...';
+  if(!SCOUT_SID) {
+    mktCarregado = true;
+    mktRender();
+    if(sync) sync.textContent = 'Modo demonstração';
+    return;
+  }
+  try {
+    var base = 'https://docs.google.com/spreadsheets/d/' + SCOUT_SID + '/gviz/tq?tqx=out:csv&sheet=';
+    var r = await fetch(base + encodeURIComponent('Banco de Talentos'));
+    var t = await r.text();
+    mktTalentos = nspParseSheet(t).filter(function(row){ return row['Nome'] && row['Nome'].trim(); });
+    mktCarregado = true;
+    if(sync) sync.textContent = 'Atualizado ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    if(sync) sync.textContent = 'Erro ao carregar';
+    console.warn('[Mercado]', e.message);
+  }
+  mktRender();
+}
+
+function mktRender() {
+  var dash = document.getElementById('mkt-dashboard');
+  if(!dash) return;
+  dash.innerHTML = mktDashboardHtml();
+}
+
+function mktDashboardHtml() {
+  var dados = mktTalentos;
+  var s = '';
+
+  // ── KPIs ──────────────────────────────────────────────────
+  var total      = dados.length;
+  var observacao = dados.filter(function(r){ return (r['Status']||'').toLowerCase().indexOf('observa') >= 0; }).length;
+  var aprovados  = dados.filter(function(r){ return (r['Status']||'').toLowerCase().indexOf('aprov') >= 0; }).length;
+  var negociacao = dados.filter(function(r){ return (r['Status']||'').toLowerCase().indexOf('negocia') >= 0; }).length;
+  var contratados= dados.filter(function(r){ return (r['Status']||'').toLowerCase().indexOf('contrat') >= 0; }).length;
+
+  s += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px">';
+  [
+    { v: total,      l: 'Total Mapeados', c: '#46A2F7' },
+    { v: observacao, l: 'Em Observação',  c: '#7A9BB5' },
+    { v: aprovados,  l: 'Aprovados',      c: '#2ECC8E' },
+    { v: negociacao, l: 'Em Negociação',  c: '#F59E0B' },
+    { v: contratados,l: 'Contratados',    c: '#A78BFA' },
+  ].forEach(function(k){
+    s += '<div style="text-align:center;padding:16px 8px;background:rgba(70,162,247,.04);border:1px solid rgba(70,162,247,.1);border-radius:8px">';
+    s += '<div style="font-family:Bebas Neue,sans-serif;font-size:36px;color:' + k.c + ';line-height:1">' + k.v + '</div>';
+    s += '<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(122,155,181,.5);margin-top:4px">' + k.l + '</div>';
+    s += '</div>';
+  });
+  s += '</div>';
+
+  if(!SCOUT_SID || total === 0) {
+    s += '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.12);border-radius:8px;padding:40px;text-align:center">';
+    s += '<div style="font-family:Bebas Neue,sans-serif;font-size:28px;color:#46A2F7;margin-bottom:12px">BANCO VAZIO</div>';
+    s += '<div style="font-size:13px;color:rgba(122,155,181,.7);max-width:500px;margin:0 auto;line-height:1.6">';
+    if(!SCOUT_SID) {
+      s += 'Configure o <strong style="color:#46A2F7">SCOUT_SID</strong> no código para conectar a planilha de talentos.<br>';
+      s += '<span style="font-size:11px;color:rgba(122,155,181,.5)">Abra o index.html e substitua SCOUT_SID pelo ID da planilha SCOUT_SID.xlsx no Google Sheets.</span>';
+    } else {
+      s += 'Nenhum atleta na planilha "Banco de Talentos" ainda.<br>';
+      s += '<span style="font-size:11px;color:rgba(122,155,181,.5)">Preencha a aba "Banco de Talentos" da planilha SCOUT_SID para ver os atletas aqui.</span>';
+    }
+    s += '</div></div>';
+    return s;
+  }
+
+  // ── Filtros ───────────────────────────────────────────────
+  s += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">';
+  s += '<span style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(122,155,181,.5)">Posição:</span>';
+  var posFiltros = ['Todas','Goleiro','Zagueiro','Lateral Direito','Lateral Esquerdo','Volante','Meia','Extremo','Atacante'];
+  posFiltros.forEach(function(p, i){
+    s += '<button onclick="mktFiltrarPos(\'' + p + '\')" id="mktf-' + i + '" style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:3px;cursor:pointer;background:' + (i===0?'rgba(70,162,247,.15)':'none') + ';color:' + (i===0?'#46A2F7':'rgba(122,155,181,.5)') + ';border:1px solid ' + (i===0?'rgba(70,162,247,.35)':'rgba(70,162,247,.12)') + '">' + p + '</button>';
+  });
+  s += '</div>';
+
+  // ── Cards ─────────────────────────────────────────────────
+  s += '<div id="mkt-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">';
+  dados.forEach(function(r){ s += mktTalentoCard(r); });
+  s += '</div>';
+
+  // ── Nota futura ───────────────────────────────────────────
+  s += '<div style="margin-top:24px;padding:14px 18px;background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.08);border-radius:8px;display:flex;align-items:center;gap:14px">';
+  s += '<div style="width:32px;height:32px;border-radius:50%;background:rgba(70,162,247,.1);border:1px solid rgba(70,162,247,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">';
+  s += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#46A2F7" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>';
+  s += '<div><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#46A2F7;margin-bottom:3px">SUGESTÕES AUTOMÁTICAS · EM BREVE</div>';
+  s += '<div style="font-size:11px;color:rgba(122,155,181,.6);line-height:1.5">Quando a API Wyscout for integrada, o sistema sugerirá automaticamente talentos por posição com base em métricas — duelos, xG, passes progressivos — filtrados por perfil e calendário.</div>';
+  s += '</div></div>';
+
+  return s;
+}
+
+function mktFiltrarPos(posicao) {
+  var btns = document.querySelectorAll('[id^="mktf-"]');
+  btns.forEach(function(b){
+    var active = b.textContent.trim() === posicao;
+    b.style.background = active ? 'rgba(70,162,247,.15)' : 'none';
+    b.style.color = active ? '#46A2F7' : 'rgba(122,155,181,.5)';
+    b.style.borderColor = active ? 'rgba(70,162,247,.35)' : 'rgba(70,162,247,.12)';
+  });
+  var filtrados = posicao === 'Todas' ? mktTalentos : mktTalentos.filter(function(r){
+    return (r['Posição']||r['Posicao']||'').toLowerCase().indexOf(posicao.toLowerCase()) >= 0;
+  });
+  var grid = document.getElementById('mkt-grid');
+  if(grid) grid.innerHTML = filtrados.map(mktTalentoCard).join('');
+}
+
+function mktTalentoCard(r) {
+  var nome    = r['Nome'] || '';
+  var clube   = r['Clube Atual'] || '';
+  var liga    = r['Liga/Campeonato'] || '';
+  var pos     = r['Posição'] || r['Posicao'] || '';
+  var pe      = r['Pé'] || r['Pe'] || '';
+  var altura  = r['Altura'] || '';
+  var idade   = r['Idade'] || '';
+  var nota    = parseInt(r['Nota (1-5)'] || 0);
+  var status  = r['Status'] || '';
+  var obs     = r['Observação'] || r['Observacao'] || '';
+  var aval    = r['Avaliador'] || '';
+  var data    = r['Data Avaliação'] || r['Data Avaliacao'] || '';
+  var link    = r['Link Vídeo'] || r['Link Video'] || '';
+  var comBola = [r['Com Bola 1'],r['Com Bola 2'],r['Com Bola 3']].filter(Boolean);
+  var semBola = [r['Sem Bola 1'],r['Sem Bola 2'],r['Sem Bola 3']].filter(Boolean);
+
+  var stCores = {
+    'em observação': '#7A9BB5', 'em observacao': '#7A9BB5',
+    'aprovado': '#2ECC8E', 'em negociação': '#F59E0B', 'em negociacao': '#F59E0B',
+    'contratado': '#A78BFA', 'descartado': '#EF4444'
+  };
+  var stCor = stCores[status.toLowerCase()] || '#7A9BB5';
+
+  var posCorMap = { 'goleiro':'#F59E0B','zagueiro':'#EF4444','lateral':'#46A2F7','volante':'#2ECC8E','meia':'#A78BFA','extremo':'#F97316','atacante':'#EF4444','avante':'#EF4444' };
+  var posCor = '#7A9BB5';
+  var posL = pos.toLowerCase();
+  Object.keys(posCorMap).forEach(function(k){ if(posL.indexOf(k) >= 0) posCor = posCorMap[k]; });
+
+  var estrelas = '';
+  for(var i = 1; i <= 5; i++) estrelas += '<span style="color:' + (i <= nota ? '#F59E0B' : 'rgba(122,155,181,.2)') + ';font-size:13px">&#9733;</span>';
+
+  var s = '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-top:3px solid ' + posCor + ';border-radius:0 0 8px 8px;padding:16px;display:flex;flex-direction:column;gap:10px">';
+
+  // Nome + status + posição
+  s += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
+  s += '<div>';
+  s += '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:#fff;letter-spacing:.5px;margin-bottom:5px">' + nome + '</div>';
+  s += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
+  s += '<span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:2px;background:' + posCor + '20;color:' + posCor + ';border:1px solid ' + posCor + '40">' + pos + '</span>';
+  s += '<span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:2px;background:' + stCor + '20;color:' + stCor + ';border:1px solid ' + stCor + '40">' + status + '</span>';
+  s += '</div>';
+  s += '</div>';
+  // Atributos físicos
+  s += '<div style="text-align:right;flex-shrink:0">';
+  if(link) s += '<a href="' + link + '" target="_blank" style="font-size:9px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:3px;background:rgba(70,162,247,.1);color:#46A2F7;border:1px solid rgba(70,162,247,.25);text-decoration:none;display:block;margin-bottom:6px">Video</a>';
+  s += '<div style="font-size:9px;color:rgba(122,155,181,.5)">' + [pe, altura, idade ? idade + ' anos' : ''].filter(Boolean).join(' · ') + '</div>';
+  s += '</div>';
+  s += '</div>';
+
+  // Clube + liga
+  if(clube || liga) {
+    s += '<div style="font-size:11px;color:rgba(122,155,181,.6);padding:6px 8px;background:rgba(0,0,0,.15);border-radius:4px">' + [clube, liga].filter(Boolean).join(' · ') + '</div>';
+  }
+
+  // Características
+  if(comBola.length > 0 || semBola.length > 0) {
+    s += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+    s += '<div style="background:rgba(70,162,247,.05);border-radius:4px;padding:8px">';
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(70,162,247,.6);margin-bottom:5px">Com bola</div>';
+    comBola.forEach(function(c){ s += '<div style="font-size:10px;color:rgba(168,216,240,.9);padding:2px 0;border-bottom:1px solid rgba(70,162,247,.06)">' + c + '</div>'; });
+    s += '</div>';
+    s += '<div style="background:rgba(239,68,68,.04);border-radius:4px;padding:8px">';
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(239,68,68,.6);margin-bottom:5px">Sem bola</div>';
+    semBola.forEach(function(c){ s += '<div style="font-size:10px;color:rgba(240,200,200,.8);padding:2px 0;border-bottom:1px solid rgba(239,68,68,.06)">' + c + '</div>'; });
+    s += '</div>';
+    s += '</div>';
+  }
+
+  // Nota
+  if(nota > 0) {
+    s += '<div style="display:flex;align-items:center;gap:8px">';
+    s += '<span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(122,155,181,.5)">Nota:</span>';
+    s += estrelas;
+    s += '</div>';
+  }
+
+  // Observação
+  if(obs) {
+    s += '<div style="padding:7px 10px;background:rgba(0,0,0,.2);border-radius:4px;font-size:10px;color:rgba(122,155,181,.7);line-height:1.5">' + obs + '</div>';
+  }
+
+  // Rodapé
+  if(aval || data) {
+    s += '<div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(122,155,181,.4)">';
+    s += '<span>' + (aval ? 'Avaliador: ' + aval : '') + '</span>';
+    s += '<span>' + data + '</span>';
+    s += '</div>';
+  }
+
+  s += '</div>';
+  return s;
+}
 
 var FIN_SID = '1-O2rXcpEtJ1oMdiq4Fvi95mB09xq4u0iEDWSPkP1IvI';
 var FIN_BASE = 'https://docs.google.com/spreadsheets/d/' + FIN_SID + '/gviz/tq?tqx=out:csv&sheet=';
