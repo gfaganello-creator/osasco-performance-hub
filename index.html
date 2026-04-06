@@ -6160,36 +6160,34 @@ function dtTabTable() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // TAB 6 — CARGA NSP (cruzamento de dados)
 // ═══════════════════════════════════════════════════════════════
 function dtTabLoad() {
-  var rec   = window.nspRecuperacao || [];
-  var carga = window.nspCarga || [];
-  var cad   = window.nspCadastro || [];
+  var rec = window.nspRecuperacao || [];
+  var cad = window.nspCadastro || [];
 
   if(rec.length === 0 && cad.length === 0) {
-    // Tenta carregar NSP em background e re-renderiza
     nspCarregar().then(function(){
       var content = document.getElementById('dt-tab-content');
       if(content) content.innerHTML = dtTabLoad();
     });
-    return '<div style="padding:40px;text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:#F59E0B;margin-bottom:12px">CARREGANDO NSP...</div><div style="font-size:13px;color:rgba(122,155,181,.7)">Buscando dados do Núcleo de Saúde e Performance.</div></div>';
+    return '<div style="padding:40px;text-align:center"><div style="font-family:Bebas Neue,sans-serif;font-size:24px;color:#F59E0B;margin-bottom:12px">CARREGANDO NSP...</div><div style="font-size:13px;color:rgba(122,155,181,.7)">Buscando dados do Nucleo de Saude e Performance.</div></div>';
   }
 
   var s = '';
 
-  // ── Distribuição de prontidão ────────────────────────────────
-  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">DISTRIBUIÇÃO DE PRONTIDÃO</div>';
-
-  // Pega último registro por atleta (nspRecuperacao é ordenado cronologicamente)
+  // Ultimo registro por atleta
   var ultimoRec = {};
   rec.forEach(function(r){
     var nome = (r['Nome'] || r['Atleta'] || '').trim();
     if(!nome) return;
-    ultimoRec[nome] = r; // sobrescreve — fica o último
+    ultimoRec[nome] = r;
   });
 
-  // Agrupa por característica (apenas último registro de cada atleta)
+  // Distribuicao de prontidao
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">DISTRIBUICAO DE PRONTIDAO</div>';
+
   var grupos = {};
   Object.keys(ultimoRec).forEach(function(nome){
     var r = ultimoRec[nome];
@@ -6200,16 +6198,12 @@ function dtTabLoad() {
   });
 
   var total = Object.keys(ultimoRec).length || rec.length;
-  var ordem = ['apronto', 'treinando', 'alerta', 'sobrecarga', 'lesão', 'lesao', 'reabilitação', 'reabilitacao'];
+  var ordem = ['apronto', 'treinando', 'alerta', 'sobrecarga', 'lesao', 'lesão', 'reabilitacao', 'reabilitação'];
   var cores = {
-    'apronto': '#2ECC8E',
-    'treinando': '#46A2F7',
-    'alerta': '#F59E0B',
-    'sobrecarga': '#F59E0B',
-    'lesão': '#EF4444',
-    'lesao': '#EF4444',
-    'reabilitação': '#EF4444',
-    'reabilitacao': '#EF4444'
+    'apronto': '#2ECC8E', 'treinando': '#46A2F7',
+    'alerta': '#F59E0B', 'sobrecarga': '#F59E0B',
+    'lesão': '#EF4444', 'lesao': '#EF4444',
+    'reabilitação': '#EF4444', 'reabilitacao': '#EF4444'
   };
 
   var keys = Object.keys(grupos).sort(function(a, b){
@@ -6218,7 +6212,7 @@ function dtTabLoad() {
     return ia - ib;
   });
 
-  s += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">';
+  s += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px">';
   keys.forEach(function(k){
     var atletas = grupos[k];
     var cnt = atletas.length;
@@ -6227,57 +6221,210 @@ function dtTabLoad() {
     s += '<div style="background:rgba(0,0,0,.15);border:1px solid rgba(70,162,247,.07);border-radius:6px;padding:10px 14px">';
     s += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">';
     s += '<span style="font-size:11px;font-weight:700;color:' + cor + ';text-transform:capitalize">' + k + '</span>';
-    s += '<span style="font-family:Bebas Neue,sans-serif;font-size:20px;color:' + cor + '">' + cnt + ' <span style="font-size:11px;color:rgba(122,155,181,.5);font-family:\'Barlow Condensed\',sans-serif">(' + pct + '%)</span></span>';
+    s += '<span style="font-family:Bebas Neue,sans-serif;font-size:20px;color:' + cor + '">' + cnt + ' <span style="font-size:11px;color:rgba(122,155,181,.5)">(' + pct + '%)</span></span>';
     s += '</div>';
     s += '<div style="height:3px;background:rgba(70,162,247,.08);border-radius:2px;overflow:hidden;margin-bottom:8px">';
-    s += '<div style="height:100%;background:' + cor + ';width:' + pct + '%;border-radius:2px"></div>';
-    s += '</div>';
+    s += '<div style="height:100%;background:' + cor + ';width:' + pct + '%;border-radius:2px"></div></div>';
     s += '<div style="font-size:10px;color:rgba(122,155,181,.6)">' + atletas.filter(Boolean).slice(0, 8).join(', ') + (atletas.length > 8 ? '...' : '') + '</div>';
     s += '</div>';
   });
   s += '</div>';
 
-  // ── Cruzamento: resultados x prontidão ───────────────────────
-  var jogados = dtState.jogosOsasco.filter(function(j){ return j.jogado; });
-  if(jogados.length > 0) {
-    s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">ÚLTIMOS RESULTADOS &mdash; CORRELAÇÃO</div>';
-    s += '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:16px">';
-    s += '<div style="font-size:11px;color:rgba(122,155,181,.7);margin-bottom:12px">Com <strong style="color:#46A2F7">' + total + ' atletas</strong> monitorados pelo NSP, os últimos resultados foram:</div>';
+  // Campanha geral + impacto por atleta
+  var jogados = dtState.jogosOsasco.filter(function(j){
+    return j.jogado && j.gOs !== null && j.gOs !== undefined && j.gAdv !== null && j.gAdv !== undefined;
+  });
 
+  if(jogados.length > 0) {
     var vit = jogados.filter(function(j){ return j.gOs > j.gAdv; }).length;
     var emp = jogados.filter(function(j){ return j.gOs === j.gAdv; }).length;
     var der = jogados.filter(function(j){ return j.gOs < j.gAdv; }).length;
-    var ap  = jogados.length > 0 ? Math.round(((vit * 3 + emp) / (jogados.length * 3)) * 100) : 0;
+    var ap  = Math.round(((vit * 3 + emp) / (jogados.length * 3)) * 100);
+    var aptos = grupos['apronto'] ? grupos['apronto'].length : 0;
+    var pctAptos = total > 0 ? Math.round((aptos / total) * 100) : 0;
 
-    s += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">';
+    s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:12px">CAMPANHA &mdash; VISAO GERAL</div>';
+    s += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">';
     [
-      { v: vit, l: 'Vitórias',  c: '#2ECC8E' },
+      { v: vit, l: 'Vitorias',  c: '#2ECC8E' },
       { v: emp, l: 'Empates',   c: '#F59E0B' },
       { v: der, l: 'Derrotas',  c: '#EF4444' },
       { v: ap + '%', l: 'Aproveit', c: ap >= 50 ? '#2ECC8E' : '#F59E0B' }
     ].forEach(function(k){
-      s += '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,.2);border-radius:4px">';
+      s += '<div style="text-align:center;padding:10px 6px;background:rgba(0,0,0,.2);border-radius:4px;border:1px solid rgba(70,162,247,.07)">';
       s += '<div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:' + k.c + ';line-height:1">' + k.v + '</div>';
       s += '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(122,155,181,.5);margin-top:2px">' + k.l + '</div>';
       s += '</div>';
     });
     s += '</div>';
 
-    // Insight automático
-    var aptos = grupos['apronto'] ? grupos['apronto'].length : 0;
-    var pctAptos = total > 0 ? Math.round((aptos / total) * 100) : 0;
     var insight = '';
-    if(pctAptos >= 80 && ap >= 60) insight = 'Plantel com alta prontidão (' + pctAptos + '%) correlaciona com aproveitamento positivo (' + ap + '%).';
-    else if(pctAptos < 70) insight = 'Atenção: apenas ' + pctAptos + '% do plantel está em plena prontidão. Gestão de carga recomendada antes do próximo jogo.';
+    if(pctAptos >= 80 && ap >= 60) insight = 'Plantel com alta prontidao (' + pctAptos + '%) correlaciona com aproveitamento positivo (' + ap + '%).';
+    else if(pctAptos < 70) insight = 'Atencao: apenas ' + pctAptos + '% do plantel em plena prontidao. Gestao de carga recomendada antes do proximo jogo.';
     else insight = pctAptos + '% do plantel apto. Aproveitamento atual: ' + ap + '%.';
 
-    s += '<div style="padding:10px 12px;background:rgba(70,162,247,.06);border:1px solid rgba(70,162,247,.15);border-radius:4px">';
+    s += '<div style="padding:10px 12px;background:rgba(70,162,247,.06);border:1px solid rgba(70,162,247,.15);border-radius:4px;margin-bottom:24px">';
     s += '<div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#46A2F7;margin-bottom:4px">INSIGHT AUTOMATICO</div>';
     s += '<div style="font-size:11px;color:rgba(240,244,248,.8);line-height:1.5">' + insight + '</div>';
     s += '</div>';
+
+    s += dtImpactoAtletas(jogados, rec);
+  }
+
+  return s;
+}
+
+// Cruzamento desempenho x composicao do plantel
+function dtImpactoAtletas(jogados, rec) {
+  // Monta indice: data(dd/mm/yyyy) -> {nome: status}
+  var aptoPorData = {};
+  rec.forEach(function(r){
+    var nome   = (r['Nome'] || r['Atleta'] || '').trim();
+    var data   = (r['Data'] || '').trim();
+    var caract = (r['Característica'] || r['Caracteristica'] || '').toLowerCase().trim();
+    if(!nome || !data) return;
+    if(!aptoPorData[data]) aptoPorData[data] = {};
+    aptoPorData[data][nome] = caract;
+  });
+
+  function toDDMMYYYY(dt) {
+    if(!dt) return '';
+    var d = new Date(dt);
+    var dd = String(d.getDate()).padStart(2, '0');
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    return dd + '/' + mm + '/' + d.getFullYear();
+  }
+
+  // Busca status do atleta na janela de -3 a +1 dias em relacao ao jogo
+  function statusNaData(dtJogo) {
+    if(!dtJogo) return {};
+    var result = {};
+    for(var off = -3; off <= 1; off++) {
+      var d = new Date(dtJogo.getTime() + off * 86400000);
+      var key = toDDMMYYYY(d);
+      if(aptoPorData[key]) {
+        Object.keys(aptoPorData[key]).forEach(function(n){
+          result[n] = aptoPorData[key][n];
+        });
+      }
+    }
+    return result;
+  }
+
+  // Atletas unicos no NSP
+  var atletasUnicos = {};
+  rec.forEach(function(r){
+    var nome = (r['Nome'] || r['Atleta'] || '').trim();
+    if(!nome) return;
+    var pos = '';
+    if(window.nspCadastro) {
+      nspCadastro.forEach(function(c){
+        if((c['Nome'] || '').trim() === nome) pos = c['Posição'] || c['Posicao'] || c['Pos.'] || '';
+      });
+    }
+    atletasUnicos[nome] = pos;
+  });
+
+  // Calcula impacto por atleta
+  var impactos = [];
+  Object.keys(atletasUnicos).forEach(function(nome){
+    var comApto = [], semApto = [];
+    jogados.forEach(function(jg){
+      var pts = jg.gOs > jg.gAdv ? 3 : jg.gOs === jg.gAdv ? 1 : 0;
+      var snap = statusNaData(jg.dt);
+      if(Object.keys(snap).length === 0) return;
+      var st = snap[nome] || '';
+      if(st.indexOf('apronto') >= 0) comApto.push(pts);
+      else if(st) semApto.push(pts);
+    });
+    if(comApto.length + semApto.length < 3) return;
+    var apCom = comApto.length > 0
+      ? Math.round((comApto.reduce(function(a,b){return a+b;},0) / (comApto.length * 3)) * 100) : null;
+    var apSem = semApto.length > 0
+      ? Math.round((semApto.reduce(function(a,b){return a+b;},0) / (semApto.length * 3)) * 100) : null;
+    impactos.push({
+      nome: nome, pos: atletasUnicos[nome],
+      comApto: comApto.length, semApto: semApto.length,
+      apCom: apCom, apSem: apSem,
+      delta: (apCom !== null && apSem !== null) ? (apCom - apSem) : null
+    });
+  });
+
+  impactos.sort(function(a, b){
+    var da = a.delta !== null ? a.delta : -999;
+    var db = b.delta !== null ? b.delta : -999;
+    return db - da;
+  });
+
+  if(impactos.length === 0) {
+    return '<div style="background:rgba(70,162,247,.03);border:1px solid rgba(70,162,247,.1);border-radius:8px;padding:16px;text-align:center;color:rgba(122,155,181,.6);font-size:12px">Dados insuficientes para calcular impacto individual. Sao necessarios pelo menos 3 jogos com registros NSP na data do jogo.</div>';
+  }
+
+  var s = '';
+  s += '<div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:rgba(122,155,181,.6);margin-bottom:6px">IMPACTO POR ATLETA</div>';
+  s += '<div style="font-size:10px;color:rgba(122,155,181,.5);margin-bottom:14px">Aproveitamento do time nos jogos em que cada atleta estava apto vs. indisponivel</div>';
+
+  // Header legenda
+  s += '<div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;padding:6px 14px;margin-bottom:4px">';
+  s += '<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(122,155,181,.4)">ATLETA</div>';
+  s += '<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(46,204,142,.5);text-align:center">COM</div>';
+  s += '<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(239,68,68,.5);text-align:center">SEM</div>';
+  s += '<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(122,155,181,.4);text-align:center">DELTA</div>';
+  s += '</div>';
+
+  var positivos = impactos.filter(function(a){ return a.delta !== null && a.delta > 0; });
+  var neutros   = impactos.filter(function(a){ return a.delta !== null && a.delta === 0; });
+  var negativos = impactos.filter(function(a){ return a.delta !== null && a.delta < 0; }).reverse();
+  var semDelta  = impactos.filter(function(a){ return a.delta === null; });
+
+  if(positivos.length > 0) {
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(46,204,142,.6);padding:8px 0 5px">MAIOR IMPACTO POSITIVO</div>';
+    s += '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">';
+    positivos.slice(0, 6).forEach(function(a){ s += dtImpactoCard(a, '#2ECC8E'); });
+    s += '</div>';
+  }
+  if(negativos.length > 0) {
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(239,68,68,.6);padding:8px 0 5px">QUEDA DE RENDIMENTO SEM O ATLETA</div>';
+    s += '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">';
+    negativos.slice(0, 4).forEach(function(a){ s += dtImpactoCard(a, '#EF4444'); });
+    s += '</div>';
+  }
+  if(semDelta.length > 0) {
+    s += '<div style="font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(122,155,181,.4);padding:8px 0 5px">APENAS UM CENARIO MAPEADO</div>';
+    s += '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">';
+    semDelta.slice(0, 4).forEach(function(a){ s += dtImpactoCard(a, 'rgba(122,155,181,.4)'); });
     s += '</div>';
   }
 
+  s += '<div style="margin-top:8px;padding:10px 12px;background:rgba(0,0,0,.2);border-radius:4px;border-left:2px solid rgba(70,162,247,.3)">';
+  s += '<div style="font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(70,162,247,.5);margin-bottom:4px">NOTA METODOLOGICA</div>';
+  s += '<div style="font-size:10px;color:rgba(122,155,181,.45);line-height:1.5">Correlacao calculada com registros NSP na semana do jogo (janela -3 a +1 dias). Minimo 3 jogos mapeados por atleta. Correlacao nao implica causalidade.</div>';
+  s += '</div>';
+
+  return s;
+}
+
+function dtImpactoCard(a, accentCor) {
+  var deltaStr = a.delta !== null ? (a.delta > 0 ? '+' : '') + a.delta + '%' : '—';
+  var deltaCor = a.delta === null ? 'rgba(122,155,181,.4)'
+    : a.delta > 0 ? '#2ECC8E' : a.delta < 0 ? '#EF4444' : '#F59E0B';
+  var s = '<div style="display:grid;grid-template-columns:1fr 56px 56px 52px;align-items:center;gap:8px;padding:9px 14px;background:rgba(0,0,0,.15);border:1px solid rgba(70,162,247,.07);border-left:3px solid ' + accentCor + ';border-radius:0 5px 5px 0">';
+  s += '<div><div style="font-size:13px;font-weight:700;color:#fff">' + a.nome + '</div>';
+  if(a.pos) s += '<div style="font-size:9px;color:rgba(122,155,181,.45);text-transform:uppercase;letter-spacing:1px">' + a.pos + '</div>';
+  s += '</div>';
+  s += '<div style="text-align:center">';
+  s += '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:' + (a.apCom !== null ? '#2ECC8E' : 'rgba(122,155,181,.3)') + '">' + (a.apCom !== null ? a.apCom + '%' : '—') + '</div>';
+  s += '<div style="font-size:8px;color:rgba(122,155,181,.4);font-weight:700">' + a.comApto + 'JG</div>';
+  s += '</div>';
+  s += '<div style="text-align:center">';
+  s += '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:' + (a.apSem !== null ? '#EF4444' : 'rgba(122,155,181,.3)') + '">' + (a.apSem !== null ? a.apSem + '%' : '—') + '</div>';
+  s += '<div style="font-size:8px;color:rgba(122,155,181,.4);font-weight:700">' + a.semApto + 'JG</div>';
+  s += '</div>';
+  s += '<div style="text-align:center">';
+  s += '<div style="font-family:Bebas Neue,sans-serif;font-size:20px;color:' + deltaCor + '">' + deltaStr + '</div>';
+  s += '<div style="font-size:8px;color:rgba(122,155,181,.4);font-weight:700">DELTA</div>';
+  s += '</div>';
+  s += '</div>';
   return s;
 }
 
